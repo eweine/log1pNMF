@@ -1,0 +1,521 @@
+---
+title: "Regression Approximation"
+output: html_document
+date: "2024-01-15"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+First, I want to build the code to approximate the different parts of the log-likelihood.
+
+```{r}
+get_sparse_term_loglik <- function(y_nz, X_nz, b) {
+  
+  sum(
+    y_nz * log(exp(X_nz %*% b) - 1)
+  )
+  
+}
+
+get_exp_term_loglik_exact <- function(X, b) {
+  
+  -sum(exp(X %*% b))
+  
+}
+
+get_exp_term_loglik_lin_approx <- function(X, b, a1) {
+  
+  -a1 * sum(colSums(X) * b)
+  
+}
+
+get_exp_term_loglik_quad_approx <- function(X, b, a1, a2) {
+  
+  get_exp_term_loglik_lin_approx(X, b, a1) - a2 * (
+    t(b) %*% crossprod(X) %*% b
+  )
+  
+}
+```
+
+Now that I have the above functions written, I can compose all possible approximations to the full log-likelihood using them
+
+```{r}
+# exact log-likelihood for regression
+get_exact_loglik <- function(b, X, y) {
+  
+  y_nz_idx <- which(y != 0)
+  ll <- get_sparse_term_loglik(
+    y[y_nz_idx], X[y_nz_idx, , drop = FALSE], b
+  ) + get_exp_term_loglik_exact(X, b)
+  return(ll)
+  
+}
+
+# log-likelihood approximating only sparse terms with linear approximation
+get_lin_sparse_approx_loglik <- function(b, X, y, a1) {
+  
+  y_nz_idx <- which(y != 0)
+  y_z_idx <- which(y == 0)
+  ll <- get_sparse_term_loglik(
+    y[y_nz_idx], X[y_nz_idx, , drop = FALSE], b
+  ) + get_exp_term_loglik_exact(
+    X[y_nz_idx, , drop = FALSE], b
+  ) + get_exp_term_loglik_lin_approx(
+    X[y_z_idx, , drop = FALSE], b, a1
+  )
+  return(ll)
+  
+}
+
+# log-likelihood approximating only sparse terms with quadratic approximation
+get_quad_sparse_approx_loglik <- function(b, X, y, a1, a2) {
+  
+  y_nz_idx <- which(y != 0)
+  y_z_idx <- which(y == 0)
+  ll <- get_sparse_term_loglik(
+    y[y_nz_idx], X[y_nz_idx, , drop = FALSE], b
+  ) + get_exp_term_loglik_exact(
+    X[y_nz_idx, , drop = FALSE], b
+  ) + get_exp_term_loglik_quad_approx(
+    X[y_z_idx, , drop = FALSE], b, a1, a2
+  )
+  return(ll)
+  
+}
+
+# log-likelihood approximating ALL terms with quadratic approximation
+get_quad_full_approx_loglik <- function(b, X, y, a1, a2) {
+  
+  y_nz_idx <- which(y != 0)
+  ll <- get_sparse_term_loglik(
+    y[y_nz_idx], X[y_nz_idx, , drop = FALSE], b
+  ) + get_exp_term_loglik_quad_approx(
+    X, b, a1, a2
+  )
+  return(ll)
+  
+}
+```
+
+Now that I have the code above, I would like to simulate data and visualize how the different approximations perform. I think it would be ideal to simulate data that has many 0 entries but also some large entries.
+
+```{r}
+set.seed(1)
+n <- 300
+p <- 1
+
+x <- numeric(n)
+x[1:225] <- abs(rnorm(n = 225, sd = .25))
+x[226:300] <- abs(rnorm(n = 75, sd = 1.75))
+b <- matrix(data = 1)
+X <- matrix(data = x, ncol = 1)
+
+lambda <- exp(X %*% b) - 1
+y <- rpois(n, lambda)
+```
+
+Now, I think that it would be good for me to figure out what the optimum is for each of these models using the optim function. I will solve for this below:
+
+```{r}
+exact_sol <- optimize(
+  get_exact_loglik,
+  lower = 0,
+  upper = 10,
+  maximum = TRUE,
+  X = X,
+  y = y
+)$maximum
+
+# now, need to determine the lengths of the approximation intervals
+approx_poly <- pracma::polyApprox(
+  exp,
+  a = 0,
+  b = log(5),
+  n = 1
+)
+
+a0_linear <- approx_poly$p[2]
+a1_linear <- approx_poly$p[1]
+
+lin_sparse_approx_sol <- optimize(
+  get_lin_sparse_approx_loglik,
+  lower = 0,
+  upper = 10,
+  maximum = TRUE,
+  X = X,
+  y = y,
+  a1 = a1_linear
+)$maximum
+
+approx_poly <- pracma::polyApprox(
+  exp,
+  a = 0,
+  b = log(8),
+  n = 2
+)
+
+a0_quad <- approx_poly$p[3]
+a1_quad <- approx_poly$p[2]
+a2_quad <- approx_poly$p[1]
+
+quad_sparse_approx_sol <- optimize(
+  get_quad_sparse_approx_loglik,
+  lower = 0,
+  upper = 10,
+  maximum = TRUE,
+  X = X,
+  y = y,
+  a1 = a1_quad,
+  a2 = a2_quad
+)$maximum
+
+approx_poly <- pracma::polyApprox(
+  exp,
+  a = 1.75,
+  b = log(10),
+  n = 2
+)
+
+a1_quad_full <- approx_poly$p[2]
+a2_quad_full <- approx_poly$p[1]
+
+quad_full_approx_sol <- optimize(
+  get_quad_full_approx_loglik,
+  lower = 0,
+  upper = 10,
+  maximum = TRUE,
+  X = X,
+  y = y,
+  a1 = a1_quad_full,
+  a2 = a2_quad_full
+)$maximum
+
+```
+
+Now, it would be nice to show graphs to demonstrate the approximation
+
+```{r}
+b_interval <- seq(0.6, 1.4, .01)
+
+b_exact_obj <- c()
+
+for (b in b_interval) {
+  
+  b_exact_obj <- c(
+    b_exact_obj, 
+    get_exact_loglik(b, X, y)
+  )
+  
+}
+
+b_quad_obj <- c()
+
+for (b in b_interval) {
+  
+  b_quad_obj <- c(
+    b_quad_obj, 
+    get_quad_sparse_approx_loglik(
+      b, X, y, a1_quad, a2_quad
+    )
+  )
+  
+}
+
+b_lin_obj <- c()
+
+for (b in b_interval) {
+  
+  b_lin_obj <- c(
+    b_lin_obj, 
+    get_lin_sparse_approx_loglik(
+      b, X, y, a1_linear
+    )
+  )
+  
+}
+
+lik_df <- data.frame(
+  b = rep(b_interval, 3),
+  objective = c(
+    b_exact_obj,
+    b_quad_obj - n * a0_quad,
+    b_lin_obj - n * a0_linear
+  ),
+  algorithm = c(
+    rep("exact", length(b_interval)),
+    rep("quad approx", length(b_interval)),
+    rep("lin approx", length(b_interval))
+  )
+)
+
+```
+
+```{r}
+library(ggplot2)
+
+ggplot(data = lik_df) +
+  geom_line(aes(x = b, y = objective, color = algorithm, linetype = algorithm)) + 
+  geom_point(
+    aes(
+      x = quad_sparse_approx_sol,
+      y = get_quad_sparse_approx_loglik(
+        quad_sparse_approx_sol, X, y, a1_quad, a2_quad
+      ) - n * a0_quad,
+    ),
+    color = "blue",
+    shape = 4
+  ) + 
+    geom_point(
+    aes(
+      x = lin_sparse_approx_sol,
+      y = get_lin_sparse_approx_loglik(
+        lin_sparse_approx_sol, X, y, a1_linear
+      ) - n * a0_linear,
+    ),
+    color = "forestgreen",
+    shape = 4
+  ) + 
+      geom_point(
+    aes(
+      x = exact_sol,
+      y = get_exact_loglik(
+        exact_sol, X, y
+      ),
+    ),
+    color = "red",
+    shape = 4
+  ) +
+  scale_color_manual(
+    values = c("red", "forestgreen", "blue")
+  ) + cowplot::theme_cowplot()
+  
+
+```
+The full quadratic approximation is generally very far off, so it is difficult to show on a plot.
+
+Now, I want to see how well these methods will generalize to more dimensions. I can write a simple simulation for this.
+
+
+```{r}
+set.seed(1)
+n <- 500
+p <- 5
+
+X <- matrix(
+  data = 0, nrow = n, ncol = p
+)
+
+X[, 1] <- abs(rnorm(n, sd = .5))
+X[, 2] <- abs(rnorm(n, sd = 1))
+X[, 3] <- rexp(n, rate = 3)
+X[, 4] <- rgamma(n, shape = 3, rate = 3)
+X[1:460, 5] <- abs(rnorm(460, sd = .01))
+X[461:500, 5] <- rexp(40, 1)
+
+b <- c(0, 0, .1, .3, .6)
+
+lambda <- exp(X %*% b) - 1
+y <- rpois(n, lambda)
+```
+
+Now, I want to optimize each of the different algorithms
+
+```{r}
+init = abs(rnorm(5))
+
+exact_sol <- optim(
+  par = init,
+  fn = get_exact_loglik,
+  X = X,
+  y = y,
+  lower = rep(0, 5),
+  control = list(fnscale = -1),
+  method = "L-BFGS-B"
+)$par
+
+# now, need to determine the lengths of the approximation intervals
+approx_poly <- pracma::polyApprox(
+  exp,
+  a = 0,
+  b = log(5),
+  n = 1
+)
+
+a0_linear <- approx_poly$p[2]
+a1_linear <- approx_poly$p[1]
+
+lin_sparse_approx_sol <- optim(
+  par = init,
+  fn = get_lin_sparse_approx_loglik,
+  X = X,
+  y = y,
+  a1 = a1_linear,
+  lower = rep(0, 5),
+  control = list(fnscale = -1),
+  method = "L-BFGS-B"
+)$par
+
+
+approx_poly <- pracma::polyApprox(
+  exp,
+  a = 0,
+  b = log(8),
+  n = 2
+)
+
+a0_quad <- approx_poly$p[3]
+a1_quad <- approx_poly$p[2]
+a2_quad <- approx_poly$p[1]
+
+quad_sparse_approx_sol <- optim(
+  par = init,
+  fn = get_quad_sparse_approx_loglik,
+  X = X,
+  y = y,
+  a1 = a1_quad,
+  a2 = a2_quad,
+  lower = rep(0, 5),
+  control = list(fnscale = -1),
+  method = "L-BFGS-B"
+)$par
+
+approx_poly <- pracma::polyApprox(
+  exp,
+  a = 0,
+  b = log(8),
+  n = 2
+)
+
+a1_quad_full <- approx_poly$p[2]
+a2_quad_full <- approx_poly$p[1]
+
+quad_full_approx_sol <- optim(
+  par = init,
+  fn = get_quad_full_approx_loglik,
+  X = X,
+  y = y,
+  a1 = a1_quad,
+  a2 = a2_quad,
+  lower = rep(0, 5),
+  control = list(fnscale = -1),
+  method = "L-BFGS-B"
+)$par
+```
+
+Now, it would be useful for me to plot the real values against the maximum likelihood solutions
+
+```{r}
+ests_df <- data.frame(
+  param = as.factor(rep(c("b1", "b2", "b3", "b4", "b5"), 5)),
+  est = c(
+    exact_sol,
+    lin_sparse_approx_sol,
+    quad_sparse_approx_sol,
+    quad_full_approx_sol,
+    b
+  ), 
+  algorithm = c(
+    rep("mle", 5),
+    rep("Lin Sparse Approx", 5),
+    rep("Quad Sparse Approx", 5),
+    rep("Quad Full Approx", 5),
+    rep("truth", 5)
+  )
+)
+```
+
+```{r}
+ggplot(data = ests_df) +
+  geom_point(
+    aes(x = param, y = est, color = algorithm), shape = 8, size = 2
+  ) +
+  xlab("Parameter") +
+  ylab("Estimate") +
+  cowplot::theme_cowplot()
+```
+
+```{r}
+set.seed(1)
+n <- 5000
+p <- 10
+X <- matrix(
+  data = abs(rnorm(n * p, sd = .15)),
+  nrow = n,
+  ncol = p
+)
+b <- abs(rnorm(p, sd = 0.75))
+b[c(1, 2, 3, 4, 7, 8, 10)] <- 0
+lambda <- exp(X %*% b) - 1
+y <- rpois(n, lambda)
+init <- abs(rnorm(p, sd = 0.5))
+
+approx_poly <- pracma::polyApprox(
+  exp,
+  a = 0,
+  b = log(5),
+  n = 1
+)
+
+a0_linear <- approx_poly$p[2]
+a1_linear <- approx_poly$p[1]
+
+lin_sparse_approx_sol <- optim(
+  par = init,
+  fn = get_lin_sparse_approx_loglik,
+  X = X,
+  y = y,
+  a1 = a1_linear,
+  lower = rep(0, 5),
+  control = list(fnscale = -1),
+  method = "L-BFGS-B"
+)$par
+
+approx_poly <- pracma::polyApprox(
+  exp,
+  a = 0,
+  b = log(8),
+  n = 2
+)
+
+a0_quad <- approx_poly$p[3]
+a1_quad <- approx_poly$p[2]
+a2_quad <- approx_poly$p[1]
+
+quad_sparse_approx_sol <- optim(
+  par = init,
+  fn = get_quad_sparse_approx_loglik,
+  X = X,
+  y = y,
+  a1 = a1_quad,
+  a2 = a2_quad,
+  lower = rep(0, 5),
+  control = list(fnscale = -1),
+  method = "L-BFGS-B"
+)$par
+
+approx_poly <- pracma::polyApprox(
+  exp,
+  a = 0,
+  b = log(8),
+  n = 2
+)
+
+a1_quad_full <- approx_poly$p[2]
+a2_quad_full <- approx_poly$p[1]
+
+quad_full_approx_sol <- optim(
+  par = init,
+  fn = get_quad_full_approx_loglik,
+  X = X,
+  y = y,
+  a1 = a1_quad,
+  a2 = a2_quad,
+  lower = rep(0, 5),
+  control = list(fnscale = -1),
+  method = "L-BFGS-B"
+)$par
+```
+
