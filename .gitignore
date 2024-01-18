@@ -49,3 +49,8 @@ po/*~
 rsconnect/
 
 *.Rproj
+
+vignettes/*_files*
+
+src/*.o
+src/*.so

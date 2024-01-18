@@ -3,11 +3,11 @@
 using namespace arma;
 
 // [[Rcpp::export]]
-arma::vec solve_pois_reg_log1p_quad_approx (
+arma::vec solve_pois_reg_log1p_quad_approx_full (
     const arma::mat X_nz,
     const arma::vec y,
-    const arma::vec X_0_cs_times_a1,
-    const arma::mat X_0_T_X_0,
+    const arma::vec X_cs_times_a1,
+    const arma::mat X_T_X,
     const double a2,
     arma::vec b,
     const std::vector<int> update_indices,
@@ -34,7 +34,7 @@ arma::vec solve_pois_reg_log1p_quad_approx (
   double cross_term;
   double dot_b;
 
-  double exact_lik = sum(exp_eta_nz) - dot(
+  double exact_lik = -dot(
     y,
     log(exp_eta_nz_m1)
   );
@@ -46,29 +46,26 @@ arma::vec solve_pois_reg_log1p_quad_approx (
     for (i = 0; i < num_indices; i++) {
       j = update_indices[i];
 
-      //current_lik = exact_lik + b[j] * X_0_cs_times_a1[j] +
-      //  a2 * sum(b.t() * X_0_T_X_0 * b);
+      dot_b = dot(X_T_X.col(j), b);
 
-      dot_b = dot(X_0_T_X_0.col(j), b);
+      cross_term = 2 * a2 * (dot_b - X_T_X(j, j) * b[j]);
 
-      cross_term = 2 * a2 * (dot_b - X_0_T_X_0(j, j) * b[j]);
-
-      current_lik = exact_lik + b[j] * X_0_cs_times_a1[j] +
-        a2 * X_0_T_X_0(j, j) * (b[j] * b[j]) +
+      current_lik = exact_lik + b[j] * X_cs_times_a1[j] +
+        a2 * X_T_X(j, j) * (b[j] * b[j]) +
         cross_term * b[j];
 
       exp_deriv_term_nz = exp_eta_nz % X_nz.col(j);
 
-      first_deriv    = sum(exp_deriv_term_nz) - dot(
+      first_deriv    = -dot(
         y,
         exp_deriv_term_nz / exp_eta_nz_m1
-      ) + X_0_cs_times_a1[j] + 2 * a2 * dot_b;
+      ) + X_cs_times_a1[j] + 2 * a2 * dot_b;
 
-      second_deriv   = dot(exp_deriv_term_nz, X_nz.col(j)) + dot(
+      second_deriv   = dot(
         y,
         (exp_deriv_term_nz % exp_deriv_term_nz) /
           square(exp_eta_nz_m1)
-      ) + 2 * a2 * X_0_T_X_0(j, j);
+      ) + 2 * a2 * X_T_X(j, j);
 
       newton_dir     = first_deriv / second_deriv;
 
@@ -95,13 +92,13 @@ arma::vec solve_pois_reg_log1p_quad_approx (
         exp_eta_nz = exp(eta_nz_proposed);
         exp_eta_nz_m1 = exp_eta_nz - 1;
 
-        exact_lik = sum(exp_eta_nz) - dot(
+        exact_lik =  -dot(
           y,
           log(exp_eta_nz_m1)
         );
 
-        f_proposed = exact_lik + b[j] * X_0_cs_times_a1[j] +
-          a2 * X_0_T_X_0(j, j) * (b[j] * b[j]) +
+        f_proposed = exact_lik + b[j] * X_cs_times_a1[j] +
+          a2 * X_T_X(j, j) * (b[j] * b[j]) +
           cross_term * b[j];
 
         if (f_proposed <= current_lik - t*newton_dec) {
