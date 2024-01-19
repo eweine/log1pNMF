@@ -54,3 +54,5 @@ vignettes/*_files*
 
 src/*.o
 src/*.so
+
+.DS_Store

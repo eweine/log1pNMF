@@ -11,6 +11,23 @@ Rcpp::Rostream<true>&  Rcpp::Rcout = Rcpp::Rcpp_cout_get();
 Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
+// get_loglik_exact
+double get_loglik_exact(const arma::mat& U_T, const arma::mat& V_T, const arma::vec& nonzero_y, const std::vector<int> nonzero_y_i_idx, const std::vector<int> nonzero_y_j_idx, const int n, const int p);
+RcppExport SEXP _passPCA_get_loglik_exact(SEXP U_TSEXP, SEXP V_TSEXP, SEXP nonzero_ySEXP, SEXP nonzero_y_i_idxSEXP, SEXP nonzero_y_j_idxSEXP, SEXP nSEXP, SEXP pSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::mat& >::type U_T(U_TSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type V_T(V_TSEXP);
+    Rcpp::traits::input_parameter< const arma::vec& >::type nonzero_y(nonzero_ySEXP);
+    Rcpp::traits::input_parameter< const std::vector<int> >::type nonzero_y_i_idx(nonzero_y_i_idxSEXP);
+    Rcpp::traits::input_parameter< const std::vector<int> >::type nonzero_y_j_idx(nonzero_y_j_idxSEXP);
+    Rcpp::traits::input_parameter< const int >::type n(nSEXP);
+    Rcpp::traits::input_parameter< const int >::type p(pSEXP);
+    rcpp_result_gen = Rcpp::wrap(get_loglik_exact(U_T, V_T, nonzero_y, nonzero_y_i_idx, nonzero_y_j_idx, n, p));
+    return rcpp_result_gen;
+END_RCPP
+}
 // solve_pois_reg_log1p
 arma::vec solve_pois_reg_log1p(const arma::mat X, const arma::vec y, const arma::uvec y_nz_idx, arma::vec b, const std::vector<int> update_indices, unsigned int num_iter, const double alpha, const double beta);
 RcppExport SEXP _passPCA_solve_pois_reg_log1p(SEXP XSEXP, SEXP ySEXP, SEXP y_nz_idxSEXP, SEXP bSEXP, SEXP update_indicesSEXP, SEXP num_iterSEXP, SEXP alphaSEXP, SEXP betaSEXP) {
@@ -26,6 +43,24 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const double >::type alpha(alphaSEXP);
     Rcpp::traits::input_parameter< const double >::type beta(betaSEXP);
     rcpp_result_gen = Rcpp::wrap(solve_pois_reg_log1p(X, y, y_nz_idx, b, update_indices, num_iter, alpha, beta));
+    return rcpp_result_gen;
+END_RCPP
+}
+// regress_cols_of_Y_on_X_log1p_pois_exact
+arma::mat regress_cols_of_Y_on_X_log1p_pois_exact(const arma::mat& X, Rcpp::List Y, Rcpp::List Y_nz_idx, arma::mat& B, const std::vector<int> update_indices, unsigned int num_iter, const double alpha, const double beta);
+RcppExport SEXP _passPCA_regress_cols_of_Y_on_X_log1p_pois_exact(SEXP XSEXP, SEXP YSEXP, SEXP Y_nz_idxSEXP, SEXP BSEXP, SEXP update_indicesSEXP, SEXP num_iterSEXP, SEXP alphaSEXP, SEXP betaSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::mat& >::type X(XSEXP);
+    Rcpp::traits::input_parameter< Rcpp::List >::type Y(YSEXP);
+    Rcpp::traits::input_parameter< Rcpp::List >::type Y_nz_idx(Y_nz_idxSEXP);
+    Rcpp::traits::input_parameter< arma::mat& >::type B(BSEXP);
+    Rcpp::traits::input_parameter< const std::vector<int> >::type update_indices(update_indicesSEXP);
+    Rcpp::traits::input_parameter< unsigned int >::type num_iter(num_iterSEXP);
+    Rcpp::traits::input_parameter< const double >::type alpha(alphaSEXP);
+    Rcpp::traits::input_parameter< const double >::type beta(betaSEXP);
+    rcpp_result_gen = Rcpp::wrap(regress_cols_of_Y_on_X_log1p_pois_exact(X, Y, Y_nz_idx, B, update_indices, num_iter, alpha, beta));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -115,7 +150,9 @@ END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
+    {"_passPCA_get_loglik_exact", (DL_FUNC) &_passPCA_get_loglik_exact, 7},
     {"_passPCA_solve_pois_reg_log1p", (DL_FUNC) &_passPCA_solve_pois_reg_log1p, 8},
+    {"_passPCA_regress_cols_of_Y_on_X_log1p_pois_exact", (DL_FUNC) &_passPCA_regress_cols_of_Y_on_X_log1p_pois_exact, 8},
     {"_passPCA_solve_pois_reg_log1p_lin_approx", (DL_FUNC) &_passPCA_solve_pois_reg_log1p_lin_approx, 8},
     {"_passPCA_solve_pois_reg_log1p_quad_approx", (DL_FUNC) &_passPCA_solve_pois_reg_log1p_quad_approx, 10},
     {"_passPCA_solve_pois_reg_log1p_quad_approx_full", (DL_FUNC) &_passPCA_solve_pois_reg_log1p_quad_approx_full, 10},

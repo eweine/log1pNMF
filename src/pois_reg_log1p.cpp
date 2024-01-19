@@ -96,8 +96,36 @@ arma::vec solve_pois_reg_log1p (
 
 }
 
-//arma::mat regress_cols_of_Y_on_X_log1p_pois_exact(
-//  const arma::mat& X,
-//  arma::mat& B,
+// Y is an nxm matrix (each col is an n-dim data vec)
+// X is an nxp matrix (each row is a p-dim covariate)
+// B is a pxm matrix (each col is a p-dim reg coef)
+// [[Rcpp::export]]
+arma::mat regress_cols_of_Y_on_X_log1p_pois_exact(
+  const arma::mat& X,
+  Rcpp::List Y,
+  Rcpp::List Y_nz_idx,
+  arma::mat& B,
+  const std::vector<int> update_indices,
+  unsigned int num_iter,
+  const double alpha,
+  const double beta
+) {
 
-//)
+  for (int j = 0; j < B.n_cols; j++) {
+
+    B.col(j) = solve_pois_reg_log1p (
+      X,
+      Y[j],
+      Y_nz_idx[j],
+      B.col(j),
+      update_indices,
+      num_iter,
+      alpha,
+      beta
+    );
+
+  }
+
+  return(B);
+
+}
