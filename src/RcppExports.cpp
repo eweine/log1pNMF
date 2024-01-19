@@ -12,14 +12,14 @@ Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
 // get_loglik_exact
-double get_loglik_exact(const arma::mat& U_T, const arma::mat& V_T, const arma::vec& nonzero_y, const std::vector<int> nonzero_y_i_idx, const std::vector<int> nonzero_y_j_idx, const int n, const int p);
+double get_loglik_exact(const arma::mat& U_T, const arma::mat& V_T, const std::vector<int> nonzero_y, const std::vector<int> nonzero_y_i_idx, const std::vector<int> nonzero_y_j_idx, const int n, const int p);
 RcppExport SEXP _passPCA_get_loglik_exact(SEXP U_TSEXP, SEXP V_TSEXP, SEXP nonzero_ySEXP, SEXP nonzero_y_i_idxSEXP, SEXP nonzero_y_j_idxSEXP, SEXP nSEXP, SEXP pSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< const arma::mat& >::type U_T(U_TSEXP);
     Rcpp::traits::input_parameter< const arma::mat& >::type V_T(V_TSEXP);
-    Rcpp::traits::input_parameter< const arma::vec& >::type nonzero_y(nonzero_ySEXP);
+    Rcpp::traits::input_parameter< const std::vector<int> >::type nonzero_y(nonzero_ySEXP);
     Rcpp::traits::input_parameter< const std::vector<int> >::type nonzero_y_i_idx(nonzero_y_i_idxSEXP);
     Rcpp::traits::input_parameter< const std::vector<int> >::type nonzero_y_j_idx(nonzero_y_j_idxSEXP);
     Rcpp::traits::input_parameter< const int >::type n(nSEXP);

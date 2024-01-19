@@ -2,7 +2,7 @@ prep_data <- function(Y) {
 
   proc_data <- list()
 
-  proc_data$sc <- summary(Y)
+  proc_data$sc <- Matrix::summary(Y)
 
   col_num_repeats <- get_num_repeats(
     proc_data$sc$j,
@@ -22,7 +22,7 @@ prep_data <- function(Y) {
     proc_data$sc$i - 1 # account for 0 indexing in C++
   )
 
-  sc_t <- summary(Matrix::t(Y))
+  sc_t <- Matrix::summary(Matrix::t(Y))
 
   row_num_repeats <- get_num_repeats(
     sc_t$j,

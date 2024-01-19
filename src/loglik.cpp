@@ -1,4 +1,5 @@
 #include <RcppArmadillo.h>
+#include <Rcpp.h>
 
 using namespace arma;
 
@@ -6,7 +7,7 @@ using namespace arma;
 double get_loglik_exact(
     const arma::mat& U_T,
     const arma::mat& V_T,
-    const arma::vec& nonzero_y,
+    const std::vector<int> nonzero_y,
     const std::vector<int> nonzero_y_i_idx,
     const std::vector<int> nonzero_y_j_idx,
     const int n,
@@ -20,9 +21,9 @@ double get_loglik_exact(
   int next_nz_j = nonzero_y_j_idx[0];
   unsigned int nz_idx = 0;
 
-  for (int i = 0; i < n; i++) {
+  for (int j = 0; j < p; j++) {
 
-    for (int j = 0; j < n; j++) {
+    for (int i = 0; i < n; i++) {
 
       cp = exp(dot(U_T.col(i), V_T.col(j)));
 
