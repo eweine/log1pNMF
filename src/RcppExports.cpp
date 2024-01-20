@@ -11,6 +11,22 @@ Rcpp::Rostream<true>&  Rcpp::Rcout = Rcpp::Rcpp_cout_get();
 Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
+// get_sparse_term_loglik
+double get_sparse_term_loglik(const arma::mat& U_T, const arma::mat& V_T, const std::vector<int> nonzero_y, const std::vector<int> nonzero_y_i_idx, const std::vector<int> nonzero_y_j_idx, const int num_nonzero_y);
+RcppExport SEXP _passPCA_get_sparse_term_loglik(SEXP U_TSEXP, SEXP V_TSEXP, SEXP nonzero_ySEXP, SEXP nonzero_y_i_idxSEXP, SEXP nonzero_y_j_idxSEXP, SEXP num_nonzero_ySEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::mat& >::type U_T(U_TSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type V_T(V_TSEXP);
+    Rcpp::traits::input_parameter< const std::vector<int> >::type nonzero_y(nonzero_ySEXP);
+    Rcpp::traits::input_parameter< const std::vector<int> >::type nonzero_y_i_idx(nonzero_y_i_idxSEXP);
+    Rcpp::traits::input_parameter< const std::vector<int> >::type nonzero_y_j_idx(nonzero_y_j_idxSEXP);
+    Rcpp::traits::input_parameter< const int >::type num_nonzero_y(num_nonzero_ySEXP);
+    rcpp_result_gen = Rcpp::wrap(get_sparse_term_loglik(U_T, V_T, nonzero_y, nonzero_y_i_idx, nonzero_y_j_idx, num_nonzero_y));
+    return rcpp_result_gen;
+END_RCPP
+}
 // get_loglik_exact
 double get_loglik_exact(const arma::mat& U_T, const arma::mat& V_T, const std::vector<int> nonzero_y, const std::vector<int> nonzero_y_i_idx, const std::vector<int> nonzero_y_j_idx, const int n, const int p);
 RcppExport SEXP _passPCA_get_loglik_exact(SEXP U_TSEXP, SEXP V_TSEXP, SEXP nonzero_ySEXP, SEXP nonzero_y_i_idxSEXP, SEXP nonzero_y_j_idxSEXP, SEXP nSEXP, SEXP pSEXP) {
@@ -103,13 +119,14 @@ BEGIN_RCPP
 END_RCPP
 }
 // solve_pois_reg_log1p_quad_approx_full
-arma::vec solve_pois_reg_log1p_quad_approx_full(const arma::mat X_nz, const arma::vec y, const arma::vec X_cs_times_a1, const arma::mat X_T_X, const double a2, arma::vec b, const std::vector<int> update_indices, unsigned int num_iter, const double alpha, const double beta);
-RcppExport SEXP _passPCA_solve_pois_reg_log1p_quad_approx_full(SEXP X_nzSEXP, SEXP ySEXP, SEXP X_cs_times_a1SEXP, SEXP X_T_XSEXP, SEXP a2SEXP, SEXP bSEXP, SEXP update_indicesSEXP, SEXP num_iterSEXP, SEXP alphaSEXP, SEXP betaSEXP) {
+arma::vec solve_pois_reg_log1p_quad_approx_full(const arma::mat X_T, const arma::vec y, const arma::uvec y_nz_idx, const arma::vec X_cs_times_a1, const arma::mat X_T_X, const double a2, arma::vec b, const std::vector<int> update_indices, unsigned int num_iter, const double alpha, const double beta);
+RcppExport SEXP _passPCA_solve_pois_reg_log1p_quad_approx_full(SEXP X_TSEXP, SEXP ySEXP, SEXP y_nz_idxSEXP, SEXP X_cs_times_a1SEXP, SEXP X_T_XSEXP, SEXP a2SEXP, SEXP bSEXP, SEXP update_indicesSEXP, SEXP num_iterSEXP, SEXP alphaSEXP, SEXP betaSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const arma::mat >::type X_nz(X_nzSEXP);
+    Rcpp::traits::input_parameter< const arma::mat >::type X_T(X_TSEXP);
     Rcpp::traits::input_parameter< const arma::vec >::type y(ySEXP);
+    Rcpp::traits::input_parameter< const arma::uvec >::type y_nz_idx(y_nz_idxSEXP);
     Rcpp::traits::input_parameter< const arma::vec >::type X_cs_times_a1(X_cs_times_a1SEXP);
     Rcpp::traits::input_parameter< const arma::mat >::type X_T_X(X_T_XSEXP);
     Rcpp::traits::input_parameter< const double >::type a2(a2SEXP);
@@ -118,7 +135,28 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< unsigned int >::type num_iter(num_iterSEXP);
     Rcpp::traits::input_parameter< const double >::type alpha(alphaSEXP);
     Rcpp::traits::input_parameter< const double >::type beta(betaSEXP);
-    rcpp_result_gen = Rcpp::wrap(solve_pois_reg_log1p_quad_approx_full(X_nz, y, X_cs_times_a1, X_T_X, a2, b, update_indices, num_iter, alpha, beta));
+    rcpp_result_gen = Rcpp::wrap(solve_pois_reg_log1p_quad_approx_full(X_T, y, y_nz_idx, X_cs_times_a1, X_T_X, a2, b, update_indices, num_iter, alpha, beta));
+    return rcpp_result_gen;
+END_RCPP
+}
+// regress_cols_of_Y_on_X_log1p_quad_approx_full
+arma::mat regress_cols_of_Y_on_X_log1p_quad_approx_full(const arma::mat X_T, Rcpp::List Y, Rcpp::List Y_nz_idx, const arma::vec X_cs_times_a1, const arma::mat X_T_X, arma::mat& B, const double a2, const std::vector<int> update_indices, unsigned int num_iter, const double alpha, const double beta);
+RcppExport SEXP _passPCA_regress_cols_of_Y_on_X_log1p_quad_approx_full(SEXP X_TSEXP, SEXP YSEXP, SEXP Y_nz_idxSEXP, SEXP X_cs_times_a1SEXP, SEXP X_T_XSEXP, SEXP BSEXP, SEXP a2SEXP, SEXP update_indicesSEXP, SEXP num_iterSEXP, SEXP alphaSEXP, SEXP betaSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::mat >::type X_T(X_TSEXP);
+    Rcpp::traits::input_parameter< Rcpp::List >::type Y(YSEXP);
+    Rcpp::traits::input_parameter< Rcpp::List >::type Y_nz_idx(Y_nz_idxSEXP);
+    Rcpp::traits::input_parameter< const arma::vec >::type X_cs_times_a1(X_cs_times_a1SEXP);
+    Rcpp::traits::input_parameter< const arma::mat >::type X_T_X(X_T_XSEXP);
+    Rcpp::traits::input_parameter< arma::mat& >::type B(BSEXP);
+    Rcpp::traits::input_parameter< const double >::type a2(a2SEXP);
+    Rcpp::traits::input_parameter< const std::vector<int> >::type update_indices(update_indicesSEXP);
+    Rcpp::traits::input_parameter< unsigned int >::type num_iter(num_iterSEXP);
+    Rcpp::traits::input_parameter< const double >::type alpha(alphaSEXP);
+    Rcpp::traits::input_parameter< const double >::type beta(betaSEXP);
+    rcpp_result_gen = Rcpp::wrap(regress_cols_of_Y_on_X_log1p_quad_approx_full(X_T, Y, Y_nz_idx, X_cs_times_a1, X_T_X, B, a2, update_indices, num_iter, alpha, beta));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -150,12 +188,14 @@ END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
+    {"_passPCA_get_sparse_term_loglik", (DL_FUNC) &_passPCA_get_sparse_term_loglik, 6},
     {"_passPCA_get_loglik_exact", (DL_FUNC) &_passPCA_get_loglik_exact, 7},
     {"_passPCA_solve_pois_reg_log1p", (DL_FUNC) &_passPCA_solve_pois_reg_log1p, 8},
     {"_passPCA_regress_cols_of_Y_on_X_log1p_pois_exact", (DL_FUNC) &_passPCA_regress_cols_of_Y_on_X_log1p_pois_exact, 8},
     {"_passPCA_solve_pois_reg_log1p_lin_approx", (DL_FUNC) &_passPCA_solve_pois_reg_log1p_lin_approx, 8},
     {"_passPCA_solve_pois_reg_log1p_quad_approx", (DL_FUNC) &_passPCA_solve_pois_reg_log1p_quad_approx, 10},
-    {"_passPCA_solve_pois_reg_log1p_quad_approx_full", (DL_FUNC) &_passPCA_solve_pois_reg_log1p_quad_approx_full, 10},
+    {"_passPCA_solve_pois_reg_log1p_quad_approx_full", (DL_FUNC) &_passPCA_solve_pois_reg_log1p_quad_approx_full, 11},
+    {"_passPCA_regress_cols_of_Y_on_X_log1p_quad_approx_full", (DL_FUNC) &_passPCA_regress_cols_of_Y_on_X_log1p_quad_approx_full, 11},
     {"_passPCA_get_num_repeats", (DL_FUNC) &_passPCA_get_num_repeats, 3},
     {"_passPCA_create_vals_list", (DL_FUNC) &_passPCA_create_vals_list, 3},
     {NULL, NULL, 0}
