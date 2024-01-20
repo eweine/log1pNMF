@@ -3,7 +3,78 @@
 
 using namespace arma;
 
-// [[Rcpp::export]]
+double get_sparse_term_loglik_quad_sparse_approx(
+    const arma::mat& U_T,
+    const arma::mat& V_T,
+    const std::vector<int> nonzero_y,
+    const std::vector<int> nonzero_y_i_idx,
+    const std::vector<int> nonzero_y_j_idx,
+    const int num_nonzero_y,
+    const double a1,
+    const double a2
+) {
+
+  double sp_term = 0.0;
+  double lin_correction = 0.0;
+  double quad_correction = 0;
+  double cp;
+  int i;
+  int j;
+
+  for (int r = 0; r < num_nonzero_y; r++) {
+
+    i = nonzero_y_i_idx[r];
+    j = nonzero_y_j_idx[r];
+
+    cp = dot(U_T.col(i), V_T.col(j));
+
+    sp_term += nonzero_y[r] * log(exp(cp) - 1);
+    lin_correction += cp;
+    quad_correction += cp * cp;
+
+  }
+
+  double ll = sp_term + a1 * lin_correction + a2 * quad_correction;
+
+  return(ll);
+
+}
+
+double get_sparse_term_loglik_lin_sparse_approx(
+    const arma::mat& U_T,
+    const arma::mat& V_T,
+    const std::vector<int> nonzero_y,
+    const std::vector<int> nonzero_y_i_idx,
+    const std::vector<int> nonzero_y_j_idx,
+    const int num_nonzero_y,
+    const double a1
+) {
+
+  double sp_term = 0.0;
+  double lin_correction = 0.0;
+  double cp;
+  int i;
+  int j;
+
+  for (int r = 0; r < num_nonzero_y; r++) {
+
+    i = nonzero_y_i_idx[r];
+    j = nonzero_y_j_idx[r];
+
+    cp = dot(U_T.col(i), V_T.col(j));
+
+    sp_term += nonzero_y[r] * log(exp(cp) - 1);
+    lin_correction += cp;
+
+  }
+
+  double ll = sp_term + a1 * lin_correction;
+
+  return(ll);
+
+}
+
+
 double get_sparse_term_loglik(
     const arma::mat& U_T,
     const arma::mat& V_T,
@@ -14,7 +85,6 @@ double get_sparse_term_loglik(
 ) {
 
   double sum = 0.0;
-  double cp;
   int i;
   int j;
 
@@ -31,7 +101,7 @@ double get_sparse_term_loglik(
 
 }
 
-// [[Rcpp::export]]
+
 double get_loglik_exact(
     const arma::mat& U_T,
     const arma::mat& V_T,

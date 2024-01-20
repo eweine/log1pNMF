@@ -2,7 +2,7 @@
 
 using namespace arma;
 
-// [[Rcpp::export]]
+
 arma::vec solve_pois_reg_log1p (
     const arma::mat X,
     const arma::vec y,

@@ -2,7 +2,7 @@
 
 using namespace arma;
 
-// [[Rcpp::export]]
+
 arma::vec solve_pois_reg_log1p_quad_approx_full (
     const arma::mat X_T,
     const arma::vec y,
