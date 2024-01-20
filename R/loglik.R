@@ -21,7 +21,7 @@ get_loglik_quad_approx_full <- function(
 
   U_T_U <- crossprod(U)
   U_T_U_V_T <- tcrossprod(U_T_U, V)
-  quad_term <- a2 * sum(colSums(t(V) * U_T_U_V_T))
+  quad_term <- a2 * sum(t(V) * U_T_U_V_T)
 
   loglik <- sparse_term - lin_term - quad_term
 
