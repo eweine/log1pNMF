@@ -25,8 +25,8 @@ regress_cols_of_Y_on_X_log1p_lin_approx_sparse <- function(X_T, Y, Y_nz_idx, X_c
     .Call(`_passPCA_regress_cols_of_Y_on_X_log1p_lin_approx_sparse`, X_T, Y, Y_nz_idx, X_cs_times_a, a, B, update_indices, num_iter, alpha, beta)
 }
 
-solve_pois_reg_log1p_quad_approx <- function(X_nz, y, X_0_cs_times_a1, X_0_T_X_0, a2, b, update_indices, num_iter, alpha, beta) {
-    .Call(`_passPCA_solve_pois_reg_log1p_quad_approx`, X_nz, y, X_0_cs_times_a1, X_0_T_X_0, a2, b, update_indices, num_iter, alpha, beta)
+regress_cols_of_Y_on_X_log1p_quad_approx_sparse <- function(X_T, Y, Y_nz_idx, X_cs_times_a1, X_T_X, B, a1, a2, update_indices, num_iter, alpha, beta) {
+    .Call(`_passPCA_regress_cols_of_Y_on_X_log1p_quad_approx_sparse`, X_T, Y, Y_nz_idx, X_cs_times_a1, X_T_X, B, a1, a2, update_indices, num_iter, alpha, beta)
 }
 
 regress_cols_of_Y_on_X_log1p_quad_approx_full <- function(X_T, Y, Y_nz_idx, X_cs_times_a1, X_T_X, B, a2, update_indices, num_iter, alpha, beta) {

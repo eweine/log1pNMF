@@ -2,12 +2,14 @@
 
 using namespace arma;
 
-// [[Rcpp::export]]
+
 arma::vec solve_pois_reg_log1p_quad_approx (
-    const arma::mat X_nz,
+    const arma::mat X_T,
     const arma::vec y,
-    const arma::vec X_0_cs_times_a1,
-    const arma::mat X_0_T_X_0,
+    const arma::uvec y_nz_idx,
+    const arma::vec X_cs_times_a1,
+    const arma::mat X_T_X,
+    const double a1,
     const double a2,
     arma::vec b,
     const std::vector<int> update_indices,
@@ -15,6 +17,10 @@ arma::vec solve_pois_reg_log1p_quad_approx (
     const double alpha,
     const double beta
 ) {
+
+  const arma::mat X_nz = X_T.cols(y_nz_idx).t();
+  const arma::vec X_0_cs_times_a1 = X_cs_times_a1 - a1 * arma::sum(X_nz, 0);
+  const arma::mat X_0_T_X_0 = X_T_X - X_nz.t() * X_nz;
 
   double first_deriv;
   double second_deriv;
@@ -45,9 +51,6 @@ arma::vec solve_pois_reg_log1p_quad_approx (
 
     for (i = 0; i < num_indices; i++) {
       j = update_indices[i];
-
-      //current_lik = exact_lik + b[j] * X_0_cs_times_a1[j] +
-      //  a2 * sum(b.t() * X_0_T_X_0 * b);
 
       dot_b = dot(X_0_T_X_0.col(j), b);
 
@@ -117,4 +120,47 @@ arma::vec solve_pois_reg_log1p_quad_approx (
   return(b);
 
 }
+
+// Y is an nxm matrix (each col is an n-dim data vec)
+// X is an nxp matrix (each row is a p-dim covariate)
+// B is a pxm matrix (each col is a p-dim reg coef)
+// [[Rcpp::export]]
+arma::mat regress_cols_of_Y_on_X_log1p_quad_approx_sparse(
+    const arma::mat X_T,
+    Rcpp::List Y,
+    Rcpp::List Y_nz_idx,
+    const arma::vec X_cs_times_a1,
+    const arma::mat X_T_X,
+    arma::mat& B,
+    const double a1,
+    const double a2,
+    const std::vector<int> update_indices,
+    unsigned int num_iter,
+    const double alpha,
+    const double beta
+) {
+
+  for (int j = 0; j < B.n_cols; j++) {
+
+    B.col(j) = solve_pois_reg_log1p_quad_approx(
+      X_T,
+      Y[j],
+      Y_nz_idx[j],
+      X_cs_times_a1,
+      X_T_X,
+      a1,
+      a2,
+      B.col(j),
+      update_indices,
+      num_iter,
+      alpha,
+      beta
+    );
+
+  }
+
+  return(B);
+
+}
+
 

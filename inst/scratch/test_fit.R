@@ -3,9 +3,9 @@
 library(passPCA)
 library(Matrix)
 set.seed(1)
-n <- 1000
-p <- 500
-K <- 5
+n <- 1500
+p <- 750
+K <- 6
 
 # first, simulate some data
 dat <- generate_data_simple(n, p, K)
@@ -20,7 +20,7 @@ library(rbenchmark)
 library(tictoc)
 
 tic()
-fit <- fit_factor_model_log1p(dat$Y, K = 5, maxiter = 10)
+fit <- fit_factor_model_log1p(dat$Y, K = 6, maxiter = 10)
 toc()
 
 actual_lambda <- exp(tcrossprod(dat$U, dat$V)) - 1
@@ -32,7 +32,19 @@ fitted_lambda <- exp(tcrossprod(fit$U, fit$V)) - 1
 tic()
 fit_quad_approx <- fit_factor_model_log1p_quad_approx_full(
   dat$Y,
-  K = 5,
+  K = 6,
+  maxiter = 10,
+  approx_range = c(0, 2)
+)
+toc()
+
+actual_lambda <- exp(tcrossprod(dat$U, dat$V)) - 1
+fitted_lambda <- exp(tcrossprod(fit$U, fit$V)) - 1
+
+tic()
+fit_quad_approx_sparse <- fit_factor_model_log1p_quad_approx_sparse(
+  dat$Y,
+  K = 6,
   maxiter = 10,
   approx_range = c(0, 2)
 )
@@ -44,7 +56,7 @@ fitted_lambda <- exp(tcrossprod(fit$U, fit$V)) - 1
 tic()
 fit_lin_approx <- fit_factor_model_log1p_lin_approx_sparse(
   dat$Y,
-  K = 5,
+  K = 6,
   maxiter = 10,
   a = 1
 )
