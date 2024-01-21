@@ -3,6 +3,7 @@
 
 using namespace arma;
 
+// [[Rcpp::export]]
 double get_sparse_term_loglik_quad_sparse_approx(
     const arma::mat& U_T,
     const arma::mat& V_T,
@@ -40,6 +41,7 @@ double get_sparse_term_loglik_quad_sparse_approx(
 
 }
 
+// [[Rcpp::export]]
 double get_sparse_term_loglik_lin_sparse_approx(
     const arma::mat& U_T,
     const arma::mat& V_T,
@@ -74,7 +76,7 @@ double get_sparse_term_loglik_lin_sparse_approx(
 
 }
 
-
+// [[Rcpp::export]]
 double get_sparse_term_loglik(
     const arma::mat& U_T,
     const arma::mat& V_T,
@@ -101,7 +103,7 @@ double get_sparse_term_loglik(
 
 }
 
-
+// [[Rcpp::export]]
 double get_loglik_exact(
     const arma::mat& U_T,
     const arma::mat& V_T,

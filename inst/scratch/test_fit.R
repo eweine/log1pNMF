@@ -3,9 +3,9 @@
 library(passPCA)
 library(Matrix)
 set.seed(1)
-n <- 10000
-p <- 7000
-K <- 15
+n <- 1000
+p <- 500
+K <- 5
 
 # first, simulate some data
 dat <- generate_data_simple(n, p, K)
@@ -17,28 +17,6 @@ dat$Y <- dat$Y[, colSums(dat$Y) > 0]
 
 library(rbenchmark)
 
-x <- matrix(rpois(100000 * 100, 10),ncol = 100)
-
-benchmark("slow" = {
-  o1 <- tcrossprod(dat$U, dat$V)
-},
-"fast" = {
-  x2 <- Rfast::colsums(x, parallel = TRUE, cores = 10)
-},
-replications = 10,
-columns = c("test", "replications", "elapsed",
-            "relative", "user.self", "sys.self"))
-
-
-
-tic()
-o1 <- tcrossprod(dat$U, dat$V)
-toc()
-
-tic()
-o2 <- Rfast::Tcrossprod(dat$U, dat$V)
-toc()
-
 library(tictoc)
 
 tic()
@@ -47,14 +25,6 @@ toc()
 
 actual_lambda <- exp(tcrossprod(dat$U, dat$V)) - 1
 fitted_lambda <- exp(tcrossprod(fit$U, fit$V)) - 1
-
-tic()
-o1 <- tcrossprod(dat$U, dat$V)
-toc()
-
-tic()
-o2 <- Rfast::Tcrossprod(dat$U, dat$V)
-toc()
 
 # These seem to match quite closely
 #plot(as.vector(actual_lambda), as.vector(fitted_lambda))
@@ -65,6 +35,18 @@ fit_quad_approx <- fit_factor_model_log1p_quad_approx_full(
   K = 5,
   maxiter = 10,
   approx_range = c(0, 2)
+)
+toc()
+
+actual_lambda <- exp(tcrossprod(dat$U, dat$V)) - 1
+fitted_lambda <- exp(tcrossprod(fit$U, fit$V)) - 1
+
+tic()
+fit_lin_approx <- fit_factor_model_log1p_lin_approx_sparse(
+  dat$Y,
+  K = 5,
+  maxiter = 10,
+  a = 1
 )
 toc()
 
