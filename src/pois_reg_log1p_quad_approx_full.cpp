@@ -17,7 +17,7 @@ arma::vec solve_pois_reg_log1p_quad_approx_full (
     const double beta
 ) {
 
-  arma::mat X_nz = X_T.cols(y_nz_idx).t();
+  const arma::mat X_nz = X_T.cols(y_nz_idx).t();
 
   double first_deriv;
   double second_deriv;

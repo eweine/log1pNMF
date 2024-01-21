@@ -29,21 +29,23 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// solve_pois_reg_log1p_lin_approx
-arma::vec solve_pois_reg_log1p_lin_approx(const arma::mat X_nz, const arma::vec y, const arma::vec X_0_cs_times_a, arma::vec b, const std::vector<int> update_indices, unsigned int num_iter, const double alpha, const double beta);
-RcppExport SEXP _passPCA_solve_pois_reg_log1p_lin_approx(SEXP X_nzSEXP, SEXP ySEXP, SEXP X_0_cs_times_aSEXP, SEXP bSEXP, SEXP update_indicesSEXP, SEXP num_iterSEXP, SEXP alphaSEXP, SEXP betaSEXP) {
+// regress_cols_of_Y_on_X_log1p_lin_approx_sparse
+arma::mat regress_cols_of_Y_on_X_log1p_lin_approx_sparse(const arma::mat X_T, Rcpp::List Y, Rcpp::List Y_nz_idx, const arma::vec X_cs_times_a, const double a, arma::mat& B, const std::vector<int> update_indices, unsigned int num_iter, const double alpha, const double beta);
+RcppExport SEXP _passPCA_regress_cols_of_Y_on_X_log1p_lin_approx_sparse(SEXP X_TSEXP, SEXP YSEXP, SEXP Y_nz_idxSEXP, SEXP X_cs_times_aSEXP, SEXP aSEXP, SEXP BSEXP, SEXP update_indicesSEXP, SEXP num_iterSEXP, SEXP alphaSEXP, SEXP betaSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const arma::mat >::type X_nz(X_nzSEXP);
-    Rcpp::traits::input_parameter< const arma::vec >::type y(ySEXP);
-    Rcpp::traits::input_parameter< const arma::vec >::type X_0_cs_times_a(X_0_cs_times_aSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type b(bSEXP);
+    Rcpp::traits::input_parameter< const arma::mat >::type X_T(X_TSEXP);
+    Rcpp::traits::input_parameter< Rcpp::List >::type Y(YSEXP);
+    Rcpp::traits::input_parameter< Rcpp::List >::type Y_nz_idx(Y_nz_idxSEXP);
+    Rcpp::traits::input_parameter< const arma::vec >::type X_cs_times_a(X_cs_times_aSEXP);
+    Rcpp::traits::input_parameter< const double >::type a(aSEXP);
+    Rcpp::traits::input_parameter< arma::mat& >::type B(BSEXP);
     Rcpp::traits::input_parameter< const std::vector<int> >::type update_indices(update_indicesSEXP);
     Rcpp::traits::input_parameter< unsigned int >::type num_iter(num_iterSEXP);
     Rcpp::traits::input_parameter< const double >::type alpha(alphaSEXP);
     Rcpp::traits::input_parameter< const double >::type beta(betaSEXP);
-    rcpp_result_gen = Rcpp::wrap(solve_pois_reg_log1p_lin_approx(X_nz, y, X_0_cs_times_a, b, update_indices, num_iter, alpha, beta));
+    rcpp_result_gen = Rcpp::wrap(regress_cols_of_Y_on_X_log1p_lin_approx_sparse(X_T, Y, Y_nz_idx, X_cs_times_a, a, B, update_indices, num_iter, alpha, beta));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -117,7 +119,7 @@ END_RCPP
 
 static const R_CallMethodDef CallEntries[] = {
     {"_passPCA_regress_cols_of_Y_on_X_log1p_pois_exact", (DL_FUNC) &_passPCA_regress_cols_of_Y_on_X_log1p_pois_exact, 8},
-    {"_passPCA_solve_pois_reg_log1p_lin_approx", (DL_FUNC) &_passPCA_solve_pois_reg_log1p_lin_approx, 8},
+    {"_passPCA_regress_cols_of_Y_on_X_log1p_lin_approx_sparse", (DL_FUNC) &_passPCA_regress_cols_of_Y_on_X_log1p_lin_approx_sparse, 10},
     {"_passPCA_solve_pois_reg_log1p_quad_approx", (DL_FUNC) &_passPCA_solve_pois_reg_log1p_quad_approx, 10},
     {"_passPCA_regress_cols_of_Y_on_X_log1p_quad_approx_full", (DL_FUNC) &_passPCA_regress_cols_of_Y_on_X_log1p_quad_approx_full, 11},
     {"_passPCA_get_num_repeats", (DL_FUNC) &_passPCA_get_num_repeats, 3},

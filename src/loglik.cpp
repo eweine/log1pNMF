@@ -28,7 +28,7 @@ double get_sparse_term_loglik_quad_sparse_approx(
 
     cp = dot(U_T.col(i), V_T.col(j));
 
-    sp_term += nonzero_y[r] * log(exp(cp) - 1);
+    sp_term += nonzero_y[r] * log(exp(cp) - 1) - exp(cp);
     lin_correction += cp;
     quad_correction += cp * cp;
 
@@ -63,7 +63,7 @@ double get_sparse_term_loglik_lin_sparse_approx(
 
     cp = dot(U_T.col(i), V_T.col(j));
 
-    sp_term += nonzero_y[r] * log(exp(cp) - 1);
+    sp_term += nonzero_y[r] * log(exp(cp) - 1) - exp(cp);
     lin_correction += cp;
 
   }
