@@ -1,7 +1,10 @@
 #include <RcppArmadillo.h>
+#include <RcppParallel.h>
+#include <Rcpp.h>
 
 using namespace arma;
-
+using namespace Rcpp;
+using namespace RcppParallel;
 
 arma::vec solve_pois_reg_log1p (
     const arma::mat X,
@@ -96,36 +99,93 @@ arma::vec solve_pois_reg_log1p (
 
 }
 
+
+struct RegressColsOfYOnXlog1pPoisExact : public Worker {
+  const arma::mat& X;
+  const Rcpp::List Y;
+  const Rcpp::List Y_nz_idx;
+  arma::mat& B;
+  const std::vector<int> update_indices;
+  unsigned int num_iter;
+  const double alpha;
+  const double beta;
+
+  RegressColsOfYOnXlog1pPoisExact(
+    const arma::mat& X,
+    const Rcpp::List Y,
+    const Rcpp::List Y_nz_idx,
+    arma::mat& B,
+    const std::vector<int> update_indices,
+    unsigned int num_iter,
+    const double alpha,
+    const double beta) : X(X),
+    Y(Y), Y_nz_idx(Y_nz_idx), B(B), update_indices(update_indices),
+      num_iter(num_iter), alpha(alpha), beta(beta) {}
+
+  void operator()(std::size_t begin, std::size_t end) {
+    for (std::size_t j = begin; j < end; j++) {
+      B.col(j) = solve_pois_reg_log1p (
+        X,
+        Y[j],
+        Y_nz_idx[j],
+        B.col(j),
+        update_indices,
+        num_iter,
+        alpha,
+        beta
+      );
+    }
+  }
+};
+
+// [[Rcpp::depends(RcppArmadillo, RcppParallel)]]
+// [[Rcpp::export]]
+void regress_cols_of_Y_on_X_log1p_pois_exact(
+    const arma::mat& X,
+    const Rcpp::List Y,
+    const Rcpp::List Y_nz_idx,
+    arma::mat& B,
+    const std::vector<int> update_indices,
+    unsigned int num_iter,
+    const double alpha,
+    const double beta
+) {
+  RegressColsOfYOnXlog1pPoisExact updater(
+      X, Y, Y_nz_idx, B, update_indices, num_iter, alpha, beta
+  );
+  parallelFor(0, B.n_cols, updater);
+}
+
 // Y is an nxm matrix (each col is an n-dim data vec)
 // X is an nxp matrix (each row is a p-dim covariate)
 // B is a pxm matrix (each col is a p-dim reg coef)
-// [[Rcpp::export]]
-arma::mat regress_cols_of_Y_on_X_log1p_pois_exact(
-  const arma::mat& X,
-  Rcpp::List Y,
-  Rcpp::List Y_nz_idx,
-  arma::mat& B,
-  const std::vector<int> update_indices,
-  unsigned int num_iter,
-  const double alpha,
-  const double beta
-) {
 
-  for (int j = 0; j < B.n_cols; j++) {
-
-    B.col(j) = solve_pois_reg_log1p (
-      X,
-      Y[j],
-      Y_nz_idx[j],
-      B.col(j),
-      update_indices,
-      num_iter,
-      alpha,
-      beta
-    );
-
-  }
-
-  return(B);
-
-}
+// arma::mat regress_cols_of_Y_on_X_log1p_pois_exact(
+//   const arma::mat& X,
+//   const Rcpp::List Y,
+//   const Rcpp::List Y_nz_idx,
+//   arma::mat& B,
+//   const std::vector<int> update_indices,
+//   unsigned int num_iter,
+//   const double alpha,
+//   const double beta
+// ) {
+//
+//   for (int j = 0; j < B.n_cols; j++) {
+//
+//     B.col(j) = solve_pois_reg_log1p (
+//       X,
+//       Y[j],
+//       Y_nz_idx[j],
+//       B.col(j),
+//       update_indices,
+//       num_iter,
+//       alpha,
+//       beta
+//     );
+//
+//   }
+//
+//   return(B);
+//
+// }

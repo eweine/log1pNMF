@@ -7,9 +7,6 @@
 #' @return list with fit and progress info
 #' @export
 #'
-#' @useDynLib passPCA, .registration = TRUE
-#' @importFrom Rcpp sourceCpp
-#'
 fit_factor_model_log1p <- function(
   Y,
   K,
@@ -45,35 +42,39 @@ fit_factor_model_log1p <- function(
     cat(sprintf("Iteration %d: objective = %+0.12e\n",
                 iter - 1, loglik))
 
-    new_U_T <- regress_cols_of_Y_on_X_log1p_pois_exact(
+    U_T <- t(fit$U)
+
+    regress_cols_of_Y_on_X_log1p_pois_exact(
       fit$V,
       count_data$y_rows_data,
       count_data$y_rows_idx,
-      t(fit$U),
+      U_T,
       0:(K - 1),
       5,
       .01,
       .25
     )
 
-    fit$U <- t(new_U_T)
+    fit$U <- t(U_T)
 
-    new_V_T <- regress_cols_of_Y_on_X_log1p_pois_exact(
+    V_T <- t(fit$V)
+
+    regress_cols_of_Y_on_X_log1p_pois_exact(
       fit$U,
       count_data$y_cols_data,
       count_data$y_cols_idx,
-      t(fit$V),
+      V_T,
       0:(K - 1),
       5,
       .01,
       .25
     )
 
-    fit$V <- t(new_V_T)
+    fit$V <- t(V_T)
 
     loglik <- get_loglik_exact(
-      new_U_T,
-      new_V_T,
+      t(fit$U),
+      t(fit$V),
       count_data$sc$x,
       count_data$sc$i - 1,
       count_data$sc$j - 1,

@@ -26,11 +26,13 @@ toc()
 actual_lambda <- exp(tcrossprod(dat$U, dat$V)) - 1
 fitted_lambda <- exp(tcrossprod(fit$U, fit$V)) - 1
 
+print(cor(as.vector(actual_lambda), as.vector(fitted_lambda)))
+
 # These seem to match quite closely
 #plot(as.vector(actual_lambda), as.vector(fitted_lambda))
 
 tic()
-fit_quad_approx <- fit_factor_model_log1p_quad_approx_full(
+fit <- fit_factor_model_log1p_quad_approx_full(
   dat$Y,
   K = 6,
   maxiter = 10,
@@ -41,8 +43,10 @@ toc()
 actual_lambda <- exp(tcrossprod(dat$U, dat$V)) - 1
 fitted_lambda <- exp(tcrossprod(fit$U, fit$V)) - 1
 
+print(cor(as.vector(actual_lambda), as.vector(fitted_lambda)))
+
 tic()
-fit_quad_approx_sparse <- fit_factor_model_log1p_quad_approx_sparse(
+fit <- fit_factor_model_log1p_quad_approx_sparse(
   dat$Y,
   K = 6,
   maxiter = 10,
@@ -53,8 +57,11 @@ toc()
 actual_lambda <- exp(tcrossprod(dat$U, dat$V)) - 1
 fitted_lambda <- exp(tcrossprod(fit$U, fit$V)) - 1
 
+print(cor(as.vector(actual_lambda), as.vector(fitted_lambda)))
+
+
 tic()
-fit_lin_approx <- fit_factor_model_log1p_lin_approx_sparse(
+fit <- fit_factor_model_log1p_lin_approx_sparse(
   dat$Y,
   K = 6,
   maxiter = 10,
@@ -65,3 +72,4 @@ toc()
 actual_lambda <- exp(tcrossprod(dat$U, dat$V)) - 1
 fitted_lambda <- exp(tcrossprod(fit$U, fit$V)) - 1
 
+print(cor(as.vector(actual_lambda), as.vector(fitted_lambda)))

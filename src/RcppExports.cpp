@@ -80,21 +80,20 @@ BEGIN_RCPP
 END_RCPP
 }
 // regress_cols_of_Y_on_X_log1p_pois_exact
-arma::mat regress_cols_of_Y_on_X_log1p_pois_exact(const arma::mat& X, Rcpp::List Y, Rcpp::List Y_nz_idx, arma::mat& B, const std::vector<int> update_indices, unsigned int num_iter, const double alpha, const double beta);
+void regress_cols_of_Y_on_X_log1p_pois_exact(const arma::mat& X, const Rcpp::List Y, const Rcpp::List Y_nz_idx, arma::mat& B, const std::vector<int> update_indices, unsigned int num_iter, const double alpha, const double beta);
 RcppExport SEXP _passPCA_regress_cols_of_Y_on_X_log1p_pois_exact(SEXP XSEXP, SEXP YSEXP, SEXP Y_nz_idxSEXP, SEXP BSEXP, SEXP update_indicesSEXP, SEXP num_iterSEXP, SEXP alphaSEXP, SEXP betaSEXP) {
 BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< const arma::mat& >::type X(XSEXP);
-    Rcpp::traits::input_parameter< Rcpp::List >::type Y(YSEXP);
-    Rcpp::traits::input_parameter< Rcpp::List >::type Y_nz_idx(Y_nz_idxSEXP);
+    Rcpp::traits::input_parameter< const Rcpp::List >::type Y(YSEXP);
+    Rcpp::traits::input_parameter< const Rcpp::List >::type Y_nz_idx(Y_nz_idxSEXP);
     Rcpp::traits::input_parameter< arma::mat& >::type B(BSEXP);
     Rcpp::traits::input_parameter< const std::vector<int> >::type update_indices(update_indicesSEXP);
     Rcpp::traits::input_parameter< unsigned int >::type num_iter(num_iterSEXP);
     Rcpp::traits::input_parameter< const double >::type alpha(alphaSEXP);
     Rcpp::traits::input_parameter< const double >::type beta(betaSEXP);
-    rcpp_result_gen = Rcpp::wrap(regress_cols_of_Y_on_X_log1p_pois_exact(X, Y, Y_nz_idx, B, update_indices, num_iter, alpha, beta));
-    return rcpp_result_gen;
+    regress_cols_of_Y_on_X_log1p_pois_exact(X, Y, Y_nz_idx, B, update_indices, num_iter, alpha, beta);
+    return R_NilValue;
 END_RCPP
 }
 // regress_cols_of_Y_on_X_log1p_lin_approx_sparse
