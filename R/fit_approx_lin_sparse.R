@@ -34,12 +34,25 @@ fit_factor_model_log1p_lin_approx_sparse <- function(
     a
   )
 
+  loglik_exact <- get_loglik_exact(
+    t(fit$U),
+    t(fit$V),
+    count_data$sc$x,
+    count_data$sc$i - 1,
+    count_data$sc$j - 1,
+    n,
+    p
+  )
+
   iter <- 0
 
   cat(sprintf("Fitting log1p factor model to %d x %d count matrix.\n",n,p))
 
   loglik_history <- numeric(maxiter + 1)
   loglik_history[1] <- loglik
+
+  loglik_exact_history <- numeric(maxiter + 1)
+  loglik_exact_history[1] <- loglik_exact
 
   for (iter in 1:maxiter) {
 
@@ -85,11 +98,23 @@ fit_factor_model_log1p_lin_approx_sparse <- function(
       a
     )
 
+    loglik_exact <- get_loglik_exact(
+      t(fit$U),
+      t(fit$V),
+      count_data$sc$x,
+      count_data$sc$i - 1,
+      count_data$sc$j - 1,
+      n,
+      p
+    )
+
     loglik_history[iter + 1] <- loglik
+    loglik_exact_history[iter + 1] <- loglik_exact
 
   }
 
   fit$loglik <- loglik_history
+  fit$loglik_exact <- loglik_exact_history
   return(fit)
 
 }

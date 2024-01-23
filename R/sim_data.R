@@ -9,6 +9,7 @@
 #' @importFrom distr UnivarMixingDistribution
 #' @importFrom distr Unif
 #' @importFrom distr r
+#' @importFrom distr Dirac
 #'
 #' @return list with underlying mean structure and observations
 #'
@@ -25,17 +26,16 @@ generate_data_simple <- function(n, p, K) {
   V <- matrix(nrow = p, ncol = K)
 
   u_dist <- UnivarMixingDistribution(
-    Unif(0,0.01),
-    Unif(.25,0.5),
-    Unif(.5,0.75),
-    mixCoeff = rep(1/3,3)
+    Unif(0,0.0001),
+    Unif(0, 0.15),
+    Dirac(.5),
+    mixCoeff = c(.75, .2, .05)
   )
 
   v_dist <- UnivarMixingDistribution(
-    Unif(0,0.01),
-    Unif(.25,0.5),
-    Unif(.5,0.75),
-    mixCoeff = rep(1/3,3)
+    Unif(0,0.75),
+    Unif(0.75,7),
+    mixCoeff = c(.98,.02)
   )
 
   u_sampler <- distr::r(u_dist)
