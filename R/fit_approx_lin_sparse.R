@@ -8,9 +8,6 @@
 #' @return list with fit and progress info
 #' @export
 #'
-#' @useDynLib passPCA, .registration = TRUE
-#' @importFrom Rcpp sourceCpp
-#'
 fit_factor_model_log1p_lin_approx_sparse <- function(
     Y,
     K,

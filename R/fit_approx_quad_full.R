@@ -8,9 +8,6 @@
 #' @return list with fit and progress info
 #' @export
 #'
-#' @useDynLib passPCA, .registration = TRUE
-#' @importFrom Rcpp sourceCpp
-#'
 fit_factor_model_log1p_quad_approx_full <- function(
     Y,
     K,
@@ -144,9 +141,6 @@ fit_factor_model_log1p_quad_approx_full <- function(
 #' @return list with fit and progress info
 #' @export
 #'
-#' @useDynLib passPCA, .registration = TRUE
-#' @importFrom Rcpp sourceCpp
-#'
 fit_factor_model_log1p_quad_approx_full_cpp <- function(
     Y,
     K,
@@ -184,8 +178,8 @@ fit_factor_model_log1p_quad_approx_full_cpp <- function(
     t(init$V),
     a1,
     a2,
-    n,
-    p,
+    as.integer(n),
+    as.integer(p),
     as.integer(maxiter),
     .01,
     .25,

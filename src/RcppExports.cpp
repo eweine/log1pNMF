@@ -160,8 +160,29 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// solve_pois_reg_log1p_quad_approx_full_parallel
+arma::mat solve_pois_reg_log1p_quad_approx_full_parallel(const arma::mat X_T, const std::vector<arma::vec> Y, const std::vector<arma::uvec> Y_nz_idx, const arma::vec X_cs_times_a1, const arma::mat X_T_X, arma::mat B, const double a2, const std::vector<int> update_indices, unsigned int num_iter, const double alpha, const double beta);
+RcppExport SEXP _passPCA_solve_pois_reg_log1p_quad_approx_full_parallel(SEXP X_TSEXP, SEXP YSEXP, SEXP Y_nz_idxSEXP, SEXP X_cs_times_a1SEXP, SEXP X_T_XSEXP, SEXP BSEXP, SEXP a2SEXP, SEXP update_indicesSEXP, SEXP num_iterSEXP, SEXP alphaSEXP, SEXP betaSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::mat >::type X_T(X_TSEXP);
+    Rcpp::traits::input_parameter< const std::vector<arma::vec> >::type Y(YSEXP);
+    Rcpp::traits::input_parameter< const std::vector<arma::uvec> >::type Y_nz_idx(Y_nz_idxSEXP);
+    Rcpp::traits::input_parameter< const arma::vec >::type X_cs_times_a1(X_cs_times_a1SEXP);
+    Rcpp::traits::input_parameter< const arma::mat >::type X_T_X(X_T_XSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type B(BSEXP);
+    Rcpp::traits::input_parameter< const double >::type a2(a2SEXP);
+    Rcpp::traits::input_parameter< const std::vector<int> >::type update_indices(update_indicesSEXP);
+    Rcpp::traits::input_parameter< unsigned int >::type num_iter(num_iterSEXP);
+    Rcpp::traits::input_parameter< const double >::type alpha(alphaSEXP);
+    Rcpp::traits::input_parameter< const double >::type beta(betaSEXP);
+    rcpp_result_gen = Rcpp::wrap(solve_pois_reg_log1p_quad_approx_full_parallel(X_T, Y, Y_nz_idx, X_cs_times_a1, X_T_X, B, a2, update_indices, num_iter, alpha, beta));
+    return rcpp_result_gen;
+END_RCPP
+}
 // fit_factor_model_log1p_quad_approx_full_cpp_src
-List fit_factor_model_log1p_quad_approx_full_cpp_src(const std::vector<int> sc_x, const std::vector<int> sc_i, const std::vector<int> sc_j, const std::vector<int> sc_T_x, const std::vector<int> sc_T_i, const std::vector<int> sc_T_j, arma::mat U_T, arma::mat V_T, const double a1, const double a2, const double n, const double p, const int max_iter, const double alpha, const double beta, const int num_ccd_iter, const std::vector<int> update_indices);
+List fit_factor_model_log1p_quad_approx_full_cpp_src(const std::vector<int> sc_x, const std::vector<int> sc_i, const std::vector<int> sc_j, const std::vector<int> sc_T_x, const std::vector<int> sc_T_i, const std::vector<int> sc_T_j, arma::mat U_T, arma::mat V_T, const double a1, const double a2, const int n, const int p, const int max_iter, const double alpha, const double beta, const int num_ccd_iter, const std::vector<int> update_indices);
 RcppExport SEXP _passPCA_fit_factor_model_log1p_quad_approx_full_cpp_src(SEXP sc_xSEXP, SEXP sc_iSEXP, SEXP sc_jSEXP, SEXP sc_T_xSEXP, SEXP sc_T_iSEXP, SEXP sc_T_jSEXP, SEXP U_TSEXP, SEXP V_TSEXP, SEXP a1SEXP, SEXP a2SEXP, SEXP nSEXP, SEXP pSEXP, SEXP max_iterSEXP, SEXP alphaSEXP, SEXP betaSEXP, SEXP num_ccd_iterSEXP, SEXP update_indicesSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
@@ -176,8 +197,8 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< arma::mat >::type V_T(V_TSEXP);
     Rcpp::traits::input_parameter< const double >::type a1(a1SEXP);
     Rcpp::traits::input_parameter< const double >::type a2(a2SEXP);
-    Rcpp::traits::input_parameter< const double >::type n(nSEXP);
-    Rcpp::traits::input_parameter< const double >::type p(pSEXP);
+    Rcpp::traits::input_parameter< const int >::type n(nSEXP);
+    Rcpp::traits::input_parameter< const int >::type p(pSEXP);
     Rcpp::traits::input_parameter< const int >::type max_iter(max_iterSEXP);
     Rcpp::traits::input_parameter< const double >::type alpha(alphaSEXP);
     Rcpp::traits::input_parameter< const double >::type beta(betaSEXP);
@@ -223,6 +244,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_passPCA_regress_cols_of_Y_on_X_log1p_lin_approx_sparse", (DL_FUNC) &_passPCA_regress_cols_of_Y_on_X_log1p_lin_approx_sparse, 10},
     {"_passPCA_regress_cols_of_Y_on_X_log1p_quad_approx_sparse", (DL_FUNC) &_passPCA_regress_cols_of_Y_on_X_log1p_quad_approx_sparse, 12},
     {"_passPCA_regress_cols_of_Y_on_X_log1p_quad_approx_full", (DL_FUNC) &_passPCA_regress_cols_of_Y_on_X_log1p_quad_approx_full, 11},
+    {"_passPCA_solve_pois_reg_log1p_quad_approx_full_parallel", (DL_FUNC) &_passPCA_solve_pois_reg_log1p_quad_approx_full_parallel, 11},
     {"_passPCA_fit_factor_model_log1p_quad_approx_full_cpp_src", (DL_FUNC) &_passPCA_fit_factor_model_log1p_quad_approx_full_cpp_src, 17},
     {"_passPCA_get_num_repeats", (DL_FUNC) &_passPCA_get_num_repeats, 3},
     {"_passPCA_create_vals_list", (DL_FUNC) &_passPCA_create_vals_list, 3},

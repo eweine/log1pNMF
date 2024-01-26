@@ -1,8 +1,10 @@
 #include <RcppArmadillo.h>
+#include <RcppParallel.h>
 #include <Rcpp.h>
 
-using namespace Rcpp;
 using namespace arma;
+using namespace Rcpp;
+using namespace RcppParallel;
 
 
 arma::vec solve_pois_reg_log1p_quad_approx_full (
@@ -160,10 +162,13 @@ arma::mat regress_cols_of_Y_on_X_log1p_quad_approx_full(
 
 }
 
+
+// Ideally, this is the code that could be made to run in parallel
+// I'm not sure how hard this will be
 arma::mat regress_cols_of_Y_on_X_log1p_quad_approx_full_cpp(
     const arma::mat X_T,
-    std::vector<arma::vec> Y,
-    std::vector<arma::uvec> Y_nz_idx,
+    const std::vector<arma::vec> Y,
+    const std::vector<arma::uvec> Y_nz_idx,
     const arma::vec X_cs_times_a1,
     const arma::mat X_T_X,
     arma::mat B,
@@ -195,6 +200,97 @@ arma::mat regress_cols_of_Y_on_X_log1p_quad_approx_full_cpp(
   return(B);
 
 }
+
+struct RegressColsOfYOnXlog1pQuadFull : public Worker {
+  const arma::mat X_T;
+  const std::vector<arma::vec> Y;
+  const std::vector<arma::uvec> Y_nz_idx;
+  const arma::vec X_cs_times_a1;
+  const arma::mat X_T_X;
+  arma::mat B;
+  arma::mat B_out;
+  const double a2;
+  const std::vector<int> update_indices;
+  unsigned int num_iter;
+  const double alpha;
+  const double beta;
+
+  RegressColsOfYOnXlog1pQuadFull(
+    const arma::mat X_T,
+    const std::vector<arma::vec> Y,
+    const std::vector<arma::uvec> Y_nz_idx,
+    const arma::vec X_cs_times_a1,
+    const arma::mat X_T_X,
+    arma::mat B,
+    arma::mat B_out,
+    const double a2,
+    const std::vector<int> update_indices,
+    unsigned int num_iter,
+    const double alpha,
+    const double beta) : X_T(X_T),
+    Y(Y), Y_nz_idx(Y_nz_idx), X_cs_times_a1(X_cs_times_a1), X_T_X(X_T_X),
+    B(B), B_out(B_out), a2(a2), update_indices(update_indices),
+    num_iter(num_iter), alpha(alpha), beta(beta) {}
+
+  void operator()(std::size_t begin, std::size_t end) {
+    for (std::size_t j = begin; j < end; j++) {
+      B_out.col(j) = solve_pois_reg_log1p_quad_approx_full (
+        X_T,
+        Y[j],
+        Y_nz_idx[j],
+        X_cs_times_a1,
+        X_T_X,
+        a2,
+        B.col(j),
+        update_indices,
+        num_iter,
+        alpha,
+        beta
+      );
+    }
+  }
+};
+
+// [[Rcpp::depends(RcppArmadillo, RcppParallel)]]
+// [[Rcpp::export]]
+arma::mat regress_cols_of_Y_on_X_log1p_quad_approx_full_parallel(
+    const arma::mat X_T,
+    const std::vector<arma::vec> Y,
+    const std::vector<arma::uvec> Y_nz_idx,
+    const arma::vec X_cs_times_a1,
+    const arma::mat X_T_X,
+    arma::mat B,
+    const double a2,
+    const std::vector<int> update_indices,
+    unsigned int num_iter,
+    const double alpha,
+    const double beta
+) {
+
+  arma::mat B_out(B.n_rows, B.n_cols);
+
+  RegressColsOfYOnXlog1pQuadFull updater(
+      X_T,
+      Y,
+      Y_nz_idx,
+      X_cs_times_a1,
+      X_T_X,
+      B,
+      B_out,
+      a2,
+      update_indices,
+      num_iter,
+      alpha,
+      beta
+  );
+
+  parallelFor(0, B.n_cols, updater);
+
+  // It's not clear to me if this will contain the updates
+  return B_out;
+
+}
+
 
 double get_loglik_cpp(
     const arma::mat U_T,
@@ -336,8 +432,8 @@ List fit_factor_model_log1p_quad_approx_full_cpp_src(
   arma::mat V_T,
   const double a1,
   const double a2,
-  const double n,
-  const double p,
+  const int n,
+  const int p,
   const int max_iter,
   const double alpha,
   const double beta,
@@ -394,13 +490,13 @@ List fit_factor_model_log1p_quad_approx_full_cpp_src(
   std::vector<double> loglik_history;
   loglik_history.push_back(loglik);
 
-  Rprintf("Fitting log1p factor model to %d x %d count matrix.\n",n,p);
+  Rprintf("Fitting log1p factor model to %i x %i count matrix.\n",n,p);
 
   for (int iter = 0; iter < max_iter; iter++) {
 
     Rprintf("Iteration %i: objective = %+0.12e\n", iter, loglik);
 
-    U_T = regress_cols_of_Y_on_X_log1p_quad_approx_full_cpp(
+    U_T = regress_cols_of_Y_on_X_log1p_quad_approx_full_parallel(
       V_T,
       y_rows_data,
       y_rows_idx,
@@ -414,7 +510,7 @@ List fit_factor_model_log1p_quad_approx_full_cpp_src(
       beta
     );
 
-    V_T = regress_cols_of_Y_on_X_log1p_quad_approx_full_cpp(
+    V_T = regress_cols_of_Y_on_X_log1p_quad_approx_full_parallel(
       U_T,
       y_cols_data,
       y_cols_idx,
