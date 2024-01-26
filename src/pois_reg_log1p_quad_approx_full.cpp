@@ -1,5 +1,6 @@
 #include <RcppArmadillo.h>
 #include <Rcpp.h>
+#include <omp.h>
 
 using namespace Rcpp;
 using namespace arma;
@@ -162,8 +163,8 @@ arma::mat regress_cols_of_Y_on_X_log1p_quad_approx_full(
 
 arma::mat regress_cols_of_Y_on_X_log1p_quad_approx_full_cpp(
     const arma::mat X_T,
-    std::vector<arma::vec> Y,
-    std::vector<arma::uvec> Y_nz_idx,
+    const std::vector<arma::vec> Y,
+    const std::vector<arma::uvec> Y_nz_idx,
     const arma::vec X_cs_times_a1,
     const arma::mat X_T_X,
     arma::mat B,
@@ -174,6 +175,7 @@ arma::mat regress_cols_of_Y_on_X_log1p_quad_approx_full_cpp(
     const double beta
 ) {
 
+  #pragma omp parallel for
   for (int j = 0; j < B.n_cols; j++) {
 
     B.col(j) = solve_pois_reg_log1p_quad_approx_full(
@@ -336,8 +338,8 @@ List fit_factor_model_log1p_quad_approx_full_cpp_src(
   arma::mat V_T,
   const double a1,
   const double a2,
-  const double n,
-  const double p,
+  const int n,
+  const int p,
   const int max_iter,
   const double alpha,
   const double beta,
@@ -345,37 +347,37 @@ List fit_factor_model_log1p_quad_approx_full_cpp_src(
   const std::vector<int> update_indices
 ) {
 
-  std::vector<int> col_num_repeats = get_num_repeats_cpp(
+  const std::vector<int> col_num_repeats = get_num_repeats_cpp(
       sc_j,
       p,
       sc_j.size()
   );
 
-  std::vector<arma::vec> y_cols_data = create_vals_vector_arma(
+  const std::vector<arma::vec> y_cols_data = create_vals_vector_arma(
       p,
       col_num_repeats,
       sc_x
   );
 
-  std::vector<arma::uvec> y_cols_idx = create_vals_vector_uvec(
+  const std::vector<arma::uvec> y_cols_idx = create_vals_vector_uvec(
       p,
       col_num_repeats,
       sc_i
   );
 
-  std::vector<int> row_num_repeats = get_num_repeats_cpp(
+  const std::vector<int> row_num_repeats = get_num_repeats_cpp(
       sc_T_j,
       n,
       sc_T_j.size()
   );
 
-  std::vector<arma::vec> y_rows_data = create_vals_vector_arma(
+  const std::vector<arma::vec> y_rows_data = create_vals_vector_arma(
       n,
       row_num_repeats,
       sc_T_x
   );
 
-  std::vector<arma::uvec> y_rows_idx = create_vals_vector_uvec(
+  const std::vector<arma::uvec> y_rows_idx = create_vals_vector_uvec(
       n,
       row_num_repeats,
       sc_T_i
@@ -394,7 +396,7 @@ List fit_factor_model_log1p_quad_approx_full_cpp_src(
   std::vector<double> loglik_history;
   loglik_history.push_back(loglik);
 
-  Rprintf("Fitting log1p factor model to %d x %d count matrix.\n",n,p);
+  Rprintf("Fitting log1p factor model to %i x %i count matrix.\n",n,p);
 
   for (int iter = 0; iter < max_iter; iter++) {
 

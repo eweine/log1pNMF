@@ -161,7 +161,7 @@ BEGIN_RCPP
 END_RCPP
 }
 // fit_factor_model_log1p_quad_approx_full_cpp_src
-List fit_factor_model_log1p_quad_approx_full_cpp_src(const std::vector<int> sc_x, const std::vector<int> sc_i, const std::vector<int> sc_j, const std::vector<int> sc_T_x, const std::vector<int> sc_T_i, const std::vector<int> sc_T_j, arma::mat U_T, arma::mat V_T, const double a1, const double a2, const double n, const double p, const int max_iter, const double alpha, const double beta, const int num_ccd_iter, const std::vector<int> update_indices);
+List fit_factor_model_log1p_quad_approx_full_cpp_src(const std::vector<int> sc_x, const std::vector<int> sc_i, const std::vector<int> sc_j, const std::vector<int> sc_T_x, const std::vector<int> sc_T_i, const std::vector<int> sc_T_j, arma::mat U_T, arma::mat V_T, const double a1, const double a2, const int n, const int p, const int max_iter, const double alpha, const double beta, const int num_ccd_iter, const std::vector<int> update_indices);
 RcppExport SEXP _passPCA_fit_factor_model_log1p_quad_approx_full_cpp_src(SEXP sc_xSEXP, SEXP sc_iSEXP, SEXP sc_jSEXP, SEXP sc_T_xSEXP, SEXP sc_T_iSEXP, SEXP sc_T_jSEXP, SEXP U_TSEXP, SEXP V_TSEXP, SEXP a1SEXP, SEXP a2SEXP, SEXP nSEXP, SEXP pSEXP, SEXP max_iterSEXP, SEXP alphaSEXP, SEXP betaSEXP, SEXP num_ccd_iterSEXP, SEXP update_indicesSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
@@ -176,8 +176,8 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< arma::mat >::type V_T(V_TSEXP);
     Rcpp::traits::input_parameter< const double >::type a1(a1SEXP);
     Rcpp::traits::input_parameter< const double >::type a2(a2SEXP);
-    Rcpp::traits::input_parameter< const double >::type n(nSEXP);
-    Rcpp::traits::input_parameter< const double >::type p(pSEXP);
+    Rcpp::traits::input_parameter< const int >::type n(nSEXP);
+    Rcpp::traits::input_parameter< const int >::type p(pSEXP);
     Rcpp::traits::input_parameter< const int >::type max_iter(max_iterSEXP);
     Rcpp::traits::input_parameter< const double >::type alpha(alphaSEXP);
     Rcpp::traits::input_parameter< const double >::type beta(betaSEXP);
