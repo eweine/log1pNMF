@@ -33,6 +33,10 @@ regress_cols_of_Y_on_X_log1p_quad_approx_full <- function(X_T, Y, Y_nz_idx, X_cs
     .Call(`_passPCA_regress_cols_of_Y_on_X_log1p_quad_approx_full`, X_T, Y, Y_nz_idx, X_cs_times_a1, X_T_X, B, a2, update_indices, num_iter, alpha, beta)
 }
 
+fit_factor_model_log1p_quad_approx_full_cpp_src <- function(sc_x, sc_i, sc_j, sc_T_x, sc_T_i, sc_T_j, U_T, V_T, a1, a2, n, p, max_iter, alpha, beta, num_ccd_iter, update_indices) {
+    .Call(`_passPCA_fit_factor_model_log1p_quad_approx_full_cpp_src`, sc_x, sc_i, sc_j, sc_T_x, sc_T_i, sc_T_j, U_T, V_T, a1, a2, n, p, max_iter, alpha, beta, num_ccd_iter, update_indices)
+}
+
 get_num_repeats <- function(idx, p, total_idx) {
     .Call(`_passPCA_get_num_repeats`, idx, p, total_idx)
 }
