@@ -1,8 +1,8 @@
-#' Fit sparse linear approximation log1p factor model
+#' Fit sparse quadratic approximation log1p factor model with C++
 #'
 #' @param Y sparse matrix.
 #' @param K rank of factorization
-#' @param a slope of linear approximation
+#' @param approx_range range of Chebyschev approximation
 #' @param maxiter maximum number of updates
 #'
 #' @return list with fit and progress info
@@ -14,107 +14,37 @@
 fit_factor_model_log1p_lin_approx_sparse <- function(
     Y,
     K,
-    a = 1,
-    maxiter = 25
+    a,
+    maxiter
 ) {
 
   n <- nrow(Y)
   p <- ncol(Y)
 
-  fit <- init_factor_model_log1p(n, p, K)
+  init <- init_factor_model_log1p(n, p, K)
 
-  count_data <- prep_data(Y)
+  sc <- Matrix::summary(Y)
+  sc_t <- Matrix::summary(Matrix::t(Y))
 
-  loglik <- get_loglik_lin_approx_sparse(
-    fit$U,
-    fit$V,
-    count_data$sc$x,
-    count_data$sc$i - 1,
-    count_data$sc$j - 1,
-    a
-  )
-
-  loglik_exact <- get_loglik_exact(
-    t(fit$U),
-    t(fit$V),
-    count_data$sc$x,
-    count_data$sc$i - 1,
-    count_data$sc$j - 1,
+  fit <- fit_factor_model_log1p_lin_approx_sparse_cpp_src(
+    sc$x,
+    sc$i - 1,
+    sc$j - 1,
+    sc_t$x,
+    sc_t$i - 1,
+    sc_t$j - 1,
+    t(init$U),
+    t(init$V),
+    a,
     n,
-    p
+    p,
+    as.integer(maxiter),
+    .01,
+    .25,
+    5,
+    0:(K-1)
   )
 
-  iter <- 0
-
-  cat(sprintf("Fitting log1p factor model to %d x %d count matrix.\n",n,p))
-
-  loglik_history <- numeric(maxiter + 1)
-  loglik_history[1] <- loglik
-
-  loglik_exact_history <- numeric(maxiter + 1)
-  loglik_exact_history[1] <- loglik_exact
-
-  for (iter in 1:maxiter) {
-
-    cat(sprintf("Iteration %d: objective = %+0.12e\n",
-                iter - 1, loglik))
-
-    new_U_T <- regress_cols_of_Y_on_X_log1p_lin_approx_sparse(
-      t(fit$V),
-      count_data$y_rows_data,
-      count_data$y_rows_idx,
-      a * colSums(fit$V),
-      a,
-      t(fit$U),
-      0:(K - 1),
-      5,
-      .01,
-      .25
-    )
-
-    fit$U <- t(new_U_T)
-
-    new_V_T <- regress_cols_of_Y_on_X_log1p_lin_approx_sparse(
-      t(fit$U),
-      count_data$y_cols_data,
-      count_data$y_cols_idx,
-      a * colSums(fit$U),
-      a,
-      t(fit$V),
-      0:(K - 1),
-      5,
-      .01,
-      .25
-    )
-
-    fit$V <- t(new_V_T)
-
-    loglik <- get_loglik_lin_approx_sparse(
-      fit$U,
-      fit$V,
-      count_data$sc$x,
-      count_data$sc$i - 1,
-      count_data$sc$j - 1,
-      a
-    )
-
-    loglik_exact <- get_loglik_exact(
-      t(fit$U),
-      t(fit$V),
-      count_data$sc$x,
-      count_data$sc$i - 1,
-      count_data$sc$j - 1,
-      n,
-      p
-    )
-
-    loglik_history[iter + 1] <- loglik
-    loglik_exact_history[iter + 1] <- loglik_exact
-
-  }
-
-  fit$loglik <- loglik_history
-  fit$loglik_exact <- loglik_exact_history
   return(fit)
 
 }

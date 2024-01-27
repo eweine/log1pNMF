@@ -2,7 +2,7 @@
 % Please edit documentation in R/fit_approx_quad_full.R
 \name{fit_factor_model_log1p_quad_approx_full}
 \alias{fit_factor_model_log1p_quad_approx_full}
-\title{Fit full quadratic approximation log1p factor model}
+\title{Fit full quadratic approximation log1p factor model with C++}
 \usage{
 fit_factor_model_log1p_quad_approx_full(Y, K, approx_range, maxiter)
 }
@@ -19,5 +19,5 @@ fit_factor_model_log1p_quad_approx_full(Y, K, approx_range, maxiter)
 list with fit and progress info
 }
 \description{
-Fit full quadratic approximation log1p factor model
+Fit full quadratic approximation log1p factor model with C++
 }

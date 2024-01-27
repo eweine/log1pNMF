@@ -2,7 +2,7 @@
 % Please edit documentation in R/fit_approx_quad_sparse.R
 \name{fit_factor_model_log1p_quad_approx_sparse}
 \alias{fit_factor_model_log1p_quad_approx_sparse}
-\title{Fit sparse quadratic approximation log1p factor model}
+\title{Fit sparse quadratic approximation log1p factor model with C++}
 \usage{
 fit_factor_model_log1p_quad_approx_sparse(Y, K, approx_range, maxiter)
 }
@@ -19,5 +19,5 @@ fit_factor_model_log1p_quad_approx_sparse(Y, K, approx_range, maxiter)
 list with fit and progress info
 }
 \description{
-Fit sparse quadratic approximation log1p factor model
+Fit sparse quadratic approximation log1p factor model with C++
 }
