@@ -11,23 +11,6 @@ Rcpp::Rostream<true>&  Rcpp::Rcout = Rcpp::Rcpp_cout_get();
 Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
-// get_loglik_exact
-double get_loglik_exact(const arma::mat& U_T, const arma::mat& V_T, const std::vector<int> nonzero_y, const std::vector<int> nonzero_y_i_idx, const std::vector<int> nonzero_y_j_idx, const int n, const int p);
-RcppExport SEXP _passPCA_get_loglik_exact(SEXP U_TSEXP, SEXP V_TSEXP, SEXP nonzero_ySEXP, SEXP nonzero_y_i_idxSEXP, SEXP nonzero_y_j_idxSEXP, SEXP nSEXP, SEXP pSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const arma::mat& >::type U_T(U_TSEXP);
-    Rcpp::traits::input_parameter< const arma::mat& >::type V_T(V_TSEXP);
-    Rcpp::traits::input_parameter< const std::vector<int> >::type nonzero_y(nonzero_ySEXP);
-    Rcpp::traits::input_parameter< const std::vector<int> >::type nonzero_y_i_idx(nonzero_y_i_idxSEXP);
-    Rcpp::traits::input_parameter< const std::vector<int> >::type nonzero_y_j_idx(nonzero_y_j_idxSEXP);
-    Rcpp::traits::input_parameter< const int >::type n(nSEXP);
-    Rcpp::traits::input_parameter< const int >::type p(pSEXP);
-    rcpp_result_gen = Rcpp::wrap(get_loglik_exact(U_T, V_T, nonzero_y, nonzero_y_i_idx, nonzero_y_j_idx, n, p));
-    return rcpp_result_gen;
-END_RCPP
-}
 // fit_factor_model_log1p_exact_cpp_src
 List fit_factor_model_log1p_exact_cpp_src(const std::vector<int> sc_x, const std::vector<int> sc_i, const std::vector<int> sc_j, const std::vector<int> sc_T_x, const std::vector<int> sc_T_i, const std::vector<int> sc_T_j, arma::mat U_T, arma::mat V_T, const int n, const int p, const int max_iter, const double alpha, const double beta, const int num_ccd_iter, const std::vector<int> update_indices);
 RcppExport SEXP _passPCA_fit_factor_model_log1p_exact_cpp_src(SEXP sc_xSEXP, SEXP sc_iSEXP, SEXP sc_jSEXP, SEXP sc_T_xSEXP, SEXP sc_T_iSEXP, SEXP sc_T_jSEXP, SEXP U_TSEXP, SEXP V_TSEXP, SEXP nSEXP, SEXP pSEXP, SEXP max_iterSEXP, SEXP alphaSEXP, SEXP betaSEXP, SEXP num_ccd_iterSEXP, SEXP update_indicesSEXP) {
@@ -135,7 +118,6 @@ END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_passPCA_get_loglik_exact", (DL_FUNC) &_passPCA_get_loglik_exact, 7},
     {"_passPCA_fit_factor_model_log1p_exact_cpp_src", (DL_FUNC) &_passPCA_fit_factor_model_log1p_exact_cpp_src, 15},
     {"_passPCA_fit_factor_model_log1p_lin_approx_sparse_cpp_src", (DL_FUNC) &_passPCA_fit_factor_model_log1p_lin_approx_sparse_cpp_src, 16},
     {"_passPCA_fit_factor_model_log1p_quad_approx_full_cpp_src", (DL_FUNC) &_passPCA_fit_factor_model_log1p_quad_approx_full_cpp_src, 17},
