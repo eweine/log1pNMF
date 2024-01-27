@@ -1,6 +1,8 @@
 #include <RcppArmadillo.h>
 #include <Rcpp.h>
 #include <omp.h>
+#include "ll.h"
+#include "utils.h"
 
 using namespace Rcpp;
 using namespace arma;
@@ -124,43 +126,6 @@ arma::vec solve_pois_reg_log1p_quad_approx_full (
 // Y is an nxm matrix (each col is an n-dim data vec)
 // X is an nxp matrix (each row is a p-dim covariate)
 // B is a pxm matrix (each col is a p-dim reg coef)
-// [[Rcpp::export]]
-arma::mat regress_cols_of_Y_on_X_log1p_quad_approx_full(
-    const arma::mat X_T,
-    Rcpp::List Y,
-    Rcpp::List Y_nz_idx,
-    const arma::vec X_cs_times_a1,
-    const arma::mat X_T_X,
-    arma::mat& B,
-    const double a2,
-    const std::vector<int> update_indices,
-    unsigned int num_iter,
-    const double alpha,
-    const double beta
-) {
-
-  for (int j = 0; j < B.n_cols; j++) {
-
-    B.col(j) = solve_pois_reg_log1p_quad_approx_full(
-      X_T,
-      Y[j],
-      Y_nz_idx[j],
-      X_cs_times_a1,
-      X_T_X,
-      a2,
-      B.col(j),
-      update_indices,
-      num_iter,
-      alpha,
-      beta
-    );
-
-  }
-
-  return(B);
-
-}
-
 arma::mat regress_cols_of_Y_on_X_log1p_quad_approx_full_cpp(
     const arma::mat X_T,
     const std::vector<arma::vec> Y,
@@ -198,133 +163,6 @@ arma::mat regress_cols_of_Y_on_X_log1p_quad_approx_full_cpp(
 
 }
 
-double get_loglik_cpp(
-    const arma::mat U_T,
-    const arma::mat V_T,
-    const std::vector<int> y_nz_vals,
-    const std::vector<int> y_nz_rows_idx,
-    const std::vector<int> y_nz_cols_idx,
-    const double a1,
-    const double a2
-) {
-
-  double sum = 0.0;
-  double lin_term;
-  double quad_term;
-  int i;
-  int j;
-
-  for (int r = 0; r < y_nz_vals.size(); r++) {
-
-    i = y_nz_rows_idx[r];
-    j = y_nz_cols_idx[r];
-
-    sum += y_nz_vals[r] * log(exp(dot(U_T.col(i), V_T.col(j))) - 1);
-
-  }
-
-  lin_term = a1 * arma::dot(arma::sum(U_T, 1), arma::sum(V_T, 1));
-
-  arma::mat U_T_U = U_T * U_T.t();
-  arma::mat U_T_U_V_T = U_T_U * V_T;
-  quad_term = a2 * arma::accu(V_T % U_T_U_V_T);
-
-  sum = sum - lin_term - quad_term;
-  return(sum);
-
-}
-
-// Now, I want to add the code that will run the full matrix factorization
-std::vector<int> get_num_repeats_cpp(
-    const std::vector<int> idx,
-    const int p,
-    const int total_idx
-) {
-
-  std::vector<int> idx_cts(p, 1);
-
-  int prev_val = idx[0];
-  int ctr = 0;
-
-  for (int i = 1; i < total_idx; i++) {
-
-    if (idx[i] != prev_val) {
-
-      ctr += 1;
-      prev_val = idx[i];
-
-    } else {
-
-      idx_cts[ctr] += 1;
-
-    }
-
-  }
-
-  return(idx_cts);
-
-}
-
-std::vector<arma::vec> create_vals_vector_arma(
-    const int num_vectors,
-    const std::vector<int> vector_sizes,
-    const std::vector<int> values
-) {
-  // Preallocate memory for the vector
-  std::vector<arma::vec> vectorOfVectors;
-  vectorOfVectors.reserve(num_vectors);
-
-  int values_ctr = 0;
-
-  // Create vectors in a for loop and add them to the vector
-  for (int i = 0; i < num_vectors; i++) {
-    // Create an Armadillo vector
-    arma::vec vec(vector_sizes[i]);
-
-    // Populate the Armadillo vector with values (e.g., incrementing values)
-    for (int j = 0; j < vector_sizes[i]; j++) {
-      vec(j) = values[values_ctr];
-      values_ctr++;
-    }
-
-    // Add the Armadillo vector to the vector
-    vectorOfVectors.push_back(vec);
-  }
-
-  return vectorOfVectors;
-}
-
-std::vector<arma::uvec> create_vals_vector_uvec(
-    const int num_vectors,
-    const std::vector<int> vector_sizes,
-    const std::vector<int> values
-) {
-  // Preallocate memory for the vector
-  std::vector<arma::uvec> vectorOfUvecs;
-  vectorOfUvecs.reserve(num_vectors);
-
-  int values_ctr = 0;
-
-  // Create vectors in a for loop and add them to the vector
-  for (int i = 0; i < num_vectors; i++) {
-    // Create an Armadillo unsigned integer vector
-    arma::uvec uvec(vector_sizes[i]);
-
-    // Populate the Armadillo unsigned integer vector with values (e.g., incrementing values)
-    for (int j = 0; j < vector_sizes[i]; j++) {
-      uvec(j) = static_cast<unsigned int>(values[values_ctr]);
-      values_ctr++;
-    }
-
-    // Add the Armadillo unsigned integer vector to the vector
-    vectorOfUvecs.push_back(uvec);
-  }
-
-  return vectorOfUvecs;
-}
-
-// Now, I want to define a function to do the full matrix
-// factorization
 
 // [[Rcpp::export]]
 List fit_factor_model_log1p_quad_approx_full_cpp_src(
@@ -383,9 +221,14 @@ List fit_factor_model_log1p_quad_approx_full_cpp_src(
       sc_T_i
   );
 
-  double loglik = get_loglik_cpp(
+  arma::vec U_cs = arma::sum(U_T, 1);
+  arma::mat U_T_U = U_T * U_T.t();
+
+  double loglik = get_loglik_quad_approx_full(
     U_T,
     V_T,
+    U_cs,
+    U_T_U,
     sc_x,
     sc_i,
     sc_j,
@@ -416,12 +259,15 @@ List fit_factor_model_log1p_quad_approx_full_cpp_src(
       beta
     );
 
+    U_cs = arma::sum(U_T, 1);
+    U_T_U = U_T * U_T.t();
+
     V_T = regress_cols_of_Y_on_X_log1p_quad_approx_full_cpp(
       U_T,
       y_cols_data,
       y_cols_idx,
-      a1 * sum(U_T, 1),
-      U_T * U_T.t(),
+      a1 * U_cs,
+      U_T_U,
       V_T,
       a2,
       update_indices,
@@ -430,9 +276,11 @@ List fit_factor_model_log1p_quad_approx_full_cpp_src(
       beta
     );
 
-    loglik = get_loglik_cpp(
+    loglik = get_loglik_quad_approx_full(
       U_T,
       V_T,
+      U_cs,
+      U_T_U,
       sc_x,
       sc_i,
       sc_j,
@@ -454,10 +302,4 @@ List fit_factor_model_log1p_quad_approx_full_cpp_src(
 
 }
 
-
-// NOTE: The issue with this implementation is that it will be difficult
-// to iterate through a list in parallel. Instead, I should use a vector
-// of arma::uvecs or a vector of arma::vecs. Once I do this, I should be
-// able to plugin the code above relatively easily.
-// I can take care of this tomorrow.
 

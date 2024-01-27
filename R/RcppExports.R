@@ -9,10 +9,6 @@ get_sparse_term_loglik_lin_sparse_approx <- function(U_T, V_T, nonzero_y, nonzer
     .Call(`_passPCA_get_sparse_term_loglik_lin_sparse_approx`, U_T, V_T, nonzero_y, nonzero_y_i_idx, nonzero_y_j_idx, num_nonzero_y, a1)
 }
 
-get_sparse_term_loglik <- function(U_T, V_T, nonzero_y, nonzero_y_i_idx, nonzero_y_j_idx, num_nonzero_y) {
-    .Call(`_passPCA_get_sparse_term_loglik`, U_T, V_T, nonzero_y, nonzero_y_i_idx, nonzero_y_j_idx, num_nonzero_y)
-}
-
 get_loglik_exact <- function(U_T, V_T, nonzero_y, nonzero_y_i_idx, nonzero_y_j_idx, n, p) {
     .Call(`_passPCA_get_loglik_exact`, U_T, V_T, nonzero_y, nonzero_y_i_idx, nonzero_y_j_idx, n, p)
 }
@@ -29,19 +25,7 @@ regress_cols_of_Y_on_X_log1p_quad_approx_sparse <- function(X_T, Y, Y_nz_idx, X_
     .Call(`_passPCA_regress_cols_of_Y_on_X_log1p_quad_approx_sparse`, X_T, Y, Y_nz_idx, X_cs_times_a1, X_T_X, B, a1, a2, update_indices, num_iter, alpha, beta)
 }
 
-regress_cols_of_Y_on_X_log1p_quad_approx_full <- function(X_T, Y, Y_nz_idx, X_cs_times_a1, X_T_X, B, a2, update_indices, num_iter, alpha, beta) {
-    .Call(`_passPCA_regress_cols_of_Y_on_X_log1p_quad_approx_full`, X_T, Y, Y_nz_idx, X_cs_times_a1, X_T_X, B, a2, update_indices, num_iter, alpha, beta)
-}
-
 fit_factor_model_log1p_quad_approx_full_cpp_src <- function(sc_x, sc_i, sc_j, sc_T_x, sc_T_i, sc_T_j, U_T, V_T, a1, a2, n, p, max_iter, alpha, beta, num_ccd_iter, update_indices) {
     .Call(`_passPCA_fit_factor_model_log1p_quad_approx_full_cpp_src`, sc_x, sc_i, sc_j, sc_T_x, sc_T_i, sc_T_j, U_T, V_T, a1, a2, n, p, max_iter, alpha, beta, num_ccd_iter, update_indices)
-}
-
-get_num_repeats <- function(idx, p, total_idx) {
-    .Call(`_passPCA_get_num_repeats`, idx, p, total_idx)
-}
-
-create_vals_list <- function(num_vectors, vector_sizes, values) {
-    .Call(`_passPCA_create_vals_list`, num_vectors, vector_sizes, values)
 }
 

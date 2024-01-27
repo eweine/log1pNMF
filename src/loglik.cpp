@@ -76,32 +76,6 @@ double get_sparse_term_loglik_lin_sparse_approx(
 
 }
 
-// [[Rcpp::export]]
-double get_sparse_term_loglik(
-    const arma::mat& U_T,
-    const arma::mat& V_T,
-    const std::vector<int> nonzero_y,
-    const std::vector<int> nonzero_y_i_idx,
-    const std::vector<int> nonzero_y_j_idx,
-    const int num_nonzero_y
-) {
-
-  double sum = 0.0;
-  int i;
-  int j;
-
-  for (int r = 0; r < num_nonzero_y; r++) {
-
-    i = nonzero_y_i_idx[r];
-    j = nonzero_y_j_idx[r];
-
-    sum += nonzero_y[r] * log(exp(dot(U_T.col(i), V_T.col(j))) - 1);
-
-  }
-
-  return(sum);
-
-}
 
 // [[Rcpp::export]]
 double get_loglik_exact(
