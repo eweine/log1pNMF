@@ -2,7 +2,6 @@
 
 export(fit_factor_model_log1p)
 export(fit_factor_model_log1p_lin_approx_sparse)
-export(fit_factor_model_log1p_lin_approx_sparse_cpp)
 export(fit_factor_model_log1p_quad_approx_full)
 export(fit_factor_model_log1p_quad_approx_sparse)
 export(generate_data_simple)

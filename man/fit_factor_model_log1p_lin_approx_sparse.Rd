@@ -2,22 +2,22 @@
 % Please edit documentation in R/fit_approx_lin_sparse.R
 \name{fit_factor_model_log1p_lin_approx_sparse}
 \alias{fit_factor_model_log1p_lin_approx_sparse}
-\title{Fit sparse linear approximation log1p factor model}
+\title{Fit sparse quadratic approximation log1p factor model with C++}
 \usage{
-fit_factor_model_log1p_lin_approx_sparse(Y, K, a = 1, maxiter = 25)
+fit_factor_model_log1p_lin_approx_sparse(Y, K, a, maxiter)
 }
 \arguments{
 \item{Y}{sparse matrix.}
 
 \item{K}{rank of factorization}
 
-\item{a}{slope of linear approximation}
-
 \item{maxiter}{maximum number of updates}
+
+\item{approx_range}{range of Chebyschev approximation}
 }
 \value{
 list with fit and progress info
 }
 \description{
-Fit sparse linear approximation log1p factor model
+Fit sparse quadratic approximation log1p factor model with C++
 }
