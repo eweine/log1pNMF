@@ -28,21 +28,28 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// regress_cols_of_Y_on_X_log1p_pois_exact
-arma::mat regress_cols_of_Y_on_X_log1p_pois_exact(const arma::mat& X, Rcpp::List Y, Rcpp::List Y_nz_idx, arma::mat& B, const std::vector<int> update_indices, unsigned int num_iter, const double alpha, const double beta);
-RcppExport SEXP _passPCA_regress_cols_of_Y_on_X_log1p_pois_exact(SEXP XSEXP, SEXP YSEXP, SEXP Y_nz_idxSEXP, SEXP BSEXP, SEXP update_indicesSEXP, SEXP num_iterSEXP, SEXP alphaSEXP, SEXP betaSEXP) {
+// fit_factor_model_log1p_exact_cpp_src
+List fit_factor_model_log1p_exact_cpp_src(const std::vector<int> sc_x, const std::vector<int> sc_i, const std::vector<int> sc_j, const std::vector<int> sc_T_x, const std::vector<int> sc_T_i, const std::vector<int> sc_T_j, arma::mat U_T, arma::mat V_T, const int n, const int p, const int max_iter, const double alpha, const double beta, const int num_ccd_iter, const std::vector<int> update_indices);
+RcppExport SEXP _passPCA_fit_factor_model_log1p_exact_cpp_src(SEXP sc_xSEXP, SEXP sc_iSEXP, SEXP sc_jSEXP, SEXP sc_T_xSEXP, SEXP sc_T_iSEXP, SEXP sc_T_jSEXP, SEXP U_TSEXP, SEXP V_TSEXP, SEXP nSEXP, SEXP pSEXP, SEXP max_iterSEXP, SEXP alphaSEXP, SEXP betaSEXP, SEXP num_ccd_iterSEXP, SEXP update_indicesSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const arma::mat& >::type X(XSEXP);
-    Rcpp::traits::input_parameter< Rcpp::List >::type Y(YSEXP);
-    Rcpp::traits::input_parameter< Rcpp::List >::type Y_nz_idx(Y_nz_idxSEXP);
-    Rcpp::traits::input_parameter< arma::mat& >::type B(BSEXP);
-    Rcpp::traits::input_parameter< const std::vector<int> >::type update_indices(update_indicesSEXP);
-    Rcpp::traits::input_parameter< unsigned int >::type num_iter(num_iterSEXP);
+    Rcpp::traits::input_parameter< const std::vector<int> >::type sc_x(sc_xSEXP);
+    Rcpp::traits::input_parameter< const std::vector<int> >::type sc_i(sc_iSEXP);
+    Rcpp::traits::input_parameter< const std::vector<int> >::type sc_j(sc_jSEXP);
+    Rcpp::traits::input_parameter< const std::vector<int> >::type sc_T_x(sc_T_xSEXP);
+    Rcpp::traits::input_parameter< const std::vector<int> >::type sc_T_i(sc_T_iSEXP);
+    Rcpp::traits::input_parameter< const std::vector<int> >::type sc_T_j(sc_T_jSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type U_T(U_TSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type V_T(V_TSEXP);
+    Rcpp::traits::input_parameter< const int >::type n(nSEXP);
+    Rcpp::traits::input_parameter< const int >::type p(pSEXP);
+    Rcpp::traits::input_parameter< const int >::type max_iter(max_iterSEXP);
     Rcpp::traits::input_parameter< const double >::type alpha(alphaSEXP);
     Rcpp::traits::input_parameter< const double >::type beta(betaSEXP);
-    rcpp_result_gen = Rcpp::wrap(regress_cols_of_Y_on_X_log1p_pois_exact(X, Y, Y_nz_idx, B, update_indices, num_iter, alpha, beta));
+    Rcpp::traits::input_parameter< const int >::type num_ccd_iter(num_ccd_iterSEXP);
+    Rcpp::traits::input_parameter< const std::vector<int> >::type update_indices(update_indicesSEXP);
+    rcpp_result_gen = Rcpp::wrap(fit_factor_model_log1p_exact_cpp_src(sc_x, sc_i, sc_j, sc_T_x, sc_T_i, sc_T_j, U_T, V_T, n, p, max_iter, alpha, beta, num_ccd_iter, update_indices));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -69,26 +76,6 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const int >::type num_ccd_iter(num_ccd_iterSEXP);
     Rcpp::traits::input_parameter< const std::vector<int> >::type update_indices(update_indicesSEXP);
     rcpp_result_gen = Rcpp::wrap(fit_factor_model_log1p_lin_approx_sparse_cpp_src(sc_x, sc_i, sc_j, sc_T_x, sc_T_i, sc_T_j, U_T, V_T, a, n, p, max_iter, alpha, beta, num_ccd_iter, update_indices));
-    return rcpp_result_gen;
-END_RCPP
-}
-// regress_cols_of_Y_on_X_log1p_lin_approx_sparse
-arma::mat regress_cols_of_Y_on_X_log1p_lin_approx_sparse(const arma::mat X_T, Rcpp::List Y, Rcpp::List Y_nz_idx, const arma::vec X_cs_times_a, const double a, arma::mat& B, const std::vector<int> update_indices, unsigned int num_iter, const double alpha, const double beta);
-RcppExport SEXP _passPCA_regress_cols_of_Y_on_X_log1p_lin_approx_sparse(SEXP X_TSEXP, SEXP YSEXP, SEXP Y_nz_idxSEXP, SEXP X_cs_times_aSEXP, SEXP aSEXP, SEXP BSEXP, SEXP update_indicesSEXP, SEXP num_iterSEXP, SEXP alphaSEXP, SEXP betaSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const arma::mat >::type X_T(X_TSEXP);
-    Rcpp::traits::input_parameter< Rcpp::List >::type Y(YSEXP);
-    Rcpp::traits::input_parameter< Rcpp::List >::type Y_nz_idx(Y_nz_idxSEXP);
-    Rcpp::traits::input_parameter< const arma::vec >::type X_cs_times_a(X_cs_times_aSEXP);
-    Rcpp::traits::input_parameter< const double >::type a(aSEXP);
-    Rcpp::traits::input_parameter< arma::mat& >::type B(BSEXP);
-    Rcpp::traits::input_parameter< const std::vector<int> >::type update_indices(update_indicesSEXP);
-    Rcpp::traits::input_parameter< unsigned int >::type num_iter(num_iterSEXP);
-    Rcpp::traits::input_parameter< const double >::type alpha(alphaSEXP);
-    Rcpp::traits::input_parameter< const double >::type beta(betaSEXP);
-    rcpp_result_gen = Rcpp::wrap(regress_cols_of_Y_on_X_log1p_lin_approx_sparse(X_T, Y, Y_nz_idx, X_cs_times_a, a, B, update_indices, num_iter, alpha, beta));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -149,9 +136,8 @@ END_RCPP
 
 static const R_CallMethodDef CallEntries[] = {
     {"_passPCA_get_loglik_exact", (DL_FUNC) &_passPCA_get_loglik_exact, 7},
-    {"_passPCA_regress_cols_of_Y_on_X_log1p_pois_exact", (DL_FUNC) &_passPCA_regress_cols_of_Y_on_X_log1p_pois_exact, 8},
+    {"_passPCA_fit_factor_model_log1p_exact_cpp_src", (DL_FUNC) &_passPCA_fit_factor_model_log1p_exact_cpp_src, 15},
     {"_passPCA_fit_factor_model_log1p_lin_approx_sparse_cpp_src", (DL_FUNC) &_passPCA_fit_factor_model_log1p_lin_approx_sparse_cpp_src, 16},
-    {"_passPCA_regress_cols_of_Y_on_X_log1p_lin_approx_sparse", (DL_FUNC) &_passPCA_regress_cols_of_Y_on_X_log1p_lin_approx_sparse, 10},
     {"_passPCA_fit_factor_model_log1p_quad_approx_full_cpp_src", (DL_FUNC) &_passPCA_fit_factor_model_log1p_quad_approx_full_cpp_src, 17},
     {"_passPCA_fit_factor_model_log1p_quad_approx_sparse_cpp_src", (DL_FUNC) &_passPCA_fit_factor_model_log1p_quad_approx_sparse_cpp_src, 17},
     {NULL, NULL, 0}

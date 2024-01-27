@@ -32,6 +32,28 @@ double get_sparse_term_loglik_exact(
   return sum;
 }
 
+double get_dense_term_loglik_exact(
+    const arma::mat U_T,
+    const arma::mat V_T,
+    const int n,
+    const int p
+) {
+
+  double sum = 0.0;
+
+  #pragma omp parallel for reduction(+:sum)
+  for (int i = 0; i < n; i++) {
+
+    for (int j = 0; j < p; j++) {
+
+      sum -= exp(dot(U_T.col(i), V_T.col(j)));
+
+    }
+  }
+
+  return sum;
+}
+
 double get_loglik_quad_approx_full(
     const arma::mat U_T,
     const arma::mat V_T,
@@ -183,6 +205,38 @@ double get_loglik_lin_approx_sparse(
   double lin_term = a * arma::dot(U_cs, arma::sum(V_T, 1));
 
   loglik = loglik - lin_term;
+  return(loglik);
+
+}
+
+double get_loglik_exact(
+    const arma::mat U_T,
+    const arma::mat V_T,
+    const std::vector<int> y_nz_vals,
+    const std::vector<int> y_nz_rows_idx,
+    const std::vector<int> y_nz_cols_idx,
+    const int n,
+    const int p
+) {
+
+  double loglik_sparse_term = get_sparse_term_loglik_exact(
+    U_T,
+    V_T,
+    y_nz_vals,
+    y_nz_rows_idx,
+    y_nz_cols_idx,
+    y_nz_vals.size()
+  );
+
+  double loglik_dense_term = get_dense_term_loglik_exact(
+    U_T,
+    V_T,
+    n,
+    p
+  );
+
+  double loglik = loglik_sparse_term + loglik_dense_term;
+
   return(loglik);
 
 }
