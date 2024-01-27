@@ -128,3 +128,61 @@ double get_loglik_quad_approx_sparse(
   return(loglik);
 
 }
+
+
+double get_sparse_term_loglik_lin_sparse_approx(
+    const arma::mat U_T,
+    const arma::mat V_T,
+    const std::vector<int> nonzero_y,
+    const std::vector<int> nonzero_y_i_idx,
+    const std::vector<int> nonzero_y_j_idx,
+    const int num_nonzero_y,
+    const double a
+) {
+
+  double sp_term = 0.0;
+  double lin_correction = 0.0;
+  double cp;
+
+  #pragma omp parallel for reduction(+:sp_term, lin_correction)
+  for (int r = 0; r < num_nonzero_y; r++) {
+
+    cp = dot(U_T.col(nonzero_y_i_idx[r]), V_T.col(nonzero_y_j_idx[r]));
+
+    sp_term += nonzero_y[r] * log(exp(cp) - 1) - exp(cp);
+    lin_correction += cp;
+
+  }
+
+  double ll = sp_term + a * lin_correction;
+
+  return(ll);
+
+}
+
+double get_loglik_lin_approx_sparse(
+    const arma::mat U_T,
+    const arma::mat V_T,
+    const arma::vec U_cs,
+    const std::vector<int> y_nz_vals,
+    const std::vector<int> y_nz_rows_idx,
+    const std::vector<int> y_nz_cols_idx,
+    const double a
+) {
+
+  double loglik = get_sparse_term_loglik_lin_sparse_approx(
+    U_T,
+    V_T,
+    y_nz_vals,
+    y_nz_rows_idx,
+    y_nz_cols_idx,
+    y_nz_vals.size(),
+    a
+  );
+
+  double lin_term = a * arma::dot(U_cs, arma::sum(V_T, 1));
+
+  loglik = loglik - lin_term;
+  return(loglik);
+
+}
