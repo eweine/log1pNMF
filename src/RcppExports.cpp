@@ -11,6 +11,25 @@ Rcpp::Rostream<true>&  Rcpp::Rcout = Rcpp::Rcpp_cout_get();
 Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
+// solve_pois_reg_log1p
+arma::vec solve_pois_reg_log1p(const arma::mat X, const arma::vec y, const arma::uvec y_nz_idx, const arma::vec s, arma::vec b, const std::vector<int> update_indices, unsigned int num_iter, const double alpha, const double beta);
+RcppExport SEXP _passPCA_solve_pois_reg_log1p(SEXP XSEXP, SEXP ySEXP, SEXP y_nz_idxSEXP, SEXP sSEXP, SEXP bSEXP, SEXP update_indicesSEXP, SEXP num_iterSEXP, SEXP alphaSEXP, SEXP betaSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::mat >::type X(XSEXP);
+    Rcpp::traits::input_parameter< const arma::vec >::type y(ySEXP);
+    Rcpp::traits::input_parameter< const arma::uvec >::type y_nz_idx(y_nz_idxSEXP);
+    Rcpp::traits::input_parameter< const arma::vec >::type s(sSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type b(bSEXP);
+    Rcpp::traits::input_parameter< const std::vector<int> >::type update_indices(update_indicesSEXP);
+    Rcpp::traits::input_parameter< unsigned int >::type num_iter(num_iterSEXP);
+    Rcpp::traits::input_parameter< const double >::type alpha(alphaSEXP);
+    Rcpp::traits::input_parameter< const double >::type beta(betaSEXP);
+    rcpp_result_gen = Rcpp::wrap(solve_pois_reg_log1p(X, y, y_nz_idx, s, b, update_indices, num_iter, alpha, beta));
+    return rcpp_result_gen;
+END_RCPP
+}
 // fit_factor_model_log1p_exact_cpp_src
 List fit_factor_model_log1p_exact_cpp_src(const std::vector<int> sc_x, const std::vector<int> sc_i, const std::vector<int> sc_j, const std::vector<int> sc_T_x, const std::vector<int> sc_T_i, const std::vector<int> sc_T_j, const arma::vec s, arma::mat U_T, arma::mat V_T, const int n, const int p, const int max_iter, const double alpha, const double beta, const int num_ccd_iter, const std::vector<int> update_indices);
 RcppExport SEXP _passPCA_fit_factor_model_log1p_exact_cpp_src(SEXP sc_xSEXP, SEXP sc_iSEXP, SEXP sc_jSEXP, SEXP sc_T_xSEXP, SEXP sc_T_iSEXP, SEXP sc_T_jSEXP, SEXP sSEXP, SEXP U_TSEXP, SEXP V_TSEXP, SEXP nSEXP, SEXP pSEXP, SEXP max_iterSEXP, SEXP alphaSEXP, SEXP betaSEXP, SEXP num_ccd_iterSEXP, SEXP update_indicesSEXP) {
@@ -119,6 +138,7 @@ END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
+    {"_passPCA_solve_pois_reg_log1p", (DL_FUNC) &_passPCA_solve_pois_reg_log1p, 9},
     {"_passPCA_fit_factor_model_log1p_exact_cpp_src", (DL_FUNC) &_passPCA_fit_factor_model_log1p_exact_cpp_src, 16},
     {"_passPCA_fit_factor_model_log1p_lin_approx_sparse_cpp_src", (DL_FUNC) &_passPCA_fit_factor_model_log1p_lin_approx_sparse_cpp_src, 16},
     {"_passPCA_fit_factor_model_log1p_quad_approx_full_cpp_src", (DL_FUNC) &_passPCA_fit_factor_model_log1p_quad_approx_full_cpp_src, 17},

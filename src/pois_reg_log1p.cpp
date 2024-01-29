@@ -8,6 +8,7 @@ using namespace Rcpp;
 using namespace arma;
 
 
+// [[Rcpp::export]]
 arma::vec solve_pois_reg_log1p (
     const arma::mat X,
     const arma::vec y,
@@ -44,6 +45,7 @@ arma::vec solve_pois_reg_log1p (
   for (int update_num = 1; update_num <= num_iter; update_num++) {
 
     for (i = 0; i < num_indices; i++) {
+
       j = update_indices[i];
 
       exp_deriv_term = exp_eta % X.col(j);
@@ -123,24 +125,6 @@ arma::mat regress_cols_of_Y_on_X_log1p_pois_exact(
     #pragma omp parallel for
     for (int j = 0; j < B.n_cols; j++) {
 
-      B.col(j) = solve_pois_reg_log1p (
-        X,
-        Y[j],
-        Y_nz_idx[j],
-        s.elem(Y_nz_idx[j]),
-        B.col(j),
-        update_indices,
-        num_iter,
-        alpha,
-        beta
-      );
-    }
-
-  } else {
-
-    #pragma omp parallel for
-    for (int j = 0; j < B.n_cols; j++) {
-
       arma::vec s_j(Y[j].n_elem);
       s_j.fill(s[j]);
 
@@ -149,6 +133,25 @@ arma::mat regress_cols_of_Y_on_X_log1p_pois_exact(
         Y[j],
         Y_nz_idx[j],
         s_j,
+        B.col(j),
+        update_indices,
+        num_iter,
+        alpha,
+        beta
+      );
+
+    }
+
+  } else {
+
+    #pragma omp parallel for
+    for (int j = 0; j < B.n_cols; j++) {
+
+      B.col(j) = solve_pois_reg_log1p (
+        X,
+        Y[j],
+        Y_nz_idx[j],
+        s.elem(Y_nz_idx[j]),
         B.col(j),
         update_indices,
         num_iter,
