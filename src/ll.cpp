@@ -12,6 +12,7 @@ double get_sparse_term_loglik_exact(
     const std::vector<int> nonzero_y,
     const std::vector<int> nonzero_y_i_idx,
     const std::vector<int> nonzero_y_j_idx,
+    const arma::vec s,
     const int num_nonzero_y
 ) {
 
@@ -25,7 +26,7 @@ double get_sparse_term_loglik_exact(
         dot(
           U_T.col(nonzero_y_i_idx[r]), V_T.col(nonzero_y_j_idx[r])
         )
-      ) - 1
+      ) - s[nonzero_y_i_idx[r]]
     );
   }
 
@@ -66,14 +67,18 @@ double get_loglik_quad_approx_full(
     const double a2
 ) {
 
-  double loglik = get_sparse_term_loglik_exact(
-    U_T,
-    V_T,
-    y_nz_vals,
-    y_nz_rows_idx,
-    y_nz_cols_idx,
-    y_nz_vals.size()
-  );
+  // Commenting out to avoid compilation error
+
+  // double loglik = get_sparse_term_loglik_exact(
+  //   U_T,
+  //   V_T,
+  //   y_nz_vals,
+  //   y_nz_rows_idx,
+  //   y_nz_cols_idx,
+  //   y_nz_vals.size()
+  // );
+
+  double loglik = 0.0;
 
   double lin_term = a1 * arma::dot(U_cs, arma::sum(V_T, 1));
 
@@ -215,6 +220,7 @@ double get_loglik_exact(
     const std::vector<int> y_nz_vals,
     const std::vector<int> y_nz_rows_idx,
     const std::vector<int> y_nz_cols_idx,
+    const arma::vec s,
     const int n,
     const int p
 ) {
@@ -225,6 +231,7 @@ double get_loglik_exact(
     y_nz_vals,
     y_nz_rows_idx,
     y_nz_cols_idx,
+    s,
     y_nz_vals.size()
   );
 

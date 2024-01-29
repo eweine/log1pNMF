@@ -12,6 +12,7 @@ arma::vec solve_pois_reg_log1p (
     const arma::mat X,
     const arma::vec y,
     const arma::uvec y_nz_idx,
+    const arma::vec s,
     arma::vec b,
     const std::vector<int> update_indices,
     unsigned int num_iter,
@@ -25,7 +26,7 @@ arma::vec solve_pois_reg_log1p (
   double newton_dec;
   vec eta = X * b;
   vec exp_eta = exp(eta);
-  vec exp_eta_nz_m1 = exp_eta.elem(y_nz_idx) - 1;
+  vec exp_eta_nz_m1 = exp_eta.elem(y_nz_idx) - s;
   vec eta_proposed;
   vec exp_deriv_term;
   double t;
@@ -81,7 +82,7 @@ arma::vec solve_pois_reg_log1p (
         b[j]             = b_j_og - t * newton_dir;
         eta_proposed     = eta + (b[j] - b_j_og) * X.col(j);
         exp_eta = exp(eta_proposed);
-        exp_eta_nz_m1 = exp_eta.elem(y_nz_idx) - 1;
+        exp_eta_nz_m1 = exp_eta.elem(y_nz_idx) - s;
         f_proposed = sum(exp_eta) - dot(
           y,
           log(exp_eta_nz_m1)
@@ -108,6 +109,8 @@ arma::mat regress_cols_of_Y_on_X_log1p_pois_exact(
     const arma::mat X,
     const std::vector<arma::vec> Y,
     const std::vector<arma::uvec> Y_nz_idx,
+    const arma::vec s,
+    const bool common_size_factor,
     arma::mat B,
     const std::vector<int> update_indices,
     unsigned int num_iter,
@@ -115,19 +118,45 @@ arma::mat regress_cols_of_Y_on_X_log1p_pois_exact(
     const double beta
 ) {
 
-  #pragma omp parallel for
-  for (int j = 0; j < B.n_cols; j++) {
+  if (common_size_factor) {
 
-    B.col(j) = solve_pois_reg_log1p (
-      X,
-      Y[j],
-      Y_nz_idx[j],
-      B.col(j),
-      update_indices,
-      num_iter,
-      alpha,
-      beta
-    );
+    #pragma omp parallel for
+    for (int j = 0; j < B.n_cols; j++) {
+
+      B.col(j) = solve_pois_reg_log1p (
+        X,
+        Y[j],
+        Y_nz_idx[j],
+        s.elem(Y_nz_idx[j]),
+        B.col(j),
+        update_indices,
+        num_iter,
+        alpha,
+        beta
+      );
+    }
+
+  } else {
+
+    #pragma omp parallel for
+    for (int j = 0; j < B.n_cols; j++) {
+
+      arma::vec s_j(Y[j].n_elem);
+      s_j.fill(s[j]);
+
+      B.col(j) = solve_pois_reg_log1p (
+        X,
+        Y[j],
+        Y_nz_idx[j],
+        s_j,
+        B.col(j),
+        update_indices,
+        num_iter,
+        alpha,
+        beta
+      );
+
+    }
 
   }
 
@@ -144,6 +173,7 @@ List fit_factor_model_log1p_exact_cpp_src(
     const std::vector<int> sc_T_x,
     const std::vector<int> sc_T_i,
     const std::vector<int> sc_T_j,
+    const arma::vec s,
     arma::mat U_T,
     arma::mat V_T,
     const int n,
@@ -197,6 +227,7 @@ List fit_factor_model_log1p_exact_cpp_src(
     sc_x,
     sc_i,
     sc_j,
+    s,
     n,
     p
   );
@@ -214,6 +245,8 @@ List fit_factor_model_log1p_exact_cpp_src(
       V_T.t(),
       y_rows_data,
       y_rows_idx,
+      s,
+      true,
       U_T,
       update_indices,
       num_ccd_iter,
@@ -225,6 +258,8 @@ List fit_factor_model_log1p_exact_cpp_src(
       U_T.t(),
       y_cols_data,
       y_cols_idx,
+      s,
+      false,
       V_T,
       update_indices,
       num_ccd_iter,
@@ -238,6 +273,7 @@ List fit_factor_model_log1p_exact_cpp_src(
       sc_x,
       sc_i,
       sc_j,
+      s,
       n,
       p
     );
@@ -250,7 +286,7 @@ List fit_factor_model_log1p_exact_cpp_src(
 
   fit["U"] = U_T.t();
   fit["V"] = V_T.t();
-  //fit["loglik"] = loglik_history;
+  fit["loglik"] = loglik_history;
 
   return(fit);
 

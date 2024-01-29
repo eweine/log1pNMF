@@ -45,6 +45,7 @@ double get_loglik_exact(
     const std::vector<int> y_nz_vals,
     const std::vector<int> y_nz_rows_idx,
     const std::vector<int> y_nz_cols_idx,
+    const arma::vec s,
     const int n,
     const int p
 );

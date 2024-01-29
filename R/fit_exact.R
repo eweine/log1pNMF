@@ -14,13 +14,20 @@
 fit_factor_model_log1p_exact <- function(
     Y,
     K,
-    maxiter
+    maxiter,
+    s = NULL
 ) {
 
   n <- nrow(Y)
   p <- ncol(Y)
 
-  init <- init_factor_model_log1p(n, p, K)
+  if (is.null(s)) {
+
+    s <- rep(1, n)
+
+  }
+
+  init <- init_factor_model_log1p(n, p, K, s)
 
   sc <- Matrix::summary(Y)
   sc_t <- Matrix::summary(Matrix::t(Y))
@@ -32,6 +39,7 @@ fit_factor_model_log1p_exact <- function(
     sc_t$x,
     sc_t$i - 1,
     sc_t$j - 1,
+    s,
     t(init$U),
     t(init$V),
     n,
@@ -40,8 +48,11 @@ fit_factor_model_log1p_exact <- function(
     .01,
     .25,
     5,
-    0:(K-1)
+    1:K
   )
+
+  fit$U <- fit$U[, -1]
+  fit$V <- fit$V[, -1]
 
   return(fit)
 
