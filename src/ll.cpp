@@ -163,6 +163,7 @@ double get_sparse_term_loglik_lin_sparse_approx(
     const std::vector<int> nonzero_y,
     const std::vector<int> nonzero_y_i_idx,
     const std::vector<int> nonzero_y_j_idx,
+    const arma::vec s,
     const int num_nonzero_y,
     const double a
 ) {
@@ -176,7 +177,7 @@ double get_sparse_term_loglik_lin_sparse_approx(
 
     cp = dot(U_T.col(nonzero_y_i_idx[r]), V_T.col(nonzero_y_j_idx[r]));
 
-    sp_term += nonzero_y[r] * log(exp(cp) - 1) - exp(cp);
+    sp_term += nonzero_y[r] * log(exp(cp) - s[nonzero_y_i_idx[r]]) - exp(cp);
     lin_correction += cp;
 
   }
@@ -194,6 +195,7 @@ double get_loglik_lin_approx_sparse(
     const std::vector<int> y_nz_vals,
     const std::vector<int> y_nz_rows_idx,
     const std::vector<int> y_nz_cols_idx,
+    const arma::vec s,
     const double a
 ) {
 
@@ -203,6 +205,7 @@ double get_loglik_lin_approx_sparse(
     y_nz_vals,
     y_nz_rows_idx,
     y_nz_cols_idx,
+    s,
     y_nz_vals.size(),
     a
   );
