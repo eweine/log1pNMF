@@ -4,7 +4,13 @@
 \alias{fit_factor_model_log1p_quad_approx_sparse}
 \title{Fit sparse quadratic approximation log1p factor model with C++}
 \usage{
-fit_factor_model_log1p_quad_approx_sparse(Y, K, approx_range, maxiter)
+fit_factor_model_log1p_quad_approx_sparse(
+  Y,
+  K,
+  approx_range,
+  maxiter,
+  s = NULL
+)
 }
 \arguments{
 \item{Y}{sparse matrix.}

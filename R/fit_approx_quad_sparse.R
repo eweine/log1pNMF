@@ -15,13 +15,20 @@ fit_factor_model_log1p_quad_approx_sparse <- function(
     Y,
     K,
     approx_range,
-    maxiter
+    maxiter,
+    s = NULL
 ) {
 
   n <- nrow(Y)
   p <- ncol(Y)
 
-  init <- init_factor_model_log1p(n, p, K)
+  if (is.null(s)) {
+
+    s <- rep(1, n)
+
+  }
+
+  init <- init_factor_model_log1p(n, p, K, s)
 
   # get the approximation
   poly_approx <- pracma::polyApprox(
@@ -44,6 +51,7 @@ fit_factor_model_log1p_quad_approx_sparse <- function(
     sc_t$x,
     sc_t$i - 1,
     sc_t$j - 1,
+    s,
     t(init$U),
     t(init$V),
     a1,
@@ -54,8 +62,11 @@ fit_factor_model_log1p_quad_approx_sparse <- function(
     .01,
     .25,
     5,
-    0:(K-1)
+    1:K
   )
+
+  fit$U <- fit$U[, -1]
+  fit$V <- fit$V[, -1]
 
   return(fit)
 

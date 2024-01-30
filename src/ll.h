@@ -25,6 +25,7 @@ double get_loglik_quad_approx_sparse(
     const std::vector<int> y_nz_vals,
     const std::vector<int> y_nz_rows_idx,
     const std::vector<int> y_nz_cols_idx,
+    const arma::vec s,
     const double a1,
     const double a2
 );

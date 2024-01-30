@@ -97,6 +97,7 @@ double get_sparse_term_loglik_quad_sparse_approx(
     const std::vector<int> nonzero_y_i_idx,
     const std::vector<int> nonzero_y_j_idx,
     const int num_nonzero_y,
+    arma::vec s,
     const double a1,
     const double a2
 ) {
@@ -111,7 +112,7 @@ double get_sparse_term_loglik_quad_sparse_approx(
 
     cp = dot(U_T.col(nonzero_y_i_idx[r]), V_T.col(nonzero_y_j_idx[r]));
 
-    sp_term += nonzero_y[r] * log(exp(cp) - 1) - exp(cp);
+    sp_term += nonzero_y[r] * log(exp(cp) - s[nonzero_y_i_idx[r]]) - exp(cp);
     lin_correction += cp;
     quad_correction += cp * cp;
 
@@ -131,6 +132,7 @@ double get_loglik_quad_approx_sparse(
     const std::vector<int> y_nz_vals,
     const std::vector<int> y_nz_rows_idx,
     const std::vector<int> y_nz_cols_idx,
+    const arma::vec s,
     const double a1,
     const double a2
 ) {
@@ -142,6 +144,7 @@ double get_loglik_quad_approx_sparse(
     y_nz_rows_idx,
     y_nz_cols_idx,
     y_nz_vals.size(),
+    s,
     a1,
     a2
   );
