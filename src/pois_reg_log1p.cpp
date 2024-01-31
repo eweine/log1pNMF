@@ -1,6 +1,7 @@
 #include <RcppArmadillo.h>
 #include <Rcpp.h>
 #include <omp.h>
+#include <chrono>
 #include "ll.h"
 #include "utils.h"
 
@@ -235,13 +236,24 @@ List fit_factor_model_log1p_exact_cpp_src(
   );
 
   std::vector<double> loglik_history;
+  loglik_history.reserve(max_iter + 1);
+  std::vector<double> timing;
+  timing.reserve(max_iter + 1);
+
   loglik_history.push_back(loglik);
+  timing.push_back(0.0);
+
+  std::chrono::high_resolution_clock::time_point start;
+  std::chrono::high_resolution_clock::time_point stop;
+  std::chrono::microseconds duration;
 
   Rprintf("Fitting log1p factor model to %i x %i count matrix.\n",n,p);
 
   for (int iter = 0; iter < max_iter; iter++) {
 
     Rprintf("Iteration %i: objective = %+0.12e\n", iter, loglik);
+
+    start = std::chrono::high_resolution_clock::now();
 
     U_T = regress_cols_of_Y_on_X_log1p_pois_exact(
       V_T.t(),
@@ -282,12 +294,18 @@ List fit_factor_model_log1p_exact_cpp_src(
 
     loglik_history.push_back(loglik);
 
+    stop = std::chrono::high_resolution_clock::now();
+    duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
+
+    timing.push_back(std::chrono::duration<double>(duration).count());
+
   }
 
   List fit;
 
   fit["U"] = U_T.t();
   fit["V"] = V_T.t();
+  fit["time"] = timing;
   fit["loglik"] = loglik_history;
 
   return(fit);

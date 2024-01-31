@@ -280,13 +280,39 @@ List fit_factor_model_log1p_quad_approx_sparse_cpp_src(
   );
 
   std::vector<double> loglik_history;
+  loglik_history.reserve(max_iter + 1);
   loglik_history.push_back(loglik);
+
+  double loglik_exact = get_loglik_exact(
+    U_T,
+    V_T,
+    sc_x,
+    sc_i,
+    sc_j,
+    s,
+    n,
+    p
+  );
+
+  std::vector<double> loglik_exact_history;
+  loglik_exact_history.reserve(max_iter + 1);
+  loglik_exact_history.push_back(loglik_exact);
+
+  std::vector<double> timing;
+  timing.reserve(max_iter + 1);
+  timing.push_back(0.0);
+
+  std::chrono::high_resolution_clock::time_point start;
+  std::chrono::high_resolution_clock::time_point stop;
+  std::chrono::microseconds duration;
 
   Rprintf("Fitting log1p factor model to %i x %i count matrix.\n",n,p);
 
   for (int iter = 0; iter < max_iter; iter++) {
 
     Rprintf("Iteration %i: objective = %+0.12e\n", iter, loglik);
+
+    start = std::chrono::high_resolution_clock::now();
 
     U_T = regress_cols_of_Y_on_X_log1p_quad_approx_sparse(
       V_T,
@@ -340,13 +366,32 @@ List fit_factor_model_log1p_quad_approx_sparse_cpp_src(
 
     loglik_history.push_back(loglik);
 
+    stop = std::chrono::high_resolution_clock::now();
+    duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
+
+    loglik_exact = get_loglik_exact(
+      U_T,
+      V_T,
+      sc_x,
+      sc_i,
+      sc_j,
+      s,
+      n,
+      p
+    );
+
+    loglik_exact_history.push_back(loglik_exact);
+    timing.push_back(std::chrono::duration<double>(duration).count());
+
   }
 
   List fit;
 
   fit["U"] = U_T.t();
   fit["V"] = V_T.t();
-  fit["loglik"] = loglik_history;
+  fit["objective"] = loglik_history;
+  fit["loglik"] = loglik_exact_history;
+  fit["time"] = timing;
 
   return(fit);
 

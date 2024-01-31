@@ -67,6 +67,8 @@ fit_factor_model_log1p_quad_approx_sparse <- function(
 
   fit$U <- fit$U[, -1]
   fit$V <- fit$V[, -1]
+  fit$s <- s
+  fit$loglik <- fit$loglik - sum(MatrixExtra::mapSparse(Y, lfactorial))
 
   return(fit)
 
