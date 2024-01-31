@@ -12,6 +12,7 @@ arma::vec solve_pois_reg_log1p_quad_approx_sparse (
     const arma::mat X_T,
     const arma::vec y,
     const arma::uvec y_nz_idx,
+    const arma::vec s,
     const arma::vec X_cs_times_a1,
     const arma::mat X_T_X,
     const double a1,
@@ -34,7 +35,7 @@ arma::vec solve_pois_reg_log1p_quad_approx_sparse (
   double newton_dec;
   vec eta_nz = X_nz * b;
   vec exp_eta_nz = exp(eta_nz);
-  vec exp_eta_nz_m1 = exp_eta_nz - 1;
+  vec exp_eta_nz_m1 = exp_eta_nz - s;
   vec eta_nz_proposed;
   vec exp_deriv_term_nz;
   vec quad_deriv_vec;
@@ -102,7 +103,7 @@ arma::vec solve_pois_reg_log1p_quad_approx_sparse (
         b[j]             = b_j_og - t * newton_dir;
         eta_nz_proposed     = eta_nz + (b[j] - b_j_og) * X_nz.col(j);
         exp_eta_nz = exp(eta_nz_proposed);
-        exp_eta_nz_m1 = exp_eta_nz - 1;
+        exp_eta_nz_m1 = exp_eta_nz - s;
 
         exact_lik = sum(exp_eta_nz) - dot(
           y,
@@ -134,6 +135,8 @@ arma::mat regress_cols_of_Y_on_X_log1p_quad_approx_sparse(
     const arma::mat X_T,
     const std::vector<arma::vec> Y,
     const std::vector<arma::uvec> Y_nz_idx,
+    const arma::vec s,
+    const bool common_size_factor,
     const arma::vec X_cs_times_a1,
     const arma::mat X_T_X,
     arma::mat B,
@@ -145,23 +148,55 @@ arma::mat regress_cols_of_Y_on_X_log1p_quad_approx_sparse(
     const double beta
 ) {
 
-  #pragma omp parallel for
-  for (int j = 0; j < B.n_cols; j++) {
 
-    B.col(j) = solve_pois_reg_log1p_quad_approx_sparse(
-      X_T,
-      Y[j],
-      Y_nz_idx[j],
-      X_cs_times_a1,
-      X_T_X,
-      a1,
-      a2,
-      B.col(j),
-      update_indices,
-      num_iter,
-      alpha,
-      beta
-    );
+  if (common_size_factor) {
+
+    #pragma omp parallel for
+    for (int j = 0; j < B.n_cols; j++) {
+
+      arma::vec s_j(Y[j].n_elem);
+      s_j.fill(s[j]);
+
+      B.col(j) = solve_pois_reg_log1p_quad_approx_sparse(
+        X_T,
+        Y[j],
+        Y_nz_idx[j],
+        s_j,
+        X_cs_times_a1,
+        X_T_X,
+        a1,
+        a2,
+        B.col(j),
+        update_indices,
+        num_iter,
+        alpha,
+        beta
+      );
+
+    }
+
+  } else {
+
+    #pragma omp parallel for
+    for (int j = 0; j < B.n_cols; j++) {
+
+      B.col(j) = solve_pois_reg_log1p_quad_approx_sparse(
+        X_T,
+        Y[j],
+        Y_nz_idx[j],
+        s.elem(Y_nz_idx[j]),
+        X_cs_times_a1,
+        X_T_X,
+        a1,
+        a2,
+        B.col(j),
+        update_indices,
+        num_iter,
+        alpha,
+        beta
+      );
+
+    }
 
   }
 
@@ -178,6 +213,7 @@ List fit_factor_model_log1p_quad_approx_sparse_cpp_src(
     const std::vector<int> sc_T_x,
     const std::vector<int> sc_T_i,
     const std::vector<int> sc_T_j,
+    const arma::vec s,
     arma::mat U_T,
     arma::mat V_T,
     const double a1,
@@ -238,6 +274,7 @@ List fit_factor_model_log1p_quad_approx_sparse_cpp_src(
     sc_x,
     sc_i,
     sc_j,
+    s,
     a1,
     a2
   );
@@ -255,6 +292,8 @@ List fit_factor_model_log1p_quad_approx_sparse_cpp_src(
       V_T,
       y_rows_data,
       y_rows_idx,
+      s,
+      true,
       a1 * sum(V_T, 1),
       V_T * V_T.t(),
       U_T,
@@ -273,6 +312,8 @@ List fit_factor_model_log1p_quad_approx_sparse_cpp_src(
       U_T,
       y_cols_data,
       y_cols_idx,
+      s,
+      false,
       a1 * U_cs,
       U_T_U,
       V_T,
@@ -292,6 +333,7 @@ List fit_factor_model_log1p_quad_approx_sparse_cpp_src(
       sc_x,
       sc_i,
       sc_j,
+      s,
       a1,
       a2
     );

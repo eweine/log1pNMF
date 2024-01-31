@@ -4,7 +4,7 @@
 \alias{generate_data_simple}
 \title{Generate Data from a log1p Factor Model}
 \usage{
-generate_data_simple(n, p, K)
+generate_data_simple(n, p, K, size_factor = FALSE)
 }
 \arguments{
 \item{n}{Number of rows.}
@@ -12,6 +12,8 @@ generate_data_simple(n, p, K)
 \item{p}{Number of columns.}
 
 \item{K}{Rank of the underlying mean structure}
+
+\item{size_factor}{boolean indicating if size factor should be generated}
 }
 \value{
 list with underlying mean structure and observations
