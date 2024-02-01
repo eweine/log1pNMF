@@ -112,9 +112,10 @@ double get_sparse_term_loglik_quad_sparse_approx(
 
     cp = dot(U_T.col(nonzero_y_i_idx[r]), V_T.col(nonzero_y_j_idx[r]));
 
-    sp_term += nonzero_y[r] * log(exp(cp) - s[nonzero_y_i_idx[r]]) - exp(cp);
-    lin_correction += cp;
-    quad_correction += cp * cp;
+    sp_term += nonzero_y[r] * log(exp(cp) - 1) -
+      s[nonzero_y_i_idx[r]] * exp(cp);
+    lin_correction += s[nonzero_y_i_idx[r]] * cp;
+    quad_correction += s[nonzero_y_i_idx[r]] * cp * cp;
 
   }
 
@@ -127,8 +128,6 @@ double get_sparse_term_loglik_quad_sparse_approx(
 double get_loglik_quad_approx_sparse(
     const arma::mat U_T,
     const arma::mat V_T,
-    const arma::vec U_cs,
-    const arma::mat U_T_U,
     const std::vector<int> y_nz_vals,
     const std::vector<int> y_nz_rows_idx,
     const std::vector<int> y_nz_cols_idx,
@@ -149,9 +148,9 @@ double get_loglik_quad_approx_sparse(
     a2
   );
 
-  double lin_term = a1 * arma::dot(U_cs, arma::sum(V_T, 1));
+  double lin_term = a1 * arma::dot(U_T * s, arma::sum(V_T, 1));
 
-  arma::mat U_T_U_V_T = U_T_U * V_T;
+  arma::mat U_T_U_V_T = (U_T.each_row() % s.t()) * U_T.t() * V_T;
   double quad_term = a2 * arma::accu(V_T % U_T_U_V_T);
 
   loglik = loglik - lin_term - quad_term;
@@ -180,8 +179,10 @@ double get_sparse_term_loglik_lin_sparse_approx(
 
     cp = dot(U_T.col(nonzero_y_i_idx[r]), V_T.col(nonzero_y_j_idx[r]));
 
-    sp_term += nonzero_y[r] * log(exp(cp) - s[nonzero_y_i_idx[r]]) - exp(cp);
-    lin_correction += cp;
+    sp_term += nonzero_y[r] * log(exp(cp) - 1) -
+      s[nonzero_y_i_idx[r]] * exp(cp);
+
+    lin_correction += s[nonzero_y_i_idx[r]] * cp;
 
   }
 
@@ -194,7 +195,7 @@ double get_sparse_term_loglik_lin_sparse_approx(
 double get_loglik_lin_approx_sparse(
     const arma::mat U_T,
     const arma::mat V_T,
-    const arma::vec U_cs,
+    const arma::vec U_T_s,
     const std::vector<int> y_nz_vals,
     const std::vector<int> y_nz_rows_idx,
     const std::vector<int> y_nz_cols_idx,
@@ -213,7 +214,7 @@ double get_loglik_lin_approx_sparse(
     a
   );
 
-  double lin_term = a * arma::dot(U_cs, arma::sum(V_T, 1));
+  double lin_term = a * arma::dot(U_T_s, arma::sum(V_T, 1));
 
   loglik = loglik - lin_term;
   return(loglik);

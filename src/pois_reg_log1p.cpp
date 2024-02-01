@@ -67,9 +67,9 @@ arma::vec solve_pois_reg_log1p (
 
         t = 1.0;
 
-      } else if (b[j] >= 1e-16) {
+      } else if (b[j] >= 1e-12) {
 
-        t = std::min(b[j] / newton_dir, 1.0);
+        t = std::min((b[j] - 1e-12) / newton_dir, 1.0);
 
       } else {
 
@@ -268,6 +268,12 @@ List fit_factor_model_log1p_exact_cpp_src(
       alpha,
       beta
     );
+
+    arma::vec d = mean(U_T, 1) / mean(V_T, 1);
+    d(0) = 1.0;
+
+    U_T.each_col() %= arma::sqrt(1/d);
+    V_T.each_col() %= arma::sqrt(d);
 
     loglik = get_loglik_exact(
       U_T,
