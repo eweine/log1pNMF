@@ -1,6 +1,7 @@
 #include <RcppArmadillo.h>
 #include <Rcpp.h>
 #include <omp.h>
+#include <cmath>
 #include "ll.h"
 #include "utils.h"
 
@@ -12,8 +13,8 @@ arma::vec solve_pois_reg_log1p_lin_approx_sparse (
     const arma::mat X_T,
     const arma::vec y,
     const arma::uvec y_nz_idx,
-    const arma::vec s,
-    const arma::vec X_cs_times_a,
+    const arma::vec s_nz,
+    const arma::vec X_T_s,
     const double a,
     arma::vec b,
     const std::vector<int> update_indices,
@@ -24,7 +25,8 @@ arma::vec solve_pois_reg_log1p_lin_approx_sparse (
 
   const arma::mat X_T_nz = X_T.cols(y_nz_idx);
   const arma::mat X_nz = X_T_nz.t();
-  const arma::vec X_0_cs_times_a = X_cs_times_a - a * arma::sum(X_T_nz, 1);
+
+  const arma::vec X_T_0_s_times_a = a * (X_T_s - X_T_nz * s_nz);
 
   double first_deriv;
   double second_deriv;
@@ -32,16 +34,19 @@ arma::vec solve_pois_reg_log1p_lin_approx_sparse (
   double newton_dec;
   vec eta_nz = X_nz * b;
   vec exp_eta_nz = exp(eta_nz);
-  vec exp_eta_nz_m1 = exp_eta_nz - s;
+  vec exp_eta_nz_m1 = exp_eta_nz - 1;
   vec eta_nz_proposed;
+  vec exp_eta_nz_proposed;
+  vec exp_eta_nz_m1_proposed;
   vec exp_deriv_term_nz;
   double t;
   double f_proposed;
+  double exact_lik_proposed;
   unsigned int i, j;
   double b_j_og;
   double current_lik;
 
-  double exact_lik = sum(exp_eta_nz) - dot(
+  double exact_lik = dot(s_nz, exp_eta_nz) - dot(
     y,
     log(exp_eta_nz_m1)
   );
@@ -53,16 +58,16 @@ arma::vec solve_pois_reg_log1p_lin_approx_sparse (
     for (i = 0; i < num_indices; i++) {
       j = update_indices[i];
 
-      current_lik = exact_lik + b[j] * X_0_cs_times_a[j];
+      current_lik = exact_lik + b[j] * X_T_0_s_times_a[j];
 
       exp_deriv_term_nz = exp_eta_nz % X_nz.col(j);
 
-      first_deriv    = sum(exp_deriv_term_nz) - dot(
+      first_deriv    = dot(s_nz, exp_deriv_term_nz) - dot(
         y,
         exp_deriv_term_nz / exp_eta_nz_m1
-      ) + X_0_cs_times_a[j];
+      ) + X_T_0_s_times_a[j];
 
-      second_deriv   = dot(exp_deriv_term_nz, X_nz.col(j)) + dot(
+      second_deriv   = dot(s_nz, exp_deriv_term_nz % X_nz.col(j)) + dot(
         y,
         (exp_deriv_term_nz % exp_deriv_term_nz) /
           square(exp_eta_nz_m1)
@@ -75,9 +80,9 @@ arma::vec solve_pois_reg_log1p_lin_approx_sparse (
 
         t = 1.0;
 
-      } else if (b[j] >= 1e-16) {
+      } else if (b[j] >= 1e-12) {
 
-        t = std::min(b[j] / newton_dir, 1.0);
+        t = std::min((b[j] - 1e-12) / newton_dir, 1.0);
 
       } else {
 
@@ -90,21 +95,31 @@ arma::vec solve_pois_reg_log1p_lin_approx_sparse (
       while (true) {
         b[j]             = b_j_og - t * newton_dir;
         eta_nz_proposed     = eta_nz + (b[j] - b_j_og) * X_nz.col(j);
-        exp_eta_nz = exp(eta_nz_proposed);
-        exp_eta_nz_m1 = exp_eta_nz - s;
+        exp_eta_nz_proposed = exp(eta_nz_proposed);
+        exp_eta_nz_m1_proposed = exp_eta_nz_proposed - 1;
 
-        exact_lik = sum(exp_eta_nz) - dot(
+        exact_lik_proposed = dot(s_nz, exp_eta_nz_proposed) - dot(
           y,
-          log(exp_eta_nz_m1)
+          log(exp_eta_nz_m1_proposed)
         );
 
-        f_proposed = exact_lik + b[j] * X_0_cs_times_a[j];
+        f_proposed = exact_lik_proposed + b[j] * X_T_0_s_times_a[j];
 
         if (f_proposed <= current_lik - t*newton_dec) {
           eta_nz = eta_nz_proposed;
+          exp_eta_nz = exp_eta_nz_proposed;
+          exp_eta_nz_m1 = exp_eta_nz_m1_proposed;
+          exact_lik = exact_lik_proposed;
           break;
         } else {
           t *= beta;
+
+          if (t < 1e-12) {
+
+            break;
+
+          }
+
         }
       }
     }
@@ -123,7 +138,6 @@ arma::mat regress_cols_of_Y_on_X_log1p_lin_approx_sparse(
     const std::vector<arma::uvec> Y_nz_idx,
     const arma::vec s,
     const bool common_size_factor,
-    const arma::vec X_cs_times_a,
     const double a,
     arma::mat B,
     const std::vector<int> update_indices,
@@ -133,6 +147,8 @@ arma::mat regress_cols_of_Y_on_X_log1p_lin_approx_sparse(
 ) {
 
   if (common_size_factor) {
+
+    arma::vec X_T_cs = arma::sum(X_T, 1);
 
     #pragma omp parallel for
     for (int j = 0; j < B.n_cols; j++) {
@@ -145,7 +161,7 @@ arma::mat regress_cols_of_Y_on_X_log1p_lin_approx_sparse(
         Y[j],
         Y_nz_idx[j],
         s_j,
-        X_cs_times_a,
+        s[j] * X_T_cs,
         a,
         B.col(j),
         update_indices,
@@ -158,6 +174,8 @@ arma::mat regress_cols_of_Y_on_X_log1p_lin_approx_sparse(
 
   } else {
 
+    arma::mat X_T_s = X_T * s;
+
     #pragma omp parallel for
     for (int j = 0; j < B.n_cols; j++) {
 
@@ -166,7 +184,7 @@ arma::mat regress_cols_of_Y_on_X_log1p_lin_approx_sparse(
         Y[j],
         Y_nz_idx[j],
         s.elem(Y_nz_idx[j]),
-        X_cs_times_a,
+        X_T_s,
         a,
         B.col(j),
         update_indices,
@@ -241,12 +259,10 @@ List fit_factor_model_log1p_lin_approx_sparse_cpp_src(
     sc_T_i
   );
 
-  arma::vec U_cs = arma::sum(U_T, 1);
-
   double loglik = get_loglik_lin_approx_sparse(
     U_T,
     V_T,
-    U_cs,
+    U_T * s,
     sc_x,
     sc_i,
     sc_j,
@@ -269,7 +285,6 @@ List fit_factor_model_log1p_lin_approx_sparse_cpp_src(
       y_rows_idx,
       s,
       true,
-      a * sum(V_T, 1),
       a,
       U_T,
       update_indices,
@@ -277,8 +292,6 @@ List fit_factor_model_log1p_lin_approx_sparse_cpp_src(
       alpha,
       beta
     );
-
-    U_cs = arma::sum(U_T, 1);
 
     V_T = regress_cols_of_Y_on_X_log1p_lin_approx_sparse(
       U_T,
@@ -286,7 +299,6 @@ List fit_factor_model_log1p_lin_approx_sparse_cpp_src(
       y_cols_idx,
       s,
       false,
-      a * U_cs,
       a,
       V_T,
       update_indices,
@@ -295,10 +307,17 @@ List fit_factor_model_log1p_lin_approx_sparse_cpp_src(
       beta
     );
 
+    arma::vec d = mean(U_T, 1) / mean(V_T, 1);
+
+    U_T.each_col() %= arma::sqrt(1/d);
+    V_T.each_col() %= arma::sqrt(d);
+
+    // TODO: Could make this slightly faster by
+    // pre-computing U_T * s to feed in to update above
     loglik = get_loglik_lin_approx_sparse(
       U_T,
       V_T,
-      U_cs,
+      U_T * s,
       sc_x,
       sc_i,
       sc_j,

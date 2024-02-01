@@ -27,7 +27,15 @@ fit_factor_model_log1p_exact <- function(
 
   }
 
-  init <- init_factor_model_log1p(n, p, K, s)
+  init <- init_factor_model_log1p(n, p, K)
+
+  init$U <- cbind(
+    log(s), init$U
+  )
+
+  init$V <- cbind(
+    rep(1, p), init$V
+  )
 
   sc <- Matrix::summary(Y)
   sc_t <- Matrix::summary(Matrix::t(Y))
@@ -51,6 +59,7 @@ fit_factor_model_log1p_exact <- function(
     1:K
   )
 
+  # remove size factor after fitting
   fit$U <- fit$U[, -1]
   fit$V <- fit$V[, -1]
 

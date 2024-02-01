@@ -28,7 +28,7 @@ fit_factor_model_log1p_lin_approx_sparse <- function(
 
   }
 
-  init <- init_factor_model_log1p(n, p, K, s)
+  init <- init_factor_model_log1p(n, p, K)
 
   sc <- Matrix::summary(Y)
   sc_t <- Matrix::summary(Matrix::t(Y))
@@ -50,11 +50,8 @@ fit_factor_model_log1p_lin_approx_sparse <- function(
     .01,
     .25,
     5,
-    1:K
+    0:(K - 1)
   )
-
-  fit$U <- fit$U[, -1]
-  fit$V <- fit$V[, -1]
 
   return(fit)
 

@@ -20,8 +20,6 @@ double get_loglik_quad_approx_full(
 double get_loglik_quad_approx_sparse(
     const arma::mat U_T,
     const arma::mat V_T,
-    const arma::vec U_cs,
-    const arma::mat U_T_U,
     const std::vector<int> y_nz_vals,
     const std::vector<int> y_nz_rows_idx,
     const std::vector<int> y_nz_cols_idx,
@@ -33,7 +31,7 @@ double get_loglik_quad_approx_sparse(
 double get_loglik_lin_approx_sparse(
     const arma::mat U_T,
     const arma::mat V_T,
-    const arma::vec U_cs,
+    const arma::vec U_T_s,
     const std::vector<int> y_nz_vals,
     const std::vector<int> y_nz_rows_idx,
     const std::vector<int> y_nz_cols_idx,
