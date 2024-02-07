@@ -470,6 +470,11 @@ List fit_factor_model_log1p_quad_approx_sparse_cpp_src(
       beta
     );
 
+    arma::vec d = mean(U_T, 1) / mean(V_T, 1);
+
+    U_T.each_col() %= arma::sqrt(1/d);
+    V_T.each_col() %= arma::sqrt(d);
+
     loglik = get_loglik_quad_approx_sparse(
       U_T,
       V_T,

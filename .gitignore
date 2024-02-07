@@ -58,3 +58,5 @@ src/*.so
 .DS_Store
 
 vignettes/*.log
+
+inst/experiments/results/*
