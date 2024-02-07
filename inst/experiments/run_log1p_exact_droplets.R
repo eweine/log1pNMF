@@ -3,7 +3,9 @@ load("/project2/mstephens/pcarbo/git/fastTopics-experiments/data/droplet.RData")
 
 set.seed(1)
 
-library(tictoc)
+library(RhpcBLASctl)
+omp_set_num_threads(28)
+blas_set_num_threads(1)
 
 library(passPCA)
 
