@@ -1,5 +1,5 @@
 load("/project2/mstephens/pcarbo/git/fastTopics-experiments/data/droplet.RData")
-#load("~/Documents/data/fastglmpca/raw_data/pbmc_68k.RData")
+#load("~/Documents/data/fastglmpca/raw_data/droplet.RData")
 
 library(RhpcBLASctl)
 omp_set_num_threads(28)
@@ -12,7 +12,7 @@ library(passPCA)
 log1p_fit <- fit_factor_model_log1p_quad_approx_sparse(
   Y = counts,
   K = 10,
-  maxiter = 2500,
+  maxiter = 5,
   approx_range = c(0, 1.25),
   s = Matrix::rowSums(counts) / mean(Matrix::rowSums(counts))
 )
