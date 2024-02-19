@@ -1,0 +1,35 @@
+---
+title: "log1p PBMCs"
+output: html_document
+date: "2024-02-16"
+---
+
+```{r}
+# load in the data
+load("~/Documents/data/fastglmpca/raw_data/pbmc_purified.RData")
+set.seed(1)
+library(Seurat)
+library(dplyr)
+
+so <- Seurat::CreateSeuratObject(counts = Matrix::t(counts))
+
+so <- FindVariableFeatures(so, nfeatures = ceiling(.25 * ncol(counts)))
+
+idx <- sort(sample(1:nrow(counts), ceiling(.1 * nrow(counts))))
+
+counts_samp <- counts[idx, ]
+samples <- samples[idx, ]
+
+counts_samp <- counts_samp[, VariableFeatures(so)]
+genes <- genes %>%
+  dplyr::filter(ensembl %in% VariableFeatures(so))
+
+z_cols <- names(which(Matrix::colSums(counts_samp) == 0))
+genes <- genes %>%
+  dplyr::filter(!(ensembl %in% z_cols))
+counts_samp <- counts_samp[, Matrix::colSums(counts_samp) > 0]
+```
+
+Now, I have the data loaded in. The next step is to read in the model fits and look at structure plots / leading genes. 
+
+

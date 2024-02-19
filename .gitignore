@@ -60,3 +60,5 @@ src/*.so
 vignettes/*.log
 
 inst/experiments/results/*
+
+inst/scratch/

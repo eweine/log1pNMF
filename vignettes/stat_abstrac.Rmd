@@ -1,0 +1,274 @@
+---
+title: "log1p Statistical Abstract Fits"
+output: html_document
+date: "2024-02-15"
+---
+
+Here, I want to investigate how different values of $c$ in the link function change the outputs of non-negative matrix factorization.
+
+```{r, include=FALSE}
+sla <- readr::read_csv("~/Downloads/paperList.txt")
+
+sla <- sla[!is.na(sla$abstract),]
+sla$docnum = 1:nrow(sla)
+datax = readRDS('~/Downloads/sla_full.rds')
+dim(datax$data)
+library(dplyr)
+library(Matrix)
+library(ggplot2)
+datax$data = Matrix(datax$data,sparse = TRUE)
+
+doc_to_use = order(rowSums(datax$data),decreasing = T)[1:round(nrow(datax$data)*0.6)]
+mat = datax$data[doc_to_use,]
+sla = sla[doc_to_use,]
+samples = datax$samples
+samples = lapply(samples, function(z){z[doc_to_use]})
+
+word_to_use = which(colSums(mat>0)>4)
+mat = mat[,word_to_use]
+mat = Matrix(mat,sparse=TRUE)
+```
+
+Here, I am fitting the model:
+
+\begin{align*}
+y_{ij} | s_{i} &\sim \textrm{Poisson}(s_{i} \lambda_{ij}) \quad \textrm{independently for $(i, j) \in \{1, \dots, n\} \times \{1, \dots, m\}$} \\
+\log(1 + \frac{\lambda_{ij}}{c}) &= h_{ij} \\
+H &= LF^{T},
+\end{align*}
+
+where $Y \in \mathbb{N}^{n \times m}_{0}$ is a document by words matrix of statistical abstracts, $L \in \mathbb{R}^{n \times K}_{+}$, and $F \in \mathbb{R}^{m \times K}_{+}$. 
+
+First, similar to Matthew's previous work trying different transformations, I will define a function to get keywords from a model fit. I will normalize $L$ so that the maximum loading for each factor is equal to $1$. I will then compare $F$ on the scale of $\lambda$. That is, I will define a keyword for a given factor as any word such that $F_{jk} > \log(\frac{t}{c} + 1)$ for some threshold $t$. Here, I've taken $t = 3$. 
+
+```{r}
+get_keywords = function(fit,cc,thresh = 3,docfilter=0){
+
+  LL <- fit$U
+  FF <- fit$V
+  
+  rownames(LL) <- 1:nrow(LL)
+  
+  Lnorm = t(t(LL)/apply(LL,2,max))
+  Fnorm = t(t(FF)*apply(LL,2,max))
+  Lmax = apply(Lnorm,1,max)
+  
+  keyw.nn =list()
+  
+  for(k in 1:ncol(Fnorm)){
+    if(sum(Lnorm[,k]>0.5)> docfilter){
+      key = Fnorm[,k] > log((thresh / cc) + 1)
+      
+      keyw.nn[[k]] = (colnames(mat)[key])[order(Fnorm[key,k],decreasing = T)]
+    } else { 
+      keyw.nn[[k]] = NA
+    }
+  }
+  return(
+    list(
+      keywords = keyw.nn,
+      Lnorm = Lnorm
+    )
+  )
+}
+
+
+
+get_keywords_nmf = function(fit,thresh = 3,docfilter=0){
+  
+  LL <- fit$L
+  FF <- fit$F
+  
+  rownames(LL) <- 1:nrow(LL)
+  
+  Lnorm = t(t(LL)/apply(LL,2,max))
+  Fnorm = t(t(FF)*apply(LL,2,max))
+  Lmax = apply(Lnorm,1,max)
+  
+  keyw.nn =list()
+  
+  for(k in 1:ncol(Fnorm)){
+    if(sum(Lnorm[,k]>0.5)> docfilter){
+      key = Fnorm[,k]  > thresh
+      
+      keyw.nn[[k]] = (colnames(mat)[key])[order(Fnorm[key,k],decreasing = T)]
+    } else { 
+      keyw.nn[[k]] = NA
+    }
+  }
+  return(
+    list(
+      keywords = keyw.nn,
+      Lnorm = Lnorm
+    )
+  )
+}
+```
+
+```{r, include=FALSE}
+# read in all the fits
+fit_c.1 <- readr::read_rds(
+  "~/Documents/passPCA/inst/experiments/results/sa_text_c.1_log1p.rds"
+)
+
+fit_c1 <- readr::read_rds(
+  "~/Documents/passPCA/inst/experiments/results/sa_text_c1_log1p.rds"
+)
+
+fit_c5 <- readr::read_rds(
+  "~/Documents/passPCA/inst/experiments/results/sa_text_c5_log1p.rds"
+)
+
+fit_c10 <- readr::read_rds(
+  "~/Documents/passPCA/inst/experiments/results/sa_text_c10_log1p.rds"
+)
+
+fit_c50 <- readr::read_rds(
+  "~/Documents/passPCA/inst/experiments/results/sa_text_c50_log1p.rds"
+)
+
+fit_c100 <- readr::read_rds(
+  "~/Documents/passPCA/inst/experiments/results/sa_text_c100_log1p.rds"
+)
+
+fit_c150 <- readr::read_rds(
+  "~/Documents/passPCA/inst/experiments/results/sa_text_c150_log1p.rds"
+)
+
+fit_c250 <- readr::read_rds(
+  "~/Documents/passPCA/inst/experiments/results/sa_text_c250_log1p.rds"
+)
+
+fit_c1000 <- readr::read_rds(
+  "~/Documents/passPCA/inst/experiments/results/sa_text_c1000_log1p.rds"
+)
+
+fit_nmf <- readr::read_rds(
+  "~/Documents/passPCA/inst/experiments/results/sa_text_nmf.rds"
+)
+```
+
+```{r, echo=FALSE}
+kwc.1 <- get_keywords(fit_c.1, cc = .1, thresh = 2)
+kwc1 <- get_keywords(fit_c1, cc = 1, thresh = 2)
+kwc5 <- get_keywords(fit_c5, cc = 5, thresh = 2)
+kwc10 <- get_keywords(fit_c10, cc = 10, thresh = 2)
+kwc50 <- get_keywords(fit_c50, cc = 50, thresh = 2)
+kwc100 <- get_keywords(fit_c100, cc = 100, thresh = 2)
+kwc150 <- get_keywords(fit_c150, cc = 150, thresh = 2)
+kwc250 <- get_keywords(fit_c250, cc = 250, thresh = 2)
+kwc1000 <- get_keywords(fit_c1000, cc = 1000, thresh = 2)
+kwnmf <- get_keywords_nmf(fit_nmf, thresh = 2)
+```
+
+```{r, echo=FALSE}
+keyword_length_df <- data.frame(
+  cc = c(
+    rep(".1", 50),
+    rep("1", 50),
+    rep("5", 50),
+    rep("10", 50),
+    rep("50", 50),
+    rep("100", 50),
+    rep("150", 50),
+    rep("250", 50),
+    rep("1000", 50),
+    rep("nmf", 50)
+  ),
+  n_keywords = c(
+    sapply(kwc.1$keywords, length),
+    sapply(kwc1$keywords, length),
+    sapply(kwc5$keywords, length),
+    sapply(kwc10$keywords, length),
+    sapply(kwc50$keywords, length),
+    sapply(kwc100$keywords, length),
+    sapply(kwc150$keywords, length),
+    sapply(kwc250$keywords, length),
+    sapply(kwc1000$keywords, length),
+    sapply(kwnmf$keywords, length)
+  )
+)
+
+keyword_length_df$cc <- factor(
+  keyword_length_df$cc, 
+  levels = c(".1", "1", "5", "10", "50", "100", "150", "250", "1000", "nmf")
+)
+```
+
+Before looking at the individual keywords from each fit, it is useful to notice a general trend in the number of keywords per factor.
+
+```{r, echo=FALSE}
+group_summary <- keyword_length_df %>%
+  group_by(cc) %>%
+  summarize(
+    m = mean(n_keywords),
+    std = sd(n_keywords)
+  )
+
+
+g1 <- ggplot(keyword_length_df, aes(x = cc, y = n_keywords)) +
+  geom_jitter(width = 0.2, height = 0, alpha = .3) +
+  geom_errorbar(data = group_summary, aes(y = m, ymin = m - std, ymax = m + std), 
+                width = 0.2, color = "red", linewidth = 1) +
+  geom_point(data = group_summary, aes(y = m), color = "red", size = 4) +
+  labs(y = "Keywords per Factor") +
+  theme_classic() +
+  xlab("c")
+
+g1
+```
+
+Overall, it seems that larger values of $c$ lead to topics with more "keywords". However, all of the models seems to make sense. The models with lower values of $c$ simply seem to explain many documents with one word instead of groups of documents with multiple words. Below are the "keywords" for the $c = 0.1$ fit.
+
+```{r}
+print(kwc.1$keywords)
+```
+
+Some of these factors are clearly describing real topics, like factor 33 which seems to be related to papers discussing gene expression, factor 48 that is related to Bayesian models, factor 45 that is related to survival time analysis, factor 30 which is related to variable selection, and factor 13 which is related to multiple testing. However, there are also some factors which explain very little interesting variability in the data, like factor 17 whose only "keyword" is "model". 
+
+Below are the keywords for the nmf fit:
+
+```{r}
+print(kwnmf$keywords)
+```
+Things look relatively similar to $c = 0.1$, though there are some noticable differences. The NMF fit seems to pick up on some novel factors, such as factor 41 that represents dimension reduction methods. There are also fewer factors with $1$ or $0$ "keywords". 
+
+It is also interesting to look at log1p fits with larger numbers of keywords per factor. Below are the results for $c = 100$:
+
+```{r}
+print(kwc100$keywords)
+```
+
+Again, things look pretty similar, but we do see some novel factors. Factor 42, for instance, seems to be getting at robust statistics / outlier detection.
+
+It is also useful to look at how many documents are loaded on each individual factor. First, we look at the means of the loadings for $c = 0.1$.
+
+```{r}
+hist(colMeans(kwc.1$Lnorm))
+```
+
+The loadings on the far right of the histogram all seem to correspond to very generic factors with single keywords like "method", "model", and "estimate". 
+
+The histograms for other values of $c$ are shown below:
+
+```{r}
+hist(colMeans(kwc1$Lnorm))
+```
+
+```{r}
+hist(colMeans(kwc10$Lnorm))
+```
+
+```{r}
+hist(colMeans(kwc100$Lnorm))
+```
+
+```{r}
+hist(colMeans(kwc1000$Lnorm))
+```
+
+```{r}
+hist(colMeans(kwnmf$Lnorm))
+```
+
+Overall, the story seems to be that smaller values of $c$ lead to models where many documents seem to be loaded on sparse factors. In contrast, larger values of $c$ seem to favor factors that have more keywords but which fewer documents are loaded on. 

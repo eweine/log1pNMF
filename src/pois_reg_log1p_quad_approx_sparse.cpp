@@ -296,7 +296,7 @@ arma::mat regress_cols_of_Y_on_X_log1p_quad_approx_sparse_vec_s(
   const arma::mat X_T_diag_s_X = (X_T.each_row() % s.t()) * X_T.t();
 
   // Commenting out parallelism for testing
-  #pragma omp parallel for
+  #pragma omp parallel for shared(B)
   for (int j = 0; j < B.n_cols; j++) {
 
     B.col(j) = solve_pois_reg_log1p_quad_approx_sparse_vec_s(
@@ -339,7 +339,7 @@ arma::mat regress_cols_of_Y_on_X_log1p_quad_approx_sparse_scalar_s(
   const arma::mat X_T_X = X_T * X_T.t();
 
   // Commenting out parallelism for testing
-  #pragma omp parallel for
+  #pragma omp parallel for shared(B)
   for (int j = 0; j < B.n_cols; j++) {
 
     B.col(j) = solve_pois_reg_log1p_quad_approx_sparse_scalar_s(
@@ -442,19 +442,10 @@ List fit_factor_model_log1p_quad_approx_sparse_cpp_src(
 
     Rprintf("Iteration %i: objective = %+0.12e\n", iter, loglik);
 
-    U_T = regress_cols_of_Y_on_X_log1p_quad_approx_sparse_scalar_s(
-      V_T,
-      y_rows_data,
-      y_rows_idx,
-      s,
-      U_T,
-      a1,
-      a2,
-      update_indices,
-      num_ccd_iter,
-      alpha,
-      beta
-    );
+    arma::vec d = mean(U_T, 1) / mean(V_T, 1);
+
+    U_T.each_col() %= arma::sqrt(1/d);
+    V_T.each_col() %= arma::sqrt(d);
 
     V_T = regress_cols_of_Y_on_X_log1p_quad_approx_sparse_vec_s(
       U_T,
@@ -470,10 +461,19 @@ List fit_factor_model_log1p_quad_approx_sparse_cpp_src(
       beta
     );
 
-    arma::vec d = mean(U_T, 1) / mean(V_T, 1);
-
-    U_T.each_col() %= arma::sqrt(1/d);
-    V_T.each_col() %= arma::sqrt(d);
+    U_T = regress_cols_of_Y_on_X_log1p_quad_approx_sparse_scalar_s(
+      V_T,
+      y_rows_data,
+      y_rows_idx,
+      s,
+      U_T,
+      a1,
+      a2,
+      update_indices,
+      num_ccd_iter,
+      alpha,
+      beta
+    );
 
     loglik = get_loglik_quad_approx_sparse(
       U_T,

@@ -121,7 +121,7 @@ arma::mat regress_cols_of_Y_on_X_log1p_pois_exact(
 
   if (common_size_factor) {
 
-    #pragma omp parallel for
+    #pragma omp parallel for shared(B)
     for (int j = 0; j < B.n_cols; j++) {
 
       arma::vec s_j(Y[j].n_elem);
@@ -143,7 +143,7 @@ arma::mat regress_cols_of_Y_on_X_log1p_pois_exact(
 
   } else {
 
-    #pragma omp parallel for
+    #pragma omp parallel for shared(B)
     for (int j = 0; j < B.n_cols; j++) {
 
       B.col(j) = solve_pois_reg_log1p (
