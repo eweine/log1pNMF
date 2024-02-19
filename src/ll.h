@@ -46,6 +46,15 @@ double get_loglik_exact(
     const std::vector<int> y_nz_rows_idx,
     const std::vector<int> y_nz_cols_idx,
     const arma::vec s,
+    const double sum_s,
+    const double c,
+    const int n,
+    const int p
+);
+
+double get_dense_term_loglik_exact(
+    const arma::mat U_T,
+    const arma::mat V_T,
     const int n,
     const int p
 );

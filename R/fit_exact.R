@@ -2,6 +2,8 @@
 #'
 #' @param Y sparse matrix.
 #' @param K rank of factorization
+#' @param cc value of c.
+#' @param fit_c if c should be fit via maximum likelihood.
 #' @param approx_range range of Chebyschev approximation
 #' @param maxiter maximum number of updates
 #'
@@ -15,7 +17,9 @@ fit_factor_model_log1p_exact <- function(
     Y,
     K,
     maxiter,
-    s = NULL
+    s = NULL,
+    cc = 1,
+    fit_c = FALSE
 ) {
 
   n <- nrow(Y)
@@ -40,6 +44,10 @@ fit_factor_model_log1p_exact <- function(
   sc <- Matrix::summary(Y)
   sc_t <- Matrix::summary(Matrix::t(Y))
 
+  # pre-compute constants for fitting c
+  sum_Y <- sum(sc$x)
+  sum_s <- sum(s)
+
   fit <- fit_factor_model_log1p_exact_cpp_src(
     sc$x,
     sc$i - 1,
@@ -47,7 +55,10 @@ fit_factor_model_log1p_exact <- function(
     sc_t$x,
     sc_t$i - 1,
     sc_t$j - 1,
+    sum_Y,
+    sum_s,
     s,
+    cc,
     t(init$U),
     t(init$V),
     n,
@@ -56,7 +67,8 @@ fit_factor_model_log1p_exact <- function(
     .01,
     .25,
     5,
-    1:K
+    1:K,
+    fit_c
   )
 
   # remove size factor after fitting

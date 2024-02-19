@@ -28,6 +28,8 @@ arma::vec solve_pois_reg_log1p (
   vec exp_eta = exp(eta);
   vec exp_eta_nz_m1 = exp_eta.elem(y_nz_idx) - s;
   vec eta_proposed;
+  vec exp_eta_proposed;
+  vec exp_eta_nz_m1_proposed;
   vec exp_deriv_term;
   double t;
   double f_proposed;
@@ -82,18 +84,27 @@ arma::vec solve_pois_reg_log1p (
       while (true) {
         b[j]             = b_j_og - t * newton_dir;
         eta_proposed     = eta + (b[j] - b_j_og) * X.col(j);
-        exp_eta = exp(eta_proposed);
-        exp_eta_nz_m1 = exp_eta.elem(y_nz_idx) - s;
-        f_proposed = sum(exp_eta) - dot(
+        exp_eta_proposed = exp(eta_proposed);
+        exp_eta_nz_m1_proposed = exp_eta_proposed.elem(y_nz_idx) - s;
+        f_proposed = sum(exp_eta_proposed) - dot(
           y,
-          log(exp_eta_nz_m1)
+          log(exp_eta_nz_m1_proposed)
         );
         if (f_proposed <= current_lik - t*newton_dec) {
           eta = eta_proposed;
           current_lik = f_proposed;
+          exp_eta = exp_eta_proposed;
+          exp_eta_nz_m1 = exp_eta_nz_m1_proposed;
           break;
         } else {
           t *= beta;
+
+          if (t < 1e-16) {
+
+            break;
+
+          }
+
         }
       }
     }
@@ -175,7 +186,10 @@ List fit_factor_model_log1p_exact_cpp_src(
     const std::vector<int> sc_T_x,
     const std::vector<int> sc_T_i,
     const std::vector<int> sc_T_j,
+    const double sum_Y,
+    const double sum_s,
     const arma::vec s,
+    double c,
     arma::mat U_T,
     arma::mat V_T,
     const int n,
@@ -184,7 +198,8 @@ List fit_factor_model_log1p_exact_cpp_src(
     const double alpha,
     const double beta,
     const int num_ccd_iter,
-    const std::vector<int> update_indices
+    const std::vector<int> update_indices,
+    const bool fit_c
 ) {
 
   const std::vector<int> col_num_repeats = get_num_repeats_cpp(
@@ -223,6 +238,8 @@ List fit_factor_model_log1p_exact_cpp_src(
     sc_T_i
   );
 
+  U_T.row(0) += log(c);
+
   double loglik = get_loglik_exact(
     U_T,
     V_T,
@@ -230,24 +247,59 @@ List fit_factor_model_log1p_exact_cpp_src(
     sc_i,
     sc_j,
     s,
+    sum_s,
+    c,
     n,
     p
   );
 
+  U_T.row(0) -= log(c);
+
   std::vector<double> loglik_history;
   loglik_history.push_back(loglik);
+
+  double dense_term;
 
   Rprintf("Fitting log1p factor model to %i x %i count matrix.\n",n,p);
 
   for (int iter = 0; iter < max_iter; iter++) {
 
-    Rprintf("Iteration %i: objective = %+0.12e\n", iter, loglik);
+    Rprintf("Iteration %i: objective before updating c = %+0.12e\n", iter, loglik);
+
+    if (fit_c) {
+
+      dense_term = get_dense_term_loglik_exact(
+        U_T, V_T, n, p
+      );
+
+      c = sum_Y / (-p * sum_s - dense_term);
+
+    }
+
+    Rprintf("c = %f\n", c);
+
+    U_T.row(0) += log(c);
+
+    loglik = get_loglik_exact(
+      U_T,
+      V_T,
+      sc_x,
+      sc_i,
+      sc_j,
+      s,
+      sum_s,
+      c,
+      n,
+      p
+    );
+
+    Rprintf("Iteration %i: objective after updating c = %+0.12e\n", iter, loglik);
 
     U_T = regress_cols_of_Y_on_X_log1p_pois_exact(
       V_T.t(),
       y_rows_data,
       y_rows_idx,
-      s,
+      c * s,
       true,
       U_T,
       update_indices,
@@ -260,7 +312,7 @@ List fit_factor_model_log1p_exact_cpp_src(
       U_T.t(),
       y_cols_data,
       y_cols_idx,
-      s,
+      c * s,
       false,
       V_T,
       update_indices,
@@ -282,9 +334,13 @@ List fit_factor_model_log1p_exact_cpp_src(
       sc_i,
       sc_j,
       s,
+      sum_s,
+      c,
       n,
       p
     );
+
+    U_T.row(0) -= log(c);
 
     loglik_history.push_back(loglik);
 
@@ -294,6 +350,7 @@ List fit_factor_model_log1p_exact_cpp_src(
 
   fit["U"] = U_T.t();
   fit["V"] = V_T.t();
+  fit["c"] = c;
   fit["loglik"] = loglik_history;
 
   return(fit);

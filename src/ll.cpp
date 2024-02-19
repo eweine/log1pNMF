@@ -228,6 +228,8 @@ double get_loglik_exact(
     const std::vector<int> y_nz_rows_idx,
     const std::vector<int> y_nz_cols_idx,
     const arma::vec s,
+    const double sum_s,
+    const double c,
     const int n,
     const int p
 ) {
@@ -238,7 +240,7 @@ double get_loglik_exact(
     y_nz_vals,
     y_nz_rows_idx,
     y_nz_cols_idx,
-    s,
+    s * c,
     y_nz_vals.size()
   );
 
@@ -249,7 +251,7 @@ double get_loglik_exact(
     p
   );
 
-  double loglik = loglik_sparse_term + loglik_dense_term;
+  double loglik = loglik_sparse_term + loglik_dense_term - c * p * sum_s;
 
   return(loglik);
 
