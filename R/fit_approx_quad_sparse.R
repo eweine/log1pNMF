@@ -2,6 +2,8 @@
 #'
 #' @param Y sparse matrix.
 #' @param K rank of factorization
+#' @param cc value of c.
+#' @param fit_c if c should be fit via maximum likelihood.
 #' @param approx_range range of Chebyschev approximation
 #' @param maxiter maximum number of updates
 #'
@@ -16,7 +18,9 @@ fit_factor_model_log1p_quad_approx_sparse <- function(
     K,
     approx_range,
     maxiter,
-    s = NULL
+    s = NULL,
+    cc = 1,
+    fit_c = FALSE
 ) {
 
   n <- nrow(Y)
@@ -38,6 +42,7 @@ fit_factor_model_log1p_quad_approx_sparse <- function(
     2
   )
 
+  a0 <- poly_approx$p[3]
   a1 <- poly_approx$p[2]
   a2 <- poly_approx$p[1]
 
@@ -52,8 +57,12 @@ fit_factor_model_log1p_quad_approx_sparse <- function(
     sc_t$i - 1,
     sc_t$j - 1,
     s,
+    cc,
+    sum(sc$x),
+    sum(s),
     t(init$U),
     t(init$V),
+    a0,
     a1,
     a2,
     n,
@@ -62,7 +71,8 @@ fit_factor_model_log1p_quad_approx_sparse <- function(
     .01,
     .25,
     5,
-    0:(K - 1)
+    0:(K - 1),
+    fit_c
   )
 
   return(fit)

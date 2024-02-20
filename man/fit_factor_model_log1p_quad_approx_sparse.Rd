@@ -9,7 +9,9 @@ fit_factor_model_log1p_quad_approx_sparse(
   K,
   approx_range,
   maxiter,
-  s = NULL
+  s = NULL,
+  cc = 1,
+  fit_c = FALSE
 )
 }
 \arguments{
@@ -20,6 +22,10 @@ fit_factor_model_log1p_quad_approx_sparse(
 \item{approx_range}{range of Chebyschev approximation}
 
 \item{maxiter}{maximum number of updates}
+
+\item{cc}{value of c.}
+
+\item{fit_c}{if c should be fit via maximum likelihood.}
 }
 \value{
 list with fit and progress info

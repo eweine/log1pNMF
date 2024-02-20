@@ -373,8 +373,12 @@ List fit_factor_model_log1p_quad_approx_sparse_cpp_src(
     const std::vector<int> sc_T_i,
     const std::vector<int> sc_T_j,
     const arma::vec s,
+    double c,
+    const double sum_Y,
+    const double sum_s,
     arma::mat U_T,
     arma::mat V_T,
+    const double a0,
     const double a1,
     const double a2,
     const int n,
@@ -383,7 +387,8 @@ List fit_factor_model_log1p_quad_approx_sparse_cpp_src(
     const double alpha,
     const double beta,
     const int num_ccd_iter,
-    const std::vector<int> update_indices
+    const std::vector<int> update_indices,
+    const bool fit_c
 ) {
 
   const std::vector<int> col_num_repeats = get_num_repeats_cpp(
@@ -429,12 +434,23 @@ List fit_factor_model_log1p_quad_approx_sparse_cpp_src(
     sc_i,
     sc_j,
     s,
+    sum_s,
+    c,
+    a0,
     a1,
-    a2
+    a2,
+    p
   );
 
   std::vector<double> loglik_history;
   loglik_history.push_back(loglik);
+
+  double lin_term;
+  double quad_term;
+  double exact_term;
+  double c_hat;
+  double const_term = a0 * p * sum_s;
+  arma::mat U_T_U_V_T;
 
   Rprintf("Fitting log1p factor model to %i x %i count matrix.\n",n,p);
 
@@ -447,11 +463,36 @@ List fit_factor_model_log1p_quad_approx_sparse_cpp_src(
     U_T.each_col() %= arma::sqrt(1/d);
     V_T.each_col() %= arma::sqrt(d);
 
+    if (fit_c) {
+
+      lin_term = a1 * arma::dot(U_T * s, arma::sum(V_T, 1));
+      U_T_U_V_T = (U_T.each_row() % s.t()) * U_T.t() * V_T;
+      quad_term = a2 * arma::accu(V_T % U_T_U_V_T);
+      exact_term = get_exact_h_term(
+        U_T,
+        V_T,
+        sc_i,
+        sc_j,
+        sc_x.size(),
+        a0,
+        a1,
+        a2,
+        s
+      );
+
+      c_hat = sum_Y / (const_term + lin_term + quad_term + exact_term - p * sum_s);
+
+      c = std::max(1.0, c_hat);
+
+    }
+
+    Rprintf("c = %f, c_hat = %f\n", c, c_hat);
+
     V_T = regress_cols_of_Y_on_X_log1p_quad_approx_sparse_vec_s(
       U_T,
       y_cols_data,
       y_cols_idx,
-      s,
+      s * c,
       V_T,
       a1,
       a2,
@@ -465,7 +506,7 @@ List fit_factor_model_log1p_quad_approx_sparse_cpp_src(
       V_T,
       y_rows_data,
       y_rows_idx,
-      s,
+      s * c,
       U_T,
       a1,
       a2,
@@ -482,8 +523,12 @@ List fit_factor_model_log1p_quad_approx_sparse_cpp_src(
       sc_i,
       sc_j,
       s,
+      sum_s,
+      c,
+      a0,
       a1,
-      a2
+      a2,
+      p
     );
 
     loglik_history.push_back(loglik);
@@ -494,6 +539,7 @@ List fit_factor_model_log1p_quad_approx_sparse_cpp_src(
 
   fit["U"] = U_T.t();
   fit["V"] = V_T.t();
+  fit["c"] = c;
   fit["loglik"] = loglik_history;
 
   return(fit);

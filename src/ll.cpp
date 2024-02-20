@@ -98,30 +98,74 @@ double get_sparse_term_loglik_quad_sparse_approx(
     const std::vector<int> nonzero_y_j_idx,
     const int num_nonzero_y,
     arma::vec s,
+    double c,
+    const double a0,
     const double a1,
     const double a2
 ) {
 
   double sp_term = 0.0;
+  double const_correction = 0.0;
   double lin_correction = 0.0;
-  double quad_correction = 0;
+  double quad_correction = 0.0;
   double cp;
 
-  #pragma omp parallel for reduction(+:sp_term, lin_correction, quad_correction)
+  #pragma omp parallel for reduction(+:sp_term, lin_correction, quad_correction, const_correction)
   for (int r = 0; r < num_nonzero_y; r++) {
 
     cp = dot(U_T.col(nonzero_y_i_idx[r]), V_T.col(nonzero_y_j_idx[r]));
 
-    sp_term += nonzero_y[r] * log(exp(cp) - 1) -
-      s[nonzero_y_i_idx[r]] * exp(cp);
-    lin_correction += s[nonzero_y_i_idx[r]] * cp;
-    quad_correction += s[nonzero_y_i_idx[r]] * cp * cp;
+    sp_term += nonzero_y[r] * log(c * (exp(cp) - 1)) -
+      s[nonzero_y_i_idx[r]] * c * exp(cp);
+    const_correction += c * s[nonzero_y_i_idx[r]];
+    lin_correction += s[nonzero_y_i_idx[r]] * c * cp;
+    quad_correction += s[nonzero_y_i_idx[r]] * c * cp * cp;
 
   }
 
-  double ll = sp_term + a1 * lin_correction + a2 * quad_correction;
+  double ll = sp_term + a0 * const_correction + a1 * lin_correction + a2 * quad_correction;
 
   return(ll);
+
+}
+
+double get_exact_h_term(
+    const arma::mat U_T,
+    const arma::mat V_T,
+    const std::vector<int> nonzero_y_i_idx,
+    const std::vector<int> nonzero_y_j_idx,
+    const int num_nonzero_y,
+    const double a0,
+    const double a1,
+    const double a2,
+    arma::vec s
+) {
+
+  double term = 0.0;
+  double cp;
+
+  double lin_correction = 0.0;
+  double quad_correction = 0.0;
+  double const_correction = 0.0;
+
+  #pragma omp parallel for reduction(+:term, lin_correction, quad_correction, const_correction)
+  for (int r = 0; r < num_nonzero_y; r++) {
+
+    cp = dot(U_T.col(nonzero_y_i_idx[r]), V_T.col(nonzero_y_j_idx[r]));
+
+    term += s[nonzero_y_i_idx[r]] * exp(cp);
+    lin_correction += s[nonzero_y_i_idx[r]] * cp;
+    quad_correction += s[nonzero_y_i_idx[r]] * cp * cp;
+    const_correction += s[nonzero_y_i_idx[r]];
+
+  }
+
+  double full_term = term -
+    a0 * const_correction -
+    a1 * lin_correction -
+    a2 * quad_correction;
+
+  return(full_term);
 
 }
 
@@ -132,8 +176,12 @@ double get_loglik_quad_approx_sparse(
     const std::vector<int> y_nz_rows_idx,
     const std::vector<int> y_nz_cols_idx,
     const arma::vec s,
+    const double sum_s,
+    const double c,
+    const double a0,
     const double a1,
-    const double a2
+    const double a2,
+    const double p
 ) {
 
   double loglik = get_sparse_term_loglik_quad_sparse_approx(
@@ -144,16 +192,20 @@ double get_loglik_quad_approx_sparse(
     y_nz_cols_idx,
     y_nz_vals.size(),
     s,
+    c,
+    a0,
     a1,
     a2
   );
 
-  double lin_term = a1 * arma::dot(U_T * s, arma::sum(V_T, 1));
+  const arma::vec s_c = s * c;
 
-  arma::mat U_T_U_V_T = (U_T.each_row() % s.t()) * U_T.t() * V_T;
+  double lin_term = a1 * arma::dot(U_T * s_c, arma::sum(V_T, 1));
+
+  arma::mat U_T_U_V_T = (U_T.each_row() % s_c.t()) * U_T.t() * V_T;
   double quad_term = a2 * arma::accu(V_T % U_T_U_V_T);
 
-  loglik = loglik - lin_term - quad_term;
+  loglik = loglik - lin_term - quad_term - a0 * p * c * sum_s + p * c * sum_s;
   return(loglik);
 
 }
