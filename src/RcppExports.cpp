@@ -11,6 +11,34 @@ Rcpp::Rostream<true>&  Rcpp::Rcout = Rcpp::Rcpp_cout_get();
 Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
+// solve_pois_reg_log1p_quad_approx_sparse_vec_s_fit_c
+List solve_pois_reg_log1p_quad_approx_sparse_vec_s_fit_c(const arma::mat X_T, const arma::vec y, const arma::uvec y_nz_idx, const double sum_y, const arma::vec s_nz, const double sum_s, const double sum_s_0, const arma::vec X_T_s, const arma::mat X_T_diag_s_X, const double a0, const double a1, const double a2, arma::vec b, double c, const std::vector<int> update_indices, unsigned int num_iter, const double alpha, const double beta);
+RcppExport SEXP _passPCA_solve_pois_reg_log1p_quad_approx_sparse_vec_s_fit_c(SEXP X_TSEXP, SEXP ySEXP, SEXP y_nz_idxSEXP, SEXP sum_ySEXP, SEXP s_nzSEXP, SEXP sum_sSEXP, SEXP sum_s_0SEXP, SEXP X_T_sSEXP, SEXP X_T_diag_s_XSEXP, SEXP a0SEXP, SEXP a1SEXP, SEXP a2SEXP, SEXP bSEXP, SEXP cSEXP, SEXP update_indicesSEXP, SEXP num_iterSEXP, SEXP alphaSEXP, SEXP betaSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::mat >::type X_T(X_TSEXP);
+    Rcpp::traits::input_parameter< const arma::vec >::type y(ySEXP);
+    Rcpp::traits::input_parameter< const arma::uvec >::type y_nz_idx(y_nz_idxSEXP);
+    Rcpp::traits::input_parameter< const double >::type sum_y(sum_ySEXP);
+    Rcpp::traits::input_parameter< const arma::vec >::type s_nz(s_nzSEXP);
+    Rcpp::traits::input_parameter< const double >::type sum_s(sum_sSEXP);
+    Rcpp::traits::input_parameter< const double >::type sum_s_0(sum_s_0SEXP);
+    Rcpp::traits::input_parameter< const arma::vec >::type X_T_s(X_T_sSEXP);
+    Rcpp::traits::input_parameter< const arma::mat >::type X_T_diag_s_X(X_T_diag_s_XSEXP);
+    Rcpp::traits::input_parameter< const double >::type a0(a0SEXP);
+    Rcpp::traits::input_parameter< const double >::type a1(a1SEXP);
+    Rcpp::traits::input_parameter< const double >::type a2(a2SEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type b(bSEXP);
+    Rcpp::traits::input_parameter< double >::type c(cSEXP);
+    Rcpp::traits::input_parameter< const std::vector<int> >::type update_indices(update_indicesSEXP);
+    Rcpp::traits::input_parameter< unsigned int >::type num_iter(num_iterSEXP);
+    Rcpp::traits::input_parameter< const double >::type alpha(alphaSEXP);
+    Rcpp::traits::input_parameter< const double >::type beta(betaSEXP);
+    rcpp_result_gen = Rcpp::wrap(solve_pois_reg_log1p_quad_approx_sparse_vec_s_fit_c(X_T, y, y_nz_idx, sum_y, s_nz, sum_s, sum_s_0, X_T_s, X_T_diag_s_X, a0, a1, a2, b, c, update_indices, num_iter, alpha, beta));
+    return rcpp_result_gen;
+END_RCPP
+}
 // fit_factor_model_log1p_exact_cpp_src
 List fit_factor_model_log1p_exact_cpp_src(const std::vector<int> sc_x, const std::vector<int> sc_i, const std::vector<int> sc_j, const std::vector<int> sc_T_x, const std::vector<int> sc_T_i, const std::vector<int> sc_T_j, const arma::vec s, arma::mat U_T, arma::mat V_T, const int n, const int p, const int max_iter, const double alpha, const double beta, const int num_ccd_iter, const std::vector<int> update_indices);
 RcppExport SEXP _passPCA_fit_factor_model_log1p_exact_cpp_src(SEXP sc_xSEXP, SEXP sc_iSEXP, SEXP sc_jSEXP, SEXP sc_T_xSEXP, SEXP sc_T_iSEXP, SEXP sc_T_jSEXP, SEXP sSEXP, SEXP U_TSEXP, SEXP V_TSEXP, SEXP nSEXP, SEXP pSEXP, SEXP max_iterSEXP, SEXP alphaSEXP, SEXP betaSEXP, SEXP num_ccd_iterSEXP, SEXP update_indicesSEXP) {
@@ -121,6 +149,7 @@ END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
+    {"_passPCA_solve_pois_reg_log1p_quad_approx_sparse_vec_s_fit_c", (DL_FUNC) &_passPCA_solve_pois_reg_log1p_quad_approx_sparse_vec_s_fit_c, 18},
     {"_passPCA_fit_factor_model_log1p_exact_cpp_src", (DL_FUNC) &_passPCA_fit_factor_model_log1p_exact_cpp_src, 16},
     {"_passPCA_fit_factor_model_log1p_lin_approx_sparse_cpp_src", (DL_FUNC) &_passPCA_fit_factor_model_log1p_lin_approx_sparse_cpp_src, 17},
     {"_passPCA_fit_factor_model_log1p_quad_approx_full_cpp_src", (DL_FUNC) &_passPCA_fit_factor_model_log1p_quad_approx_full_cpp_src, 17},
