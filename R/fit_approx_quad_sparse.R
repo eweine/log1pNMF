@@ -4,6 +4,8 @@
 #' @param K rank of factorization
 #' @param approx_range range of Chebyschev approximation
 #' @param maxiter maximum number of updates
+#' @param s size factor
+#' @param init_method method for initialization
 #'
 #' @return list with fit and progress info
 #' @export
@@ -16,8 +18,11 @@ fit_factor_model_log1p_quad_approx_sparse <- function(
     K,
     approx_range,
     maxiter,
+    init_method = c("random", "frob_nmf"),
     s = NULL
 ) {
+
+  init_method = match.arg(init_method)
 
   n <- nrow(Y)
   p <- ncol(Y)
@@ -28,7 +33,7 @@ fit_factor_model_log1p_quad_approx_sparse <- function(
 
   }
 
-  init <- init_factor_model_log1p(n, p, K)
+  init <- init_factor_model_log1p(Y, s, n, p, K, init_method)
 
   # get the approximation
   poly_approx <- pracma::polyApprox(

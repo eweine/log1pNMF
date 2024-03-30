@@ -1,42 +1,48 @@
-args <- commandArgs(trailingOnly = TRUE)
-cc <- as.numeric(args[1])
-#cc <- 1
-
 load("~/Documents/data/fastglmpca/raw_data/pbmc_purified.RData")
 set.seed(1)
-library(Seurat)
-
-so <- Seurat::CreateSeuratObject(counts = Matrix::t(counts))
-
-so <- FindVariableFeatures(so, nfeatures = ceiling(.25 * ncol(counts)))
-
-idx <- sample(1:nrow(counts), ceiling(.1 * nrow(counts)))
-
-counts_samp <- counts[idx, ]
-
-counts_samp <- counts_samp[, VariableFeatures(so)]
-
-counts_samp <- counts_samp[, Matrix::colSums(counts_samp) > 0]
-
-rm(counts)
-rm(genes)
-rm(samples)
-gc()
+counts <- counts[, Matrix::colSums(counts) > 0]
 
 library(passPCA)
 
+set.seed(1)
 log1p_fit <- fit_factor_model_log1p_quad_approx_sparse(
-  Y = counts_samp,
-  K = 10,
-  maxiter = 1000,
+  Y = counts,
+  K = 30,
+  maxiter = 2,
   approx_range = c(0, 1.25),
-  s = cc * as.vector(Matrix::rowSums(counts_samp) / mean(Matrix::rowSums(counts_samp)))
+  s = as.vector(Matrix::rowSums(counts) / mean(Matrix::rowSums(counts))),
+  init_method = "random"
+)
+
+library(Matrix)
+set.seed(1)
+log1p_fit_frob_init <- fit_factor_model_log1p_quad_approx_sparse(
+  Y = counts,
+  K = 30,
+  maxiter = 2,
+  approx_range = c(0, 1.25),
+  s = as.vector(Matrix::rowSums(counts) / mean(Matrix::rowSums(counts))),
+  init_method = "frob_nmf"
+)
+
+mod2 <- readr::read_rds(
+  glue::glue(
+    "results/log1p_quad_approx_pbmc_purified_30_factors_125_iter.rds"
+  )
 )
 
 readr::write_rds(
   log1p_fit,
   glue::glue(
-    "results/log1p_quad_approx_c{cc}_pbmc_purified_10_factors_1000_iter.rds"
+    "results/log1p_quad_approx_pbmc_purified_30_factors_125_iter.rds"
     )
+)
+
+library(fastTopics)
+set.seed(1)
+nmf_fit <- fit_poisson_nmf(
+  X = counts,
+  k = 30,
+  numiter = 125
 )
 
