@@ -9,6 +9,9 @@ fit_factor_model_log1p_quad_approx_sparse(
   K,
   approx_range,
   maxiter,
+  init_U = NULL,
+  init_V = NULL,
+  update_idx = NULL,
   init_method = c("random", "frob_nmf"),
   s = NULL
 )
@@ -21,6 +24,12 @@ fit_factor_model_log1p_quad_approx_sparse(
 \item{approx_range}{range of Chebyschev approximation}
 
 \item{maxiter}{maximum number of updates}
+
+\item{init_U}{initialization of U}
+
+\item{init_V}{initialization of V}
+
+\item{update_idx}{indication of which indices should be updated}
 
 \item{init_method}{method for initialization}
 

@@ -4,6 +4,9 @@
 #' @param K rank of factorization
 #' @param approx_range range of Chebyschev approximation
 #' @param maxiter maximum number of updates
+#' @param init_U initialization of U
+#' @param init_V initialization of V
+#' @param update_idx indication of which indices should be updated
 #' @param s size factor
 #' @param init_method method for initialization
 #'
@@ -18,6 +21,9 @@ fit_factor_model_log1p_quad_approx_sparse <- function(
     K,
     approx_range,
     maxiter,
+    init_U = NULL,
+    init_V = NULL,
+    update_idx = NULL,
     init_method = c("random", "frob_nmf"),
     s = NULL
 ) {
@@ -33,7 +39,27 @@ fit_factor_model_log1p_quad_approx_sparse <- function(
 
   }
 
-  init <- init_factor_model_log1p(Y, s, n, p, K, init_method)
+  if (!is.null(init_U) & !is.null(init_V)) {
+
+    init <- list()
+    init$U <- init_U
+    init$V <- init_V
+
+  } else {
+
+    init <- init_factor_model_log1p(Y, s, n, p, K, init_method)
+
+  }
+
+  if (is.null(update_idx)) {
+
+    C_update_idx <- 0:(K - 1)
+
+  } else {
+
+    C_update_idx <- update_idx - 1
+
+  }
 
   # get the approximation
   poly_approx <- pracma::polyApprox(
@@ -67,7 +93,7 @@ fit_factor_model_log1p_quad_approx_sparse <- function(
     .01,
     .25,
     5,
-    0:(K - 1)
+    C_update_idx
   )
 
   return(fit)
