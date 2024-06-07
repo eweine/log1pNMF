@@ -1,0 +1,137 @@
+---
+title: "Analysis of Mouse Light Exposure Factors Models"
+output: html_document
+date: "2024-03-04"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r, results=F, message=F, warning=F, echo=F}
+counts <- readr::read_rds("~/Downloads/counts.rds")
+
+library(fastTopics)
+
+ids <- readr::read_csv("~/Downloads/GSE102827_cell_type_assignments.csv")
+
+library(dplyr)
+
+ids <- ids %>%
+  dplyr::rename(cell_bc = `...1`)
+
+counts_ids <- data.frame(
+  row_idx = 1:nrow(counts),
+  cell_bc = rownames(counts)
+)
+
+ids <- ids %>%
+  dplyr::inner_join(counts_ids, by = "cell_bc")
+
+ids <- ids %>% arrange(row_idx)
+
+ids <- ids %>%
+  dplyr::mutate(
+    type_stim = glue::glue("{maintype}_{stim}"))
+
+library(clusterProfiler)
+library(fgsea)
+library(AnnotationDbi)
+library(org.Mm.eg.db)
+
+get_go_terms <- function(V) {
+  
+  K <- ncol(V)
+  
+  genes_vec <- c()
+  go_terms_vec <- c()
+  
+  for (k in 1:K) {
+    
+    print(k)
+    
+    driving_genes <- names(sort(V[,k], decreasing = TRUE))[1:10]
+    
+    entrez_ids <- mapIds(
+      org.Mm.eg.db,
+      keys = driving_genes, 
+      column = "ENTREZID",
+      keytype = "SYMBOL"
+    )
+    
+    go_result <- enrichGO(gene = entrez_ids,
+                          OrgDb = org.Mm.eg.db,
+                          keyType = "ENTREZID",
+                          ont = "BP", 
+                          pAdjustMethod = "bonferroni",
+                          pvalueCutoff = 0.01,
+                          qvalueCutoff = 0.1)@result
+    
+    go_result <- go_result %>%
+      dplyr::filter(p.adjust < .01)
+    
+    go_terms <- go_result$Description
+    
+    genes_vec <- c(genes_vec, paste(driving_genes, collapse = ", "))
+    go_terms_vec <- c(go_terms_vec, paste(go_terms, collapse = ", "))
+    
+  }
+  
+  go_df <- data.frame(
+    driving_genes = genes_vec,
+    go_terms = go_terms_vec,
+    factor = 1:K
+  )
+  
+  return(go_df)
+  
+}
+
+log1p_mod <- readr::read_rds(
+  "~/Documents/passPCA/inst/experiments/results/log1p_mouse_light_K12.rds"
+)
+
+rownames(log1p_mod$V) <- colnames(counts)
+nmf12 <- readr::read_rds("~/Documents/passPCA/inst/experiments/results/pois_nmf_k12_mouse_light.rds")
+
+
+gdf <- get_go_terms(log1p_mod$V)
+gdf2 <- get_go_terms(nmf12$F)
+
+library(ggplot2)
+g1 <- structure_plot(
+  nmf12,
+  grouping = ids$type_stim,
+  n = 15000,
+  gap = 300
+) + ggplot2::ggtitle("Poisson NMF")
+
+U_normalized <- apply(log1p_mod$U, 2, function(col) col / max(col))
+
+g2 <- structure_plot(
+  U_normalized,
+  grouping = ids$type_stim,
+  n = 15000,
+  gap = 300
+) + ggplot2::ggtitle("log1p")
+
+library(ggpubr)
+```
+
+Structure plots for log1p and NMF fits with K = 12:
+
+```{r, fig.width=8, fig.height=8}
+ggarrange(g1, g2, ncol = 1, nrow = 2)
+```
+
+Go terms with Bonferroni corrected p-values < .01 for NMF:
+
+```{r}
+knitr::kable(gdf2)
+```
+
+Go terms with Bonferroni corrected p-values < .01 for log1p:
+
+```{r}
+knitr::kable(gdf)
+```

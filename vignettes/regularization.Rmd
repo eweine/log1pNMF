@@ -1,0 +1,156 @@
+---
+title: "Untitled"
+output: html_document
+date: "2024-06-07"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+```{python}
+import torch
+from autograd_minimize import minimize
+import numpy as np
+
+def get_objective_log1p_pois_expo(y, X, p, b, mu):
+  
+  exp_eta = torch.exp(X @ b)
+  log_likelihood = torch.dot(y, torch.log(exp_eta - 1)) - torch.sum(exp_eta)
+  log_prior = p * torch.log(mu) - mu * torch.sum(b)
+  obj = log_likelihood + log_prior
+  return obj
+
+def get_objective_log1p_pois_expo_optimf(par, X, y):
+  obj = - get_objective_log1p_pois_expo(
+      y=y, 
+      X=X, 
+      p=X.shape[1],
+      b=par[1:(1 + X.shape[1])], 
+      mu=par[0]
+  )
+  return obj
+  
+def fit_log1p_pois_expo(y, X):
+
+  x0 = np.random.uniform(size=X.shape[1] + 1)
+  lower_bounds = [1e-12] + [0] * X.shape[1]
+  upper_bounds = [None] * (X.shape[1] + 1)
+  opt_out = minimize(
+      fun=lambda x: get_objective_log1p_pois_expo_optimf(
+          x, X=X, y=y
+      ),
+      backend='torch',
+      method='L-BFGS-B',
+      x0=x0,
+      bounds=tuple(zip(lower_bounds, upper_bounds))
+  )
+  return opt_out.x
+
+def fit_log1p_pois_expo_R(dat):
+  
+  X = torch.tensor(dat['X'], dtype=torch.float32)
+
+  opt_out = fit_log1p_pois_expo(
+    X=X,
+    y=torch.tensor(dat['y'], dtype=torch.float32)
+  )
+  
+  opt_dict = {
+    'mu': opt_out[0],
+    'b': opt_out[1:(1 + X.shape[1])]
+  }
+  
+  return opt_dict
+```
+
+
+```{python}
+import torch
+from autograd_minimize import minimize
+import numpy as np
+
+def get_objective_log1p_pois_mle(y, X, b):
+  
+  exp_eta = torch.exp(X @ b)
+  log_likelihood = torch.dot(y, torch.log(exp_eta - 1)) - torch.sum(exp_eta)
+  return log_likelihood
+
+def get_objective_log1p_pois_mle_optimf(par, X, y):
+  obj = - get_objective_log1p_pois_mle(
+      y=y, 
+      X=X, 
+      b=par
+  )
+  return obj
+  
+def fit_log1p_pois_mle(y, X):
+
+  x0 = np.random.uniform(size=X.shape[1])
+  lower_bounds = [0] * X.shape[1]
+  upper_bounds = [None] * X.shape[1]
+  opt_out = minimize(
+      fun=lambda x: get_objective_log1p_pois_mle_optimf(
+          x, X=X, y=y
+      ),
+      backend='torch',
+      method='L-BFGS-B',
+      x0=x0,
+      bounds=tuple(zip(lower_bounds, upper_bounds))
+  )
+  return opt_out.x
+
+def fit_log1p_pois_mle_R(dat):
+  
+  X = torch.tensor(dat['X'], dtype=torch.float32)
+
+  opt_out = fit_log1p_pois_mle(
+    X=X,
+    y=torch.tensor(dat['y'], dtype=torch.float32)
+  )
+  
+  opt_dict = {
+    'b': opt_out
+  }
+  
+  return opt_dict
+```
+
+```{r}
+library(reticulate)
+use_condaenv("glmm")
+```
+
+```{r}
+set.seed(1)
+n <- 1000
+p <- 500
+
+X <- matrix(
+  data = rexp(n = n * p, rate = 15), nrow = n, ncol = p
+)
+
+b <- rexp(n = 500, rate = 15)
+
+lambda <- exp(X %*% b) - 1
+y <- rpois(n, lambda)
+```
+
+```{r}
+# now, test the fit
+# I don't expect this to necessarily work super well
+fit_out <- py$fit_log1p_pois_expo_R(
+  dat = list(
+    X = X, y = y
+  )
+)
+
+fit_out_mle <- py$fit_log1p_pois_mle_R(
+  dat = list(
+    X = X, y = y
+  )
+)
+```
+
