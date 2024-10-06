@@ -1,0 +1,6 @@
+F77 = /opt/homebrew/bin/gfortran
+FC = $F77
+FLIBS = -L/opt/homebrew/bin/gfortran
+
+LDFLAGS += -L/opt/homebrew/opt/libomp/lib -lomp
+CPPFLAGS += -I/opt/homebrew/opt/libomp/include -Xclang -fopenmp
