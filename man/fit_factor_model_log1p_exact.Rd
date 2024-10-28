@@ -4,7 +4,13 @@
 \alias{fit_factor_model_log1p_exact}
 \title{Fit sparse quadratic approximation log1p factor model with C++}
 \usage{
-fit_factor_model_log1p_exact(Y, K, maxiter, s = NULL)
+fit_factor_model_log1p_exact(
+  Y,
+  K,
+  maxiter,
+  init_method = c("random", "frob_nmf"),
+  s = NULL
+)
 }
 \arguments{
 \item{Y}{sparse matrix.}
@@ -12,6 +18,8 @@ fit_factor_model_log1p_exact(Y, K, maxiter, s = NULL)
 \item{K}{rank of factorization}
 
 \item{maxiter}{maximum number of updates}
+
+\item{init_method}{method for initialization}
 
 \item{approx_range}{range of Chebyschev approximation}
 }

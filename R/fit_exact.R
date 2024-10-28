@@ -4,6 +4,7 @@
 #' @param K rank of factorization
 #' @param approx_range range of Chebyschev approximation
 #' @param maxiter maximum number of updates
+#' @param init_method method for initialization
 #'
 #' @return list with fit and progress info
 #' @export
@@ -15,30 +16,45 @@ fit_factor_model_log1p_exact <- function(
     Y,
     K,
     maxiter,
+    init_method = c("random", "frob_nmf"),
     s = NULL
 ) {
 
   n <- nrow(Y)
   p <- ncol(Y)
 
+  null_s <- FALSE
+
   if (is.null(s)) {
 
     s <- rep(1, n)
+    null_s <- TRUE
 
   }
 
-  init <- init_factor_model_log1p(n, p, K)
-
-  init$U <- cbind(
-    log(s), init$U
-  )
-
-  init$V <- cbind(
-    rep(1, p), init$V
-  )
+  init_method = match.arg(init_method)
+  init <- init_factor_model_log1p(Y, s, n, p, K, init_method)
 
   sc <- Matrix::summary(Y)
   sc_t <- Matrix::summary(Matrix::t(Y))
+
+  if (!null_s) {
+
+    init$U <- cbind(
+      log(s), init$U
+    )
+
+    init$V <- cbind(
+      rep(1, p), init$V
+    )
+
+    update_idx <- 1:K
+
+  } else {
+
+    update_idx <- 0:(K - 1)
+
+  }
 
   fit <- fit_factor_model_log1p_exact_cpp_src(
     sc$x,
@@ -56,12 +72,15 @@ fit_factor_model_log1p_exact <- function(
     .01,
     .25,
     5,
-    1:K
+    update_idx
   )
 
-  # remove size factor after fitting
-  fit$U <- fit$U[, -1]
-  fit$V <- fit$V[, -1]
+  if (!null_s) {
+
+    fit$U <- fit$U[, -1]
+    fit$V <- fit$V[, -1]
+
+  }
 
   return(fit)
 

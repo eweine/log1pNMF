@@ -4,7 +4,7 @@
 \alias{run_flash_log1p_with_greedy_init}
 \title{Wrapper for flash with greedy initialization}
 \usage{
-run_flash_log1p_with_greedy_init(Y, greedy_Kmax = 50, var_type = 2)
+run_flash_log1p_with_greedy_init(Y, greedy_Kmax = 50, var_type = 2, s = NULL)
 }
 \arguments{
 \item{Y}{Original data Y}
@@ -12,6 +12,8 @@ run_flash_log1p_with_greedy_init(Y, greedy_Kmax = 50, var_type = 2)
 \item{greedy_Kmax}{max number of greedy factors to add}
 
 \item{var_type}{variance type for flash init}
+
+\item{s}{size factor, on the order of 1.}
 }
 \value{
 flashier fit

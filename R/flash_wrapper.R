@@ -1,4 +1,4 @@
-make_log1p_init_fn <- function(Y) {
+make_log1p_init_fn <- function(Y, s) {
 
   log1p_init_fn <- function(f) {
 
@@ -29,7 +29,8 @@ make_log1p_init_fn <- function(Y) {
       init_U = L_init,
       init_V = F_init,
       update_idx = c(new_factor_num),
-      approx_range = c(0, 1.25)
+      approx_range = c(0, 1.25),
+      s = s
     )
 
     return(
@@ -49,37 +50,94 @@ make_log1p_init_fn <- function(Y) {
 #' @param Y Original data Y
 #' @param greedy_Kmax max number of greedy factors to add
 #' @param var_type variance type for flash init
+#' @param s size factor, on the order of 1.
 #'
 #' @return flashier fit
 #' @export
 #'
-run_flash_log1p_with_greedy_init <- function(Y, greedy_Kmax = 50, var_type = 2) {
+run_flash_log1p_with_greedy_init <- function(
+    Y, greedy_Kmax = 50, var_type = 2, s = NULL
+  ) {
 
-  Y_tilde <- MatrixExtra::mapSparse(Y, log1p)
-  S_tilde <- MatrixExtra::mapSparse(Y, function(x){sqrt(x / ((1 + x) ^ 2))})
-  S_tilde_vals <- as.vector(as.matrix(S_tilde))
-  S_tilde <- matrix(
-    data = ifelse(
-      S_tilde_vals == 0, 1, S_tilde_vals
-    ),
-    nrow = nrow(S_tilde),
-    ncol = ncol(S_tilde)
-  )
+  if (is.null(s)) {
 
-  rm(S_tilde_vals)
-  gc()
+    Y_tilde <- MatrixExtra::mapSparse(Y, log1p)
+    S_tilde <- MatrixExtra::mapSparse(Y, function(x){sqrt(x / ((1 + x) ^ 2))})
+    S_tilde_vals <- as.vector(as.matrix(S_tilde))
+    S_tilde <- matrix(
+      data = ifelse(
+        S_tilde_vals == 0, 1, S_tilde_vals
+      ),
+      nrow = nrow(S_tilde),
+      ncol = ncol(S_tilde)
+    )
 
-  Y_tilde_vals <- as.vector(as.matrix(Y_tilde))
+    rm(S_tilde_vals)
+    gc()
 
-  Y_tilde <- matrix(
-    data = ifelse(
-      Y_tilde_vals == 0, -1, Y_tilde_vals
-    ),
-    nrow = nrow(S_tilde),
-    ncol = ncol(S_tilde)
-  )
-  rm(Y_tilde_vals)
-  gc()
+    Y_tilde_vals <- as.vector(as.matrix(Y_tilde))
+
+    Y_tilde <- matrix(
+      data = ifelse(
+        Y_tilde_vals == 0, -1, Y_tilde_vals
+      ),
+      nrow = nrow(S_tilde),
+      ncol = ncol(S_tilde)
+    )
+    rm(Y_tilde_vals)
+    gc()
+
+  } else {
+
+    Y_scaled <- Matrix::Diagonal(x = 1/s) %*% Y
+    Y_tilde <- MatrixExtra::mapSparse(Y_scaled, log1p)
+
+    Y_tilde_vals <- as.vector(as.matrix(Y_tilde))
+
+    Y_tilde <- matrix(
+      data = ifelse(
+        Y_tilde_vals == 0, -1, Y_tilde_vals
+      ),
+      nrow = nrow(Y_tilde),
+      ncol = ncol(Y_tilde)
+    )
+    rm(Y_tilde_vals)
+    gc()
+
+    S_nz_denom <- MatrixExtra::mapSparse(Y_scaled, function(x){1 / ((1 + x)^2)})
+    S_nz_num <- Matrix::Diagonal(x = 1/(s^2)) %*% Y
+    S_tilde <- S_nz_num * S_nz_denom
+
+
+
+
+    S_tilde <- MatrixExtra::mapSparse(Y, function(x){sqrt(x / ((1 + x) ^ 2))})
+    S_tilde_vals <- as.vector(as.matrix(S_tilde))
+    S_tilde <- matrix(
+      data = ifelse(
+        S_tilde_vals == 0, 1, S_tilde_vals
+      ),
+      nrow = nrow(S_tilde),
+      ncol = ncol(S_tilde)
+    )
+
+    rm(S_tilde_vals)
+    gc()
+
+    Y_tilde_vals <- as.vector(as.matrix(Y_tilde))
+
+    Y_tilde <- matrix(
+      data = ifelse(
+        Y_tilde_vals == 0, -1, Y_tilde_vals
+      ),
+      nrow = nrow(S_tilde),
+      ncol = ncol(S_tilde)
+    )
+    rm(Y_tilde_vals)
+    gc()
+
+  }
+
 
   f_log1p_init <- flashier::flash_init(
     data = Y_tilde,
@@ -91,7 +149,7 @@ run_flash_log1p_with_greedy_init <- function(Y, greedy_Kmax = 50, var_type = 2) 
     flash = f_log1p_init,
     Kmax = greedy_Kmax,
     ebnm_fn = ebnm::ebnm_point_exponential,
-    init_fn = make_log1p_init_fn(Y)
+    init_fn = make_log1p_init_fn(Y, s)
   )
 
   f_log1p_init <- flashier::flash_backfit(f_log1p_init)

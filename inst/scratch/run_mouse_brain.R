@@ -2,16 +2,21 @@ load("~/Downloads/mouse_brain_stim.Rdata")
 
 library(dplyr)
 
+set.seed(1)
 cells <- cells %>% dplyr::filter(!is.na(maintype))
 
 
 counts <- counts[rownames(counts) %in% cells$...1, ]
-counts <- counts[, Matrix::colSums(counts) > 0]
+#counts <- counts[, Matrix::colSums(counts) > 0]
 counts <- counts[Matrix::rowSums(counts) > 0, ]
+
+counts <- counts[sample(x = rownames(counts), size = 7500, replace = FALSE), ]
+counts <- counts[, Matrix::colSums(counts) > 0]
+counts <- as(counts, "CsparseMatrix")
 
 n <- nrow(counts)
 p <- ncol(counts)
-K <- 15
+K <- 10
 
 rs <- Matrix::rowSums(counts)
 s <- rs / mean(rs)
@@ -48,9 +53,9 @@ init_FF <- log1p_k1$V %>%
   )
 
 set.seed(1)
-log1p_k15 <- passPCA::fit_factor_model_log1p_quad_approx_sparse(
+log1p_k10 <- passPCA::fit_factor_model_log1p_quad_approx_sparse(
   Y = counts,
-  K = 15,
+  K = K,
   maxiter = 100,
   approx_range = c(0, 1.25),
   s = s,
@@ -58,7 +63,37 @@ log1p_k15 <- passPCA::fit_factor_model_log1p_quad_approx_sparse(
   init_V = init_FF
 )
 
-readr::write_rds(log1p_k15, "~/Documents/data/passPCA/experiment_results/mouse_brain_k15.rds")
+readr::write_rds(log1p_k10, "~/Documents/data/passPCA/experiment_results/mouse_brain_k10.rds")
+
+cells_sub <- cells %>%
+  dplyr::filter(
+    `...1` %in% rownames(counts)
+  )
+
+library(fastTopics)
+
+normalize_bars <- function(LL) {
+
+  max_col <- apply(LL, 2, max)
+  sweep(LL, 2, max_col, FUN = "/")
+
+}
+
+LL <- log1p_k10$U
+
+LL <- normalize_bars(LL)
+
+ct <- cells_sub$maintype
+names(ct) <- cells_sub$...1
+ct <- ct[rownames(counts)]
+
+structure_plot(LL, grouping = ct)
+
+flash_mod <- readr::read_rds("~/Documents/data/passPCA/experiment_results/mouse_brain_flash_fit_out.rds")
+
+LL2 <- normalize_bars(flash_mod$LL)
+
+structure_plot(LL2, grouping = ct, gap = 25)
 
 
 # Y_sum <- Matrix::summary(counts)

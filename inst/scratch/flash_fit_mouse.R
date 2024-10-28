@@ -1,4 +1,4 @@
-load("/home/ericweine/mouse_data.Rdata")
+load("~/Downloads/mouse_brain_stim.Rdata")
 
 library(dplyr)
 
@@ -6,8 +6,12 @@ cells <- cells %>% dplyr::filter(!is.na(maintype))
 
 
 counts <- counts[rownames(counts) %in% cells$...1, ]
-counts <- counts[, Matrix::colSums(counts) > 0]
+#counts <- counts[, Matrix::colSums(counts) > 0]
 counts <- counts[Matrix::rowSums(counts) > 0, ]
+
+counts <- counts[sample(x = rownames(counts), size = 7500, replace = FALSE), ]
+counts <- counts[, Matrix::colSums(counts) > 0]
+counts <- as(counts, "CsparseMatrix")
 
 ff <- passPCA::run_flash_log1p_with_greedy_init(
   Y = counts,
