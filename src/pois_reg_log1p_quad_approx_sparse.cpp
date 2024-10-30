@@ -433,6 +433,8 @@ List fit_factor_model_log1p_quad_approx_sparse_cpp_src(
     a2
   );
 
+  double prev_lik = loglik;
+
   std::vector<double> loglik_history;
   loglik_history.push_back(loglik);
 
@@ -487,6 +489,16 @@ List fit_factor_model_log1p_quad_approx_sparse_cpp_src(
     );
 
     loglik_history.push_back(loglik);
+
+    if (loglik - prev_lik < 1e-8) {
+
+      break;
+
+    } else {
+
+      prev_lik = loglik;
+
+    }
 
   }
 

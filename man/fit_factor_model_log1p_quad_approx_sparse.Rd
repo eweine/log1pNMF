@@ -7,11 +7,12 @@
 fit_factor_model_log1p_quad_approx_sparse(
   Y,
   K,
-  approx_range,
-  maxiter,
+  approx_range = NULL,
+  maxiter = 100,
   init_U = NULL,
   init_V = NULL,
   update_idx = NULL,
+  approx_method = c("chebyshev", "taylor"),
   init_method = c("random", "frob_nmf"),
   s = NULL
 )
@@ -30,6 +31,8 @@ fit_factor_model_log1p_quad_approx_sparse(
 \item{init_V}{initialization of V}
 
 \item{update_idx}{indication of which indices should be updated}
+
+\item{approx_method}{method used to approximation exp(x)}
 
 \item{init_method}{method for initialization}
 

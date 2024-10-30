@@ -234,6 +234,8 @@ List fit_factor_model_log1p_exact_cpp_src(
     p
   );
 
+  double prev_lik = loglik;
+
   std::vector<double> loglik_history;
   loglik_history.push_back(loglik);
 
@@ -287,6 +289,16 @@ List fit_factor_model_log1p_exact_cpp_src(
     );
 
     loglik_history.push_back(loglik);
+
+    if (loglik - prev_lik < 1e-8) {
+
+      break;
+
+    } else {
+
+      prev_lik = loglik;
+
+    }
 
   }
 

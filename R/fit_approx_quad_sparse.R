@@ -3,6 +3,7 @@
 #' @param Y sparse matrix.
 #' @param K rank of factorization
 #' @param approx_range range of Chebyschev approximation
+#' @param approx_method method used to approximation exp(x)
 #' @param maxiter maximum number of updates
 #' @param init_U initialization of U
 #' @param init_V initialization of V
@@ -19,11 +20,12 @@
 fit_factor_model_log1p_quad_approx_sparse <- function(
     Y,
     K,
-    approx_range,
-    maxiter,
+    approx_range = NULL,
+    maxiter = 100,
     init_U = NULL,
     init_V = NULL,
     update_idx = NULL,
+    approx_method = c("chebyshev", "taylor"),
     init_method = c("random", "frob_nmf"),
     s = NULL
 ) {
@@ -61,16 +63,33 @@ fit_factor_model_log1p_quad_approx_sparse <- function(
 
   }
 
-  # get the approximation
-  poly_approx <- pracma::polyApprox(
-    exp,
-    approx_range[1],
-    approx_range[2],
-    2
-  )
+  approx_method <- match.arg(approx_method)
 
-  a1 <- poly_approx$p[2]
-  a2 <- poly_approx$p[1]
+  if (approx_method == "chebyshev") {
+
+    if (is.null(approx_range)) {
+
+      approx_range <- c(0, 1.25)
+
+    }
+
+    # get the approximation
+    poly_approx <- pracma::polyApprox(
+      exp,
+      approx_range[1],
+      approx_range[2],
+      2
+    )
+
+    a1 <- poly_approx$p[2]
+    a2 <- poly_approx$p[1]
+
+  } else if (approx_method == "taylor") {
+
+    a1 <- 1
+    a2 <- 0.5
+
+  }
 
   sc <- Matrix::summary(Y)
   sc_t <- Matrix::summary(Matrix::t(Y))
