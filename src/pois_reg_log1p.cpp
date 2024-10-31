@@ -3,6 +3,7 @@
 #include <omp.h>
 #include "ll.h"
 #include "utils.h"
+#include "update_add_const.h"
 
 using namespace Rcpp;
 using namespace arma;
@@ -184,7 +185,9 @@ List fit_factor_model_log1p_exact_cpp_src(
     const double alpha,
     const double beta,
     const int num_ccd_iter,
-    const std::vector<int> update_indices
+    const std::vector<int> update_indices,
+    const bool fit_constant,
+    double tol
 ) {
 
   const std::vector<int> col_num_repeats = get_num_repeats_cpp(
@@ -241,9 +244,40 @@ List fit_factor_model_log1p_exact_cpp_src(
 
   Rprintf("Fitting log1p factor model to %i x %i count matrix.\n",n,p);
 
+  arma::uvec update_indices_uvec = conv_to<arma::uvec>::from(update_indices);
+
   for (int iter = 0; iter < max_iter; iter++) {
 
     Rprintf("Iteration %i: objective = %+0.12e\n", iter, loglik);
+
+    if (fit_constant) {
+
+      double current_constant = U_T(0, 0);
+      //Rprintf("current_constant = %f\n", current_constant);
+      U_T.shed_row(0);
+      V_T.shed_row(0);
+      double new_constant = update_a(
+        current_constant,
+        U_T,
+        V_T,
+        sc_x,
+        sc_i,
+        sc_j,
+        sc_x.size(),
+        s,
+        n,
+        p,
+        alpha,
+        beta
+      );
+
+      arma::rowvec new_row(U_T.n_cols, arma::fill::value(new_constant));
+      U_T.insert_rows(0, new_row);
+
+      arma::rowvec new_row_ones(V_T.n_cols, arma::fill::ones);
+      V_T.insert_rows(0, new_row_ones);
+
+    }
 
     U_T = regress_cols_of_Y_on_X_log1p_pois_exact(
       V_T.t(),
@@ -271,8 +305,10 @@ List fit_factor_model_log1p_exact_cpp_src(
       beta
     );
 
-    arma::vec d = mean(U_T, 1) / mean(V_T, 1);
-    d(0) = 1.0;
+    // I think I need to change this depending on the update indices
+    arma::vec d = arma::ones<arma::vec>(U_T.n_rows);
+    arma::vec scaling = mean(U_T, 1) / mean(V_T, 1);
+    d.elem(update_indices_uvec) = scaling.elem(update_indices_uvec);
 
     U_T.each_col() %= arma::sqrt(1/d);
     V_T.each_col() %= arma::sqrt(d);
@@ -290,7 +326,7 @@ List fit_factor_model_log1p_exact_cpp_src(
 
     loglik_history.push_back(loglik);
 
-    if (loglik - prev_lik < 1e-8) {
+    if (loglik - prev_lik < tol) {
 
       break;
 
@@ -307,6 +343,12 @@ List fit_factor_model_log1p_exact_cpp_src(
   fit["U"] = U_T.t();
   fit["V"] = V_T.t();
   fit["loglik"] = loglik_history;
+
+  if (fit_constant) {
+
+    fit["a"] = U_T(0, 0);
+
+  }
 
   return(fit);
 

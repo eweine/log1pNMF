@@ -9,7 +9,8 @@ fit_factor_model_log1p_exact(
   K,
   maxiter,
   init_method = c("random", "frob_nmf"),
-  s = NULL
+  s = NULL,
+  fit_constant = FALSE
 )
 }
 \arguments{
@@ -20,6 +21,8 @@ fit_factor_model_log1p_exact(
 \item{maxiter}{maximum number of updates}
 
 \item{init_method}{method for initialization}
+
+\item{fit_constant}{boolean indicating if constant should be fit}
 
 \item{approx_range}{range of Chebyschev approximation}
 }

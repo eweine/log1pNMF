@@ -5,6 +5,9 @@
 #' @param approx_range range of Chebyschev approximation
 #' @param maxiter maximum number of updates
 #' @param init_method method for initialization
+#' @param fit_constant boolean indicating if constant should be fit
+#' @param constant_init initialization value for constant
+#' @param tol tolerance for optimization
 #'
 #' @return list with fit and progress info
 #' @export
@@ -17,7 +20,10 @@ fit_factor_model_log1p_exact <- function(
     K,
     maxiter,
     init_method = c("random", "frob_nmf"),
-    s = NULL
+    s = NULL,
+    fit_constant = FALSE,
+    constant_init = NULL,
+    tol = 1e-4
 ) {
 
   n <- nrow(Y)
@@ -48,13 +54,47 @@ fit_factor_model_log1p_exact <- function(
       rep(1, p), init$V
     )
 
-    update_idx <- 1:K
+  }
 
-  } else {
+  if (fit_constant) {
 
-    update_idx <- 0:(K - 1)
+    if (!is.null(constant_init)) {
+
+      init$U <- cbind(
+        rep(constant_init, n), init$U
+      )
+
+    } else {
+
+      init$U <- cbind(
+        rep(0, n), init$U
+      )
+
+    }
+
+    init$V <- cbind(
+      rep(1, p), init$V
+    )
+
+  } else if (!is.null(constant_init)) {
+
+    init$U <- cbind(
+      rep(constant_init, n), init$U
+    )
+
+    init$V <- cbind(
+      rep(1, p), init$V
+    )
 
   }
+
+  K_total <- ncol(init$U)
+  K_not_fit <- K_total - K
+
+  update_idx <- K_not_fit:(K_total - 1)
+
+  print("update_idx = ")
+  print(update_idx)
 
   fit <- fit_factor_model_log1p_exact_cpp_src(
     sc$x,
@@ -72,15 +112,16 @@ fit_factor_model_log1p_exact <- function(
     .01,
     .25,
     5,
-    update_idx
+    update_idx,
+    fit_constant,
+    tol
   )
 
-  if (!null_s) {
+  # here, I need to adjust what I'm doing in order to extract the right fit
+  # I have to be a bit careful about this but I think it should be fairly easy
 
-    fit$U <- fit$U[, -1]
-    fit$V <- fit$V[, -1]
-
-  }
+  #fit$U <- fit$U[,(update_idx + 1),drop = FALSE]
+  #fit$V <- fit$V[,(update_idx + 1),drop = FALSE]
 
   return(fit)
 
