@@ -241,6 +241,8 @@ List fit_factor_model_log1p_exact_cpp_src(
 
   Rprintf("Fitting log1p factor model to %i x %i count matrix.\n",n,p);
 
+  arma::uvec update_indices_uvec = conv_to<arma::uvec>::from(update_indices);
+
   for (int iter = 0; iter < max_iter; iter++) {
 
     Rprintf("Iteration %i: objective = %+0.12e\n", iter, loglik);
@@ -271,8 +273,9 @@ List fit_factor_model_log1p_exact_cpp_src(
       beta
     );
 
-    arma::vec d = mean(U_T, 1) / mean(V_T, 1);
-    d(0) = 1.0;
+    arma::vec d = arma::ones<arma::vec>(U_T.n_rows);
+    arma::vec scaling = mean(U_T, 1) / mean(V_T, 1);
+    d.elem(update_indices_uvec) = scaling.elem(update_indices_uvec);
 
     U_T.each_col() %= arma::sqrt(1/d);
     V_T.each_col() %= arma::sqrt(d);
