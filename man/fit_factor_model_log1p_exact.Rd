@@ -7,7 +7,9 @@
 fit_factor_model_log1p_exact(
   Y,
   K,
-  maxiter,
+  maxiter = 100,
+  init_U = NULL,
+  init_V = NULL,
   init_method = c("random", "frob_nmf"),
   s = NULL
 )

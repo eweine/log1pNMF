@@ -10,24 +10,184 @@ genes <- genes %>% dplyr::filter(feature_type == "protein_coding")
 
 counts <- counts[, colnames(counts) %in% rownames(genes)]
 
-counts <- counts[,Matrix::colSums(counts) > 0]
-counts <- counts[Matrix::rowSums(counts) > 0, ]
+day_str <- substr(cells$author_day, 2, 5)
+day_str <- ifelse(day_str == "0000", "1900", day_str)
+day <- as.numeric(day_str)
 
-cells_sum <- cells %>%
-  dplyr::group_by(author_day, author_cell_type) %>%
-  dplyr::summarise(
-    tot = n()
-  )
+cells$day <- day
 
+cells <- cells %>% dplyr::filter(day >= 1725)
+cells <- cells %>% dplyr::filter(author_cell_type != "Lung progenitor cells")
+
+set.seed(1)
+df_list <- list()
+i <- 1
+for (d in unique(cells$author_day)) {
+
+  for (ct in unique(cells$author_cell_type)) {
+
+    ctd_df <- cells %>% dplyr::filter(author_day == d & author_cell_type == ct)
+
+    if (nrow(ctd_df) > 500) {
+
+      ctd_df <- ctd_df %>% dplyr::sample_n(500)
+
+    }
+
+    if (nrow(ctd_df) >= 25) {
+
+      df_list[[i]] <- ctd_df
+      i <- i + 1
+
+    }
+
+  }
+
+}
+
+dfo <- do.call(rbind, df_list)
+
+counts <- counts[rownames(dfo), ]
+
+counts <- counts[, Matrix::colSums(counts) > 0]
+genes_to_use <- which(Matrix::colSums(counts>0)>4)
+counts <- counts[,genes_to_use]
 
 counts <- as(counts, "CsparseMatrix")
 
 n <- nrow(counts)
 p <- ncol(counts)
-K <- 11
+K <- 12
 
+cc_vec <- c(0.0001, 1e-3, 1e-2, 1e-1, 1, 1e1, 1e2, 1e3)
+
+nmf_k1 <- fastTopics:::fit_pnmf_rank1(counts)
+
+nmf_LL <- nmf_k1$L %>%
+  cbind(
+    matrix(
+      data = rexp(
+        n = n * (K - 1), rate = 15
+      ),
+      nrow = n,
+      ncol = K - 1
+    )
+  )
+rownames(nmf_LL) <- rownames(counts)
+
+nmf_FF <- nmf_k1$F %>%
+  cbind(
+    matrix(
+      data = rexp(
+        n = p * (K - 1), rate = 15
+      ),
+      nrow = p,
+      ncol = K - 1
+    )
+  )
+
+rownames(nmf_FF) <- colnames(counts)
+
+set.seed(1)
+nmf_fit0 <- fastTopics::init_poisson_nmf(
+  X = counts,
+  L = nmf_LL,
+  F = nmf_FF
+)
+
+nmf_fit <- fastTopics::fit_poisson_nmf(
+  X = counts,
+  fit0 = nmf_fit0
+)
+
+readr::write_rds(
+  nmf_fit, "~/Documents/data/passPCA/lung_embryo_results/nmf_k12.rds"
+)
+
+library(passPCA)
+library(Matrix)
+cc_vec <- c(0.0001, 1e-3, 1e-2, 1e-1, 1, 1e1, 1e2, 1e3)
 rs <- Matrix::rowSums(counts)
 s <- rs / mean(rs)
+
+
+for (cc in cc_vec) {
+
+  print(cc)
+
+  set.seed(1)
+  log1p_k1 <- fit_factor_model_log1p_exact(
+    Y = counts,
+    K = 1,
+    maxiter = 10,
+    s = cc * s,
+    init_method = "frob_nmf"
+  )
+
+  init_LL <- log1p_k1$U %>%
+    cbind(
+      matrix(
+        data = rexp(
+          n = n * (K - 1), rate = 15
+        ),
+        nrow = n,
+        ncol = K - 1
+      )
+    )
+
+  init_FF <- log1p_k1$V %>%
+    cbind(
+      matrix(
+        data = rexp(
+          n = p * (K - 1), rate = 15
+        ),
+        nrow = p,
+        ncol = K - 1
+      )
+    )
+
+
+  set.seed(1)
+  fit <- fit_factor_model_log1p_exact(
+    Y = counts,
+    K = K,
+    init_U = init_LL,
+    init_V = init_FF,
+    maxiter = 100,
+    s = cc * s
+  )
+
+  rownames(fit$U) <- rownames(counts)
+  rownames(fit$V) <- colnames(counts)
+
+  readr::write_rds(
+    fit, glue::glue("~/Documents/data/passPCA/lung_embryo_results/log1p_c{cc}_k12.rds")
+  )
+
+}
+
+fit_list <- list()
+
+fit_list[["nmf"]] <- readr::read_rds("~/Documents/data/passPCA/lung_embryo_results/nmf_k12.rds")
+
+cc_vec <- c(0.0001, 1e-3, 1e-2, 1e-1, 1, 1e1, 1e2, 1e3)
+
+for (cc in cc_vec) {
+
+  print(cc)
+
+  fit_list[[as.character(cc)]] <- readr::read_rds(
+    glue::glue("~/Documents/data/passPCA/lung_embryo_results/log1p_c{cc}_k12.rds")
+  )
+
+}
+
+readr::write_rds(
+  fit_list, glue::glue("~/Documents/data/passPCA/lung_embryo_results/k12_fit_list.rds")
+)
+
+############ Code to fit full models above
+
 
 set.seed(1)
 log1p_k1 <- passPCA::fit_factor_model_log1p_quad_approx_sparse(
@@ -70,6 +230,16 @@ log1p_k11 <- passPCA::fit_factor_model_log1p_quad_approx_sparse(
   init_U = init_LL,
   init_V = init_FF
 )
+
+library(fastTopics)
+set.seed(1)
+nmf <- fit_poisson_nmf(
+  X = counts,
+  k = K,
+  control = list(nc = 6)
+)
+
+readr::write_rds(nmf, "~/Documents/data/passPCA/experiment_results/nmf_pois_k11_mouse_embryo_lung.rds")
 
 #readr::write_rds(log1p_k11, "~/Documents/data/passPCA/experiment_results/log1p_pois_k11_mouse_embryo_lung.rds")
 
@@ -143,7 +313,9 @@ cells_av1 <- cells %>%
 
 LL_av1 <- LL[rownames(cells_av1), ]
 library(fastTopics)
-structure_plot(LL_av1, grouping = as.factor(as.character(cells_av1$day)))
+av1d <- cells_av1$day
+names(av1d) <- rownames(cells_av1)
+structure_plot(LL_av1, grouping = av1d)
 
 library(ggplot2)
 

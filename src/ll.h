@@ -50,4 +50,25 @@ double get_loglik_exact(
     const int p
 );
 
+double get_loglik_exact_add_const(
+    const arma::mat U_T,
+    const arma::mat V_T,
+    const std::vector<int> y_nz_vals,
+    const std::vector<int> y_nz_rows_idx,
+    const std::vector<int> y_nz_cols_idx,
+    const double c,
+    const int n,
+    const int p
+);
+
+double get_loglik_nn_glmpca(
+    const arma::mat U_T,
+    const arma::mat V_T,
+    const std::vector<int> y_nz_vals,
+    const std::vector<int> y_nz_rows_idx,
+    const std::vector<int> y_nz_cols_idx,
+    const int n,
+    const int p
+);
+
 #endif

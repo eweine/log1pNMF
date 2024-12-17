@@ -33,6 +33,33 @@ double get_sparse_term_loglik_exact(
   return sum;
 }
 
+double get_sparse_term_loglik_exact_add_const(
+    const arma::mat U_T,
+    const arma::mat V_T,
+    const std::vector<int> nonzero_y,
+    const std::vector<int> nonzero_y_i_idx,
+    const std::vector<int> nonzero_y_j_idx,
+    const double c,
+    const int num_nonzero_y
+) {
+
+  double sum = 0.0;
+
+  #pragma omp parallel for reduction(+:sum)
+  for (int r = 0; r < num_nonzero_y; r++) {
+
+    sum += nonzero_y[r] * log(
+      exp(
+        dot(
+          U_T.col(nonzero_y_i_idx[r]), V_T.col(nonzero_y_j_idx[r])
+        )
+      ) - c
+    );
+  }
+
+  return sum;
+}
+
 double get_dense_term_loglik_exact(
     const arma::mat U_T,
     const arma::mat V_T,
@@ -252,5 +279,66 @@ double get_loglik_exact(
   double loglik = loglik_sparse_term + loglik_dense_term;
 
   return(loglik);
+
+}
+
+double get_loglik_exact_add_const(
+    const arma::mat U_T,
+    const arma::mat V_T,
+    const std::vector<int> y_nz_vals,
+    const std::vector<int> y_nz_rows_idx,
+    const std::vector<int> y_nz_cols_idx,
+    const double c,
+    const int n,
+    const int p
+) {
+
+  double loglik_sparse_term = get_sparse_term_loglik_exact_add_const(
+    U_T,
+    V_T,
+    y_nz_vals,
+    y_nz_rows_idx,
+    y_nz_cols_idx,
+    c,
+    y_nz_vals.size()
+  );
+
+  double loglik_dense_term = get_dense_term_loglik_exact(
+    U_T,
+    V_T,
+    n,
+    p
+  );
+
+  double loglik = loglik_sparse_term + loglik_dense_term;
+
+  return(loglik);
+
+}
+
+double get_loglik_nn_glmpca(
+    const arma::mat U_T,
+    const arma::mat V_T,
+    const std::vector<int> y_nz_vals,
+    const std::vector<int> y_nz_rows_idx,
+    const std::vector<int> y_nz_cols_idx,
+    const int n,
+    const int p
+) {
+
+  double sp_term = 0;
+
+  #pragma omp parallel for reduction(+:sp_term)
+  for (int r = 0; r < y_nz_vals.size(); r++) {
+
+    sp_term += y_nz_vals[r] *
+        dot(
+          U_T.col(y_nz_rows_idx[r]), V_T.col(y_nz_cols_idx[r])
+        );
+
+  }
+
+  double ll = get_dense_term_loglik_exact(U_T, V_T, n, p) + sp_term;
+  return ll;
 
 }
