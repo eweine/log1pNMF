@@ -51,7 +51,7 @@ for (cc in cc_vec) {
     K = K,
     init_U = init_LL,
     init_V = init_FF,
-    maxiter = 100,
+    maxiter = 10000,
     s = cc * s
   )
 
@@ -59,7 +59,7 @@ for (cc in cc_vec) {
   rownames(fit$V) <- colnames(counts)
 
   readr::write_rds(
-    fit, glue::glue("liu_pbmc_log1p_c{cc}_k25.rds")
+    fit, glue::glue("liu_pbmc_log1p_c{cc}_k25_exact.rds")
   )
 
 }
