@@ -9,12 +9,12 @@ using namespace arma;
 
 
 arma::vec solve_pois_reg_log1p (
-    const arma::mat X,
+    const arma::mat& X,
     const arma::vec y,
     const arma::uvec y_nz_idx,
-    const arma::vec s,
+    const arma::vec& s,
     arma::vec b,
-    const std::vector<int> update_indices,
+    const std::vector<int>& update_indices,
     unsigned int num_iter,
     const double alpha,
     const double beta
@@ -107,13 +107,13 @@ arma::vec solve_pois_reg_log1p (
 // X is an nxp matrix (each row is a p-dim covariate)
 // B is a pxm matrix (each col is a p-dim reg coef)
 arma::mat regress_cols_of_Y_on_X_log1p_pois_exact(
-    const arma::mat X,
-    const std::vector<arma::vec> Y,
-    const std::vector<arma::uvec> Y_nz_idx,
-    const arma::vec s,
+    const arma::mat& X,
+    const std::vector<arma::vec>& Y,
+    const std::vector<arma::uvec>& Y_nz_idx,
+    const arma::vec& s,
     const bool common_size_factor,
-    arma::mat B,
-    const std::vector<int> update_indices,
+    arma::mat& B,
+    const std::vector<int>& update_indices,
     unsigned int num_iter,
     const double alpha,
     const double beta
@@ -169,22 +169,22 @@ arma::mat regress_cols_of_Y_on_X_log1p_pois_exact(
 
 // [[Rcpp::export]]
 List fit_factor_model_log1p_exact_cpp_src(
-    const std::vector<int> sc_x,
-    const std::vector<int> sc_i,
-    const std::vector<int> sc_j,
-    const std::vector<int> sc_T_x,
-    const std::vector<int> sc_T_i,
-    const std::vector<int> sc_T_j,
-    const arma::vec s,
-    arma::mat U_T,
-    arma::mat V_T,
+    const std::vector<int>& sc_x,
+    const std::vector<int>& sc_i,
+    const std::vector<int>& sc_j,
+    const std::vector<int>& sc_T_x,
+    const std::vector<int>& sc_T_i,
+    const std::vector<int>& sc_T_j,
+    const arma::vec& s,
+    arma::mat& U_T,
+    arma::mat& V_T,
     const int n,
     const int p,
     const int max_iter,
     const double alpha,
     const double beta,
     const int num_ccd_iter,
-    const std::vector<int> update_indices
+    const std::vector<int>& update_indices
 ) {
 
   const std::vector<int> col_num_repeats = get_num_repeats_cpp(
