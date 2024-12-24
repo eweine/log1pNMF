@@ -13,16 +13,16 @@ using namespace arma;
 
 
 arma::vec solve_pois_reg_log1p_quad_approx_sparse_scalar_s (
-    const arma::mat X_T,
+    const arma::mat& X_T,
     const arma::vec y,
     const arma::uvec y_nz_idx,
     const double s,
-    const arma::vec X_cs,
-    const arma::mat X_T_X,
+    const arma::vec& X_cs,
+    const arma::mat& X_T_X,
     const double a1,
     const double a2,
     arma::vec b,
-    const std::vector<int> update_indices,
+    const std::vector<int>& update_indices,
     unsigned int num_iter,
     const double alpha,
     const double beta
@@ -144,16 +144,16 @@ arma::vec solve_pois_reg_log1p_quad_approx_sparse_scalar_s (
 
 
 arma::vec solve_pois_reg_log1p_quad_approx_sparse_vec_s (
-    const arma::mat X_T,
+    const arma::mat& X_T,
     const arma::vec y,
     const arma::uvec y_nz_idx,
     const arma::vec s_nz,
-    const arma::vec X_T_s,
-    const arma::mat X_T_diag_s_X,
+    const arma::vec& X_T_s,
+    const arma::mat& X_T_diag_s_X,
     const double a1,
     const double a2,
     arma::vec b,
-    const std::vector<int> update_indices,
+    const std::vector<int>& update_indices,
     unsigned int num_iter,
     const double alpha,
     const double beta
@@ -279,14 +279,14 @@ arma::vec solve_pois_reg_log1p_quad_approx_sparse_vec_s (
 // X is an nxp matrix (each row is a p-dim covariate)
 // B is a pxm matrix (each col is a p-dim reg coef)
 arma::mat regress_cols_of_Y_on_X_log1p_quad_approx_sparse_vec_s(
-    const arma::mat X_T,
-    const std::vector<arma::vec> Y,
-    const std::vector<arma::uvec> Y_nz_idx,
-    const arma::vec s,
-    arma::mat B,
+    const arma::mat& X_T,
+    const std::vector<arma::vec>& Y,
+    const std::vector<arma::uvec>& Y_nz_idx,
+    const arma::vec& s,
+    arma::mat& B,
     const double a1,
     const double a2,
-    const std::vector<int> update_indices,
+    const std::vector<int>& update_indices,
     unsigned int num_iter,
     const double alpha,
     const double beta
@@ -322,14 +322,14 @@ arma::mat regress_cols_of_Y_on_X_log1p_quad_approx_sparse_vec_s(
 }
 
 arma::mat regress_cols_of_Y_on_X_log1p_quad_approx_sparse_scalar_s(
-    const arma::mat X_T,
-    const std::vector<arma::vec> Y,
-    const std::vector<arma::uvec> Y_nz_idx,
-    const arma::vec s,
-    arma::mat B,
+    const arma::mat& X_T,
+    const std::vector<arma::vec>& Y,
+    const std::vector<arma::uvec>& Y_nz_idx,
+    const arma::vec& s,
+    arma::mat& B,
     const double a1,
     const double a2,
-    const std::vector<int> update_indices,
+    const std::vector<int>& update_indices,
     unsigned int num_iter,
     const double alpha,
     const double beta
@@ -366,15 +366,15 @@ arma::mat regress_cols_of_Y_on_X_log1p_quad_approx_sparse_scalar_s(
 
 // [[Rcpp::export]]
 List fit_factor_model_log1p_quad_approx_sparse_cpp_src(
-    const std::vector<int> sc_x,
-    const std::vector<int> sc_i,
-    const std::vector<int> sc_j,
-    const std::vector<int> sc_T_x,
-    const std::vector<int> sc_T_i,
-    const std::vector<int> sc_T_j,
-    const arma::vec s,
-    arma::mat U_T,
-    arma::mat V_T,
+    const std::vector<int>& sc_x,
+    const std::vector<int>& sc_i,
+    const std::vector<int>& sc_j,
+    const std::vector<int>& sc_T_x,
+    const std::vector<int>& sc_T_i,
+    const std::vector<int>& sc_T_j,
+    const arma::vec& s,
+    arma::mat& U_T,
+    arma::mat& V_T,
     const double a1,
     const double a2,
     const int n,
@@ -383,7 +383,7 @@ List fit_factor_model_log1p_quad_approx_sparse_cpp_src(
     const double alpha,
     const double beta,
     const int num_ccd_iter,
-    const std::vector<int> update_indices
+    const std::vector<int>& update_indices
 ) {
 
   const std::vector<int> col_num_repeats = get_num_repeats_cpp(

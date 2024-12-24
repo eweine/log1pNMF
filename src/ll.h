@@ -18,12 +18,12 @@ double get_loglik_quad_approx_full(
 );
 
 double get_loglik_quad_approx_sparse(
-    const arma::mat U_T,
-    const arma::mat V_T,
-    const std::vector<int> y_nz_vals,
-    const std::vector<int> y_nz_rows_idx,
-    const std::vector<int> y_nz_cols_idx,
-    const arma::vec s,
+    const arma::mat& U_T,
+    const arma::mat& V_T,
+    const std::vector<int>& y_nz_vals,
+    const std::vector<int>& y_nz_rows_idx,
+    const std::vector<int>& y_nz_cols_idx,
+    const arma::vec& s,
     const double a1,
     const double a2
 );
