@@ -94,6 +94,11 @@ arma::vec solve_pois_reg_log1p (
           break;
         } else {
           t *= beta;
+          if(t < 1e-12) {
+
+            break;
+
+          }
         }
       }
     }
