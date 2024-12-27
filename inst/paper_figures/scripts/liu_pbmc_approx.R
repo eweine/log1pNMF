@@ -2,7 +2,8 @@ library(Matrix)
 library(dplyr)
 library(passPCA)
 
-load("/home/ericw456/pbmc/liu_data.Rdata")
+#load("/home/ericw456/pbmc/liu_data.Rdata")
+load("~/Documents/data/passPCA/liu_data.Rdata")
 
 counts <- counts[,Matrix::colSums(counts) > 0]
 # require that all used genes appear in at least 5 cells
@@ -11,7 +12,8 @@ s <- s / mean(s)
 genes_to_use <- which(Matrix::colSums(counts>0)>4)
 counts <- counts[,genes_to_use]
 K <- 25
-cc_vec <- c(1e-4, 1e-3, 1e-2, 1e-1, 1, 1e1, 1e2, 1e3, 1e4)
+#cc_vec <- c(1e-4, 1e-3, 1e-2, 1e-1, 1, 1e1, 1e2, 1e3, 1e4)
+cc_vec <- c(1)
 
 n <- nrow(counts)
 p <- ncol(counts)
@@ -29,6 +31,7 @@ for (cc in cc_vec) {
     init_method = "frob_nmf"
   )
 
+  set.seed(1)
   init_LL <- log1p_k1$U %>%
     cbind(
       matrix(
@@ -40,6 +43,7 @@ for (cc in cc_vec) {
       )
     )
 
+  set.seed(1)
   init_FF <- log1p_k1$V %>%
     cbind(
       matrix(
