@@ -130,6 +130,7 @@ arma::vec solve_pois_reg_log1p_quad_approx_sparse_scalar_s (
           t *= beta;
           if(t < 1e-12) {
 
+            b[j] = b_j_og;
             break;
 
           }
@@ -261,6 +262,7 @@ arma::vec solve_pois_reg_log1p_quad_approx_sparse_vec_s (
 
           if (t < 1e-12) {
 
+            b[j] = b_j_og;
             break;
 
           }
