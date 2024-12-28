@@ -4,6 +4,10 @@ library(passPCA)
 
 #load("/home/ericw456/pbmc/liu_data.Rdata")
 load("~/Documents/data/passPCA/liu_data.Rdata")
+library(RcppParallel)
+
+# Force RcppParallel to use exactly 1 thread
+setThreadOptions(numThreads = 7L)
 
 
 counts <- counts[,Matrix::colSums(counts) > 0]
@@ -14,7 +18,7 @@ genes_to_use <- which(Matrix::colSums(counts>0)>4)
 counts <- counts[,genes_to_use]
 K <- 25
 #cc_vec <- c(1e-4, 1e-3, 1e-2, 1e-1, 1, 1e1, 1e2, 1e3, 1e4)
-cc_vec <- c(1e4)
+cc_vec <- c(1)
 
 n <- nrow(counts)
 p <- ncol(counts)

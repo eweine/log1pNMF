@@ -62,7 +62,7 @@ for (cc in cc_vec) {
     K = K,
     init_U = init_LL,
     init_V = init_FF,
-    maxiter = 1000,
+    maxiter = 100,
     s = cc * s,
     approx_method = "taylor"
   )
