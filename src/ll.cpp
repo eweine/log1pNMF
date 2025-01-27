@@ -1,10 +1,12 @@
 #include <RcppArmadillo.h>
 #include <Rcpp.h>
 #include <omp.h>
+#include <RcppParallel.h>
 #include "ll.h"
 
 using namespace Rcpp;
 using namespace arma;
+
 
 double get_sparse_term_loglik_exact(
     const arma::mat U_T,
@@ -182,4 +184,3 @@ double get_loglik_exact(
   return(loglik);
 
 }
-
