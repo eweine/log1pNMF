@@ -296,7 +296,7 @@ List fit_factor_model_log1p_exact_cpp_src(
 
     loglik_history.push_back(loglik);
 
-    if (loglik - prev_lik < 1e-8) {
+    if (loglik - prev_lik < 1e-12) {
 
       break;
 

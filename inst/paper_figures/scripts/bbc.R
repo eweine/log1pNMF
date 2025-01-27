@@ -1,4 +1,5 @@
-dat <- readr::read_csv("/home/ericw456/bbc/bbc_news_text_complexity_summarization.csv")
+#dat <- readr::read_csv("/home/ericw456/bbc/bbc_news_text_complexity_summarization.csv")
+dat <- readr::read_csv("~/Downloads/bbc_news_text_complexity_summarization.csv")
 
 library(tm)
 library(SnowballC)
@@ -42,7 +43,7 @@ library(Matrix)
 library(dplyr)
 
 K <- 25
-cc_vec <- c(1e-4, 1e-3, 1e-2, 1e-1, 1, 1e1, 1e2, 1e3, 1e4)
+cc_vec <- c(1e-3, 1e-2, 1e-1, 1, 1e1, 1e2, 1e3)
 
 n <- nrow(counts)
 p <- ncol(counts)
@@ -89,7 +90,7 @@ for (cc in cc_vec) {
     K = K,
     init_U = init_LL,
     init_V = init_FF,
-    maxiter = 1000,
+    maxiter = 100,
     s = cc * s
   )
   total_time <- tictoc::toc()
@@ -99,7 +100,7 @@ for (cc in cc_vec) {
   rownames(fit$V) <- colnames(counts)
 
   readr::write_rds(
-    fit, glue::glue("bbc_log1p_c{cc}_k25_exact_1K_iter.rds")
+    fit, glue::glue("~/Documents/data/passPCA/bbc_log1p_c{cc}_k25_exact_100_iter.rds")
   )
 
 }
