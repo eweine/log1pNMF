@@ -1,6 +1,5 @@
 #include <RcppArmadillo.h>
 #include <Rcpp.h>
-#include <omp.h>
 #include <RcppParallel.h>
 #include "ll.h"
 
@@ -20,7 +19,7 @@ double get_sparse_term_loglik_exact(
 
   double sum = 0.0;
 
-  #pragma omp parallel for reduction(+:sum)
+  //#pragma omp parallel for reduction(+:sum)
   for (int r = 0; r < num_nonzero_y; r++) {
 
     sum += nonzero_y[r] * log(
@@ -45,7 +44,7 @@ double get_dense_term_loglik_exact(
 
   double sum = 0.0;
 
-  #pragma omp parallel for reduction(+:sum)
+  //#pragma omp parallel for reduction(+:sum)
   for (int i = 0; i < n; i++) {
 
     for (int j = 0; j < p; j++) {
@@ -99,7 +98,7 @@ double get_sparse_term_loglik_quad_sparse_approx(
   double quad_correction = 0;
   double cp;
 
-  #pragma omp parallel for reduction(+:sp_term, lin_correction, quad_correction)
+  //#pragma omp parallel for reduction(+:sp_term, lin_correction, quad_correction)
   for (int r = 0; r < num_nonzero_y; r++) {
 
     cp = dot(U_T.col(nonzero_y_i_idx[r]), V_T.col(nonzero_y_j_idx[r]));

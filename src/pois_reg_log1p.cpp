@@ -1,6 +1,5 @@
 #include <RcppArmadillo.h>
 #include <Rcpp.h>
-#include <omp.h>
 #include <RcppParallel.h>
 #include "ll.h"
 #include "utils.h"

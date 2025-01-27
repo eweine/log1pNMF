@@ -1,6 +1,5 @@
 #include <RcppArmadillo.h>
 #include <Rcpp.h>
-#include <omp.h>
 #include <RcppParallel.h>
 #include "ll.h"
 #include "utils.h"
@@ -278,95 +277,6 @@ arma::vec solve_pois_reg_log1p_quad_approx_sparse_vec_s (
 
 }
 
-
-// Y is an nxm matrix (each col is an n-dim data vec)
-// X is an nxp matrix (each row is a p-dim covariate)
-// B is a pxm matrix (each col is a p-dim reg coef)
-arma::mat regress_cols_of_Y_on_X_log1p_quad_approx_sparse_vec_s(
-    const arma::mat& X_T,
-    const std::vector<arma::vec>& Y,
-    const std::vector<arma::uvec>& Y_nz_idx,
-    const arma::vec& s,
-    arma::mat& B,
-    const double a1,
-    const double a2,
-    const std::vector<int>& update_indices,
-    unsigned int num_iter,
-    const double alpha,
-    const double beta
-) {
-
-  const arma::mat X_T_s = X_T * s;
-  const arma::mat X_T_diag_s_X = (X_T.each_row() % s.t()) * X_T.t();
-
-  // Commenting out parallelism for testing
-#pragma omp parallel for shared(B)
-  for (int j = 0; j < B.n_cols; j++) {
-
-    B.col(j) = solve_pois_reg_log1p_quad_approx_sparse_vec_s(
-      X_T,
-      Y[j],
-       Y_nz_idx[j],
-               s.elem(Y_nz_idx[j]),
-               X_T_s,
-               X_T_diag_s_X,
-               a1,
-               a2,
-               B.col(j),
-               update_indices,
-               num_iter,
-               alpha,
-               beta
-    );
-
-  }
-
-  return(B);
-
-}
-
-arma::mat regress_cols_of_Y_on_X_log1p_quad_approx_sparse_scalar_s(
-    const arma::mat& X_T,
-    const std::vector<arma::vec>& Y,
-    const std::vector<arma::uvec>& Y_nz_idx,
-    const arma::vec& s,
-    arma::mat& B,
-    const double a1,
-    const double a2,
-    const std::vector<int>& update_indices,
-    unsigned int num_iter,
-    const double alpha,
-    const double beta
-) {
-
-  const arma::mat X_cs = arma::sum(X_T, 1);
-  const arma::mat X_T_X = X_T * X_T.t();
-
-  // Commenting out parallelism for testing
-#pragma omp parallel for shared(B)
-  for (int j = 0; j < B.n_cols; j++) {
-
-    B.col(j) = solve_pois_reg_log1p_quad_approx_sparse_scalar_s(
-      X_T,
-      Y[j],
-       Y_nz_idx[j],
-               s(j),
-               X_cs,
-               X_T_X,
-               a1,
-               a2,
-               B.col(j),
-               update_indices,
-               num_iter,
-               alpha,
-               beta
-    );
-
-  }
-
-  return(B);
-
-}
 
 // A worker that processes columns [begin, end) of B in parallel:
 struct RegressColsVecSWorker : public Worker
