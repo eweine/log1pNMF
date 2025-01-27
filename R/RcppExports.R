@@ -9,6 +9,14 @@ fit_factor_model_log1p_exact_cpp_src <- function(sc_x, sc_i, sc_j, sc_T_x, sc_T_
     .Call(`_passPCA_fit_factor_model_log1p_exact_cpp_src`, sc_x, sc_i, sc_j, sc_T_x, sc_T_i, sc_T_j, s, U_T, V_T, n, p, max_iter, alpha, beta, num_ccd_iter, update_indices)
 }
 
+regress_cols_of_Y_on_X_log1p_quad_approx_sparse_vec_s_parallel <- function(X_T, Y, Y_nz_idx, s, B, a1, a2, update_indices, num_iter, alpha, beta) {
+    .Call(`_passPCA_regress_cols_of_Y_on_X_log1p_quad_approx_sparse_vec_s_parallel`, X_T, Y, Y_nz_idx, s, B, a1, a2, update_indices, num_iter, alpha, beta)
+}
+
+regress_cols_of_Y_on_X_log1p_quad_approx_sparse_scalar_s_parallel <- function(X_T, Y, Y_nz_idx, s, B, a1, a2, update_indices, num_iter, alpha, beta) {
+    .Call(`_passPCA_regress_cols_of_Y_on_X_log1p_quad_approx_sparse_scalar_s_parallel`, X_T, Y, Y_nz_idx, s, B, a1, a2, update_indices, num_iter, alpha, beta)
+}
+
 fit_factor_model_log1p_quad_approx_sparse_cpp_src <- function(sc_x, sc_i, sc_j, sc_T_x, sc_T_i, sc_T_j, s, U_T, V_T, a1, a2, n, p, max_iter, alpha, beta, num_ccd_iter, update_indices) {
     .Call(`_passPCA_fit_factor_model_log1p_quad_approx_sparse_cpp_src`, sc_x, sc_i, sc_j, sc_T_x, sc_T_i, sc_T_j, s, U_T, V_T, a1, a2, n, p, max_iter, alpha, beta, num_ccd_iter, update_indices)
 }
