@@ -220,41 +220,157 @@ double get_dense_term_loglik_exact_parallel(const arma::mat &U_T,
   return worker.sum;
 }
 
+struct SparseTermLogLikQuadWorker : public Worker
+{
+  // Pointers to raw matrix data
+  const double* U_T_data;
+  const double* V_T_data;
+  // Pointer to s
+  const double* s_data;
 
-double get_sparse_term_loglik_quad_sparse_approx(
-    const arma::mat& U_T,
-    const arma::mat& V_T,
-    const std::vector<int>& nonzero_y,
-    const std::vector<int>& nonzero_y_i_idx,
-    const std::vector<int>& nonzero_y_j_idx,
-    const int num_nonzero_y,
-    const arma::vec& s,
-    const double a1,
-    const double a2
-) {
+  // Read-only references to vectors
+  const std::vector<int> &nonzero_y;
+  const std::vector<int> &nonzero_y_i_idx;
+  const std::vector<int> &nonzero_y_j_idx;
 
-  double sp_term = 0.0;
-  double lin_correction = 0.0;
-  double quad_correction = 0;
-  double cp;
+  // Dimensions for U_T, V_T (number of rows)
+  const int n_rows_U;
+  const int n_rows_V;
 
-  //#pragma omp parallel for reduction(+:sp_term, lin_correction, quad_correction)
-  for (int r = 0; r < num_nonzero_y; r++) {
+  // Additional constants
+  const double a1;
+  const double a2;
 
-    cp = dot(U_T.col(nonzero_y_i_idx[r]), V_T.col(nonzero_y_j_idx[r]));
+  // Partial sums
+  double sp_term;
+  double lin_correction;
+  double quad_correction;
 
-    sp_term += nonzero_y[r] * log(exp(cp) - 1) -
-      s[nonzero_y_i_idx[r]] * exp(cp);
-    lin_correction += s[nonzero_y_i_idx[r]] * cp;
-    quad_correction += s[nonzero_y_i_idx[r]] * cp * cp;
-
+  // Constructor
+  SparseTermLogLikQuadWorker(
+    const arma::mat &U_T,
+    const arma::mat &V_T,
+    const arma::vec &s,
+    const std::vector<int> &nonzero_y_,
+    const std::vector<int> &nonzero_y_i_idx_,
+    const std::vector<int> &nonzero_y_j_idx_,
+    double a1_,
+    double a2_
+  )
+    : U_T_data(U_T.memptr()),
+      V_T_data(V_T.memptr()),
+      s_data(s.memptr()),
+      nonzero_y(nonzero_y_),
+      nonzero_y_i_idx(nonzero_y_i_idx_),
+      nonzero_y_j_idx(nonzero_y_j_idx_),
+      n_rows_U(U_T.n_rows),
+      n_rows_V(V_T.n_rows),
+      a1(a1_),
+      a2(a2_),
+      sp_term(0.0),
+      lin_correction(0.0),
+      quad_correction(0.0)
+  {
   }
 
-  double ll = sp_term + a1 * lin_correction + a2 * quad_correction;
+  // Split constructor for parallelReduce
+  SparseTermLogLikQuadWorker(const SparseTermLogLikQuadWorker &w, Split)
+    : U_T_data(w.U_T_data),
+      V_T_data(w.V_T_data),
+      s_data(w.s_data),
+      nonzero_y(w.nonzero_y),
+      nonzero_y_i_idx(w.nonzero_y_i_idx),
+      nonzero_y_j_idx(w.nonzero_y_j_idx),
+      n_rows_U(w.n_rows_U),
+      n_rows_V(w.n_rows_V),
+      a1(w.a1),
+      a2(w.a2),
+      sp_term(0.0),
+      lin_correction(0.0),
+      quad_correction(0.0)
+  {
+  }
 
-  return(ll);
+  // The parallel loop
+  void operator()(std::size_t begin, std::size_t end)
+  {
+    double local_sp_term = 0.0;
+    double local_lin_correction = 0.0;
+    double local_quad_correction = 0.0;
 
+    for (std::size_t r = begin; r < end; r++)
+    {
+      const int i = nonzero_y_i_idx[r];
+      const int j = nonzero_y_j_idx[r];
+      const int yval = nonzero_y[r];
+
+      // Dot product of U_T.col(i) and V_T.col(j)
+      double cp = 0.0;
+      for (int k = 0; k < n_rows_U; k++)
+      {
+        cp += U_T_data[k + i * n_rows_U] * V_T_data[k + j * n_rows_V];
+      }
+
+      // sp_term piece
+      // sp_term += y[r]*log(exp(cp) - 1) - s[i]*exp(cp)
+      double exp_cp = std::exp(cp);
+
+      // NOTE: If cp < 0, it's possible exp_cp - 1 <= 0 => log() invalid.
+      // We assume the original code ensures cp>0 or handles the domain properly.
+      local_sp_term += yval * std::log(exp_cp - 1.0)
+        - s_data[i] * exp_cp;
+
+      // lin_correction piece
+      local_lin_correction += s_data[i] * cp;
+
+      // quad_correction piece
+      local_quad_correction += s_data[i] * (cp * cp);
+    }
+
+    // Accumulate partial sums into the functor
+    sp_term         += local_sp_term;
+    lin_correction  += local_lin_correction;
+    quad_correction += local_quad_correction;
+  }
+
+  // Join partial sums from different threads
+  void join(const SparseTermLogLikQuadWorker &rhs)
+  {
+    sp_term         += rhs.sp_term;
+    lin_correction  += rhs.lin_correction;
+    quad_correction += rhs.quad_correction;
+  }
+};
+
+// [[Rcpp::export]]
+double get_sparse_term_loglik_quad_sparse_approx_parallel(
+    const arma::mat &U_T,
+    const arma::mat &V_T,
+    const std::vector<int> &nonzero_y,
+    const std::vector<int> &nonzero_y_i_idx,
+    const std::vector<int> &nonzero_y_j_idx,
+    const int num_nonzero_y,
+    const arma::vec &s,
+    const double a1,
+    const double a2
+)
+{
+  // Instantiate worker
+  SparseTermLogLikQuadWorker worker(
+      U_T, V_T, s, nonzero_y, nonzero_y_i_idx, nonzero_y_j_idx, a1, a2
+  );
+
+  // Parallel reduce over the range [0, num_nonzero_y)
+  parallelReduce(0, num_nonzero_y, worker);
+
+  // Combine results into the final
+  double ll = worker.sp_term
+  + a1 * worker.lin_correction
+  + a2 * worker.quad_correction;
+
+  return ll;
 }
+
 
 double get_loglik_quad_approx_sparse(
     const arma::mat& U_T,
@@ -267,7 +383,7 @@ double get_loglik_quad_approx_sparse(
     const double a2
 ) {
 
-  double loglik = get_sparse_term_loglik_quad_sparse_approx(
+  double loglik = get_sparse_term_loglik_quad_sparse_approx_parallel(
     U_T,
     V_T,
     y_nz_vals,

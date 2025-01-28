@@ -11,6 +11,25 @@ Rcpp::Rostream<true>&  Rcpp::Rcout = Rcpp::Rcpp_cout_get();
 Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
+// get_sparse_term_loglik_quad_sparse_approx_parallel
+double get_sparse_term_loglik_quad_sparse_approx_parallel(const arma::mat& U_T, const arma::mat& V_T, const std::vector<int>& nonzero_y, const std::vector<int>& nonzero_y_i_idx, const std::vector<int>& nonzero_y_j_idx, const int num_nonzero_y, const arma::vec& s, const double a1, const double a2);
+RcppExport SEXP _passPCA_get_sparse_term_loglik_quad_sparse_approx_parallel(SEXP U_TSEXP, SEXP V_TSEXP, SEXP nonzero_ySEXP, SEXP nonzero_y_i_idxSEXP, SEXP nonzero_y_j_idxSEXP, SEXP num_nonzero_ySEXP, SEXP sSEXP, SEXP a1SEXP, SEXP a2SEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::mat& >::type U_T(U_TSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type V_T(V_TSEXP);
+    Rcpp::traits::input_parameter< const std::vector<int>& >::type nonzero_y(nonzero_ySEXP);
+    Rcpp::traits::input_parameter< const std::vector<int>& >::type nonzero_y_i_idx(nonzero_y_i_idxSEXP);
+    Rcpp::traits::input_parameter< const std::vector<int>& >::type nonzero_y_j_idx(nonzero_y_j_idxSEXP);
+    Rcpp::traits::input_parameter< const int >::type num_nonzero_y(num_nonzero_ySEXP);
+    Rcpp::traits::input_parameter< const arma::vec& >::type s(sSEXP);
+    Rcpp::traits::input_parameter< const double >::type a1(a1SEXP);
+    Rcpp::traits::input_parameter< const double >::type a2(a2SEXP);
+    rcpp_result_gen = Rcpp::wrap(get_sparse_term_loglik_quad_sparse_approx_parallel(U_T, V_T, nonzero_y, nonzero_y_i_idx, nonzero_y_j_idx, num_nonzero_y, s, a1, a2));
+    return rcpp_result_gen;
+END_RCPP
+}
 // regress_cols_of_Y_on_X_log1p_pois_exact_parallel
 arma::mat regress_cols_of_Y_on_X_log1p_pois_exact_parallel(const arma::mat& X, const std::vector<arma::vec>& Y, const std::vector<arma::uvec>& Y_nz_idx, const arma::vec& s, const bool common_size_factor, arma::mat& B, const std::vector<int>& update_indices, unsigned int num_iter, const double alpha, const double beta);
 RcppExport SEXP _passPCA_regress_cols_of_Y_on_X_log1p_pois_exact_parallel(SEXP XSEXP, SEXP YSEXP, SEXP Y_nz_idxSEXP, SEXP sSEXP, SEXP common_size_factorSEXP, SEXP BSEXP, SEXP update_indicesSEXP, SEXP num_iterSEXP, SEXP alphaSEXP, SEXP betaSEXP) {
@@ -129,6 +148,7 @@ END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
+    {"_passPCA_get_sparse_term_loglik_quad_sparse_approx_parallel", (DL_FUNC) &_passPCA_get_sparse_term_loglik_quad_sparse_approx_parallel, 9},
     {"_passPCA_regress_cols_of_Y_on_X_log1p_pois_exact_parallel", (DL_FUNC) &_passPCA_regress_cols_of_Y_on_X_log1p_pois_exact_parallel, 10},
     {"_passPCA_fit_factor_model_log1p_exact_cpp_src", (DL_FUNC) &_passPCA_fit_factor_model_log1p_exact_cpp_src, 16},
     {"_passPCA_regress_cols_of_Y_on_X_log1p_quad_approx_sparse_vec_s_parallel", (DL_FUNC) &_passPCA_regress_cols_of_Y_on_X_log1p_quad_approx_sparse_vec_s_parallel, 11},
