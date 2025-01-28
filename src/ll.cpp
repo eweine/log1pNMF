@@ -342,7 +342,7 @@ struct SparseTermLogLikQuadWorker : public Worker
   }
 };
 
-// [[Rcpp::export]]
+
 double get_sparse_term_loglik_quad_sparse_approx_parallel(
     const arma::mat &U_T,
     const arma::mat &V_T,
