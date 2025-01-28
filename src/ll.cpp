@@ -4,36 +4,123 @@
 #include "ll.h"
 
 using namespace Rcpp;
+using namespace RcppParallel;
 using namespace arma;
 
 
-double get_sparse_term_loglik_exact(
-    const arma::mat U_T,
-    const arma::mat V_T,
-    const std::vector<int> nonzero_y,
-    const std::vector<int> nonzero_y_i_idx,
-    const std::vector<int> nonzero_y_j_idx,
-    const arma::vec s,
-    const int num_nonzero_y
-) {
+struct SparseTermLogLikExactWorker : public Worker
+{
+  // Pointers to the underlying data (read-only)
+  const double* U_T_data;
+  const double* V_T_data;
+  const double* s_data;
 
-  double sum = 0.0;
+  // Read-only references to vectors of indices/values
+  const std::vector<int> &nonzero_y;
+  const std::vector<int> &nonzero_y_i_idx;
+  const std::vector<int> &nonzero_y_j_idx;
 
-  //#pragma omp parallel for reduction(+:sum)
-  for (int r = 0; r < num_nonzero_y; r++) {
+  // Dimensions (number of rows) for U_T and V_T
+  // (they must share the same n_rows if you are doing dot products)
+  const int n_rows_U;
+  const int n_rows_V;
 
-    sum += nonzero_y[r] * log(
-      exp(
-        dot(
-          U_T.col(nonzero_y_i_idx[r]), V_T.col(nonzero_y_j_idx[r])
-        )
-      ) - s[nonzero_y_i_idx[r]]
-    );
+  // Accumulator for partial sums
+  double sum;
+
+  // Constructor
+  SparseTermLogLikExactWorker(const arma::mat &U_T,
+                              const arma::mat &V_T,
+                              const arma::vec &s,
+                              const std::vector<int> &nonzero_y_,
+                              const std::vector<int> &nonzero_y_i_idx_,
+                              const std::vector<int> &nonzero_y_j_idx_)
+    : U_T_data(U_T.memptr()),
+      V_T_data(V_T.memptr()),
+      s_data(s.memptr()),
+      nonzero_y(nonzero_y_),
+      nonzero_y_i_idx(nonzero_y_i_idx_),
+      nonzero_y_j_idx(nonzero_y_j_idx_),
+      n_rows_U(U_T.n_rows),
+      n_rows_V(V_T.n_rows),
+      sum(0.0)
+  {
+    // (Optionally) you could add checks here to ensure dimensions match:
+    // e.g.,  Rcpp::Rcout << "U_T: " << U_T.n_rows << "x" << U_T.n_cols << std::endl;
+    //        Rcpp::Rcout << "V_T: " << V_T.n_rows << "x" << V_T.n_cols << std::endl;
   }
 
-  return sum;
-}
+  // Split constructor for parallelReduce
+  SparseTermLogLikExactWorker(const SparseTermLogLikExactWorker &w, Split)
+    : U_T_data(w.U_T_data),
+      V_T_data(w.V_T_data),
+      s_data(w.s_data),
+      nonzero_y(w.nonzero_y),
+      nonzero_y_i_idx(w.nonzero_y_i_idx),
+      nonzero_y_j_idx(w.nonzero_y_j_idx),
+      n_rows_U(w.n_rows_U),
+      n_rows_V(w.n_rows_V),
+      sum(0.0)
+  {}
 
+  // The main loop for each thread-chunk
+  void operator()(std::size_t begin, std::size_t end)
+  {
+    double localSum = 0.0;
+    for (std::size_t r = begin; r < end; r++)
+    {
+      const int i = nonzero_y_i_idx[r];   // column index in U_T
+      const int j = nonzero_y_j_idx[r];   // column index in V_T
+      const int yval = nonzero_y[r];
+
+      // Compute the dot product of U_T.col(i) and V_T.col(j).
+      // Recall Armadillo is column-major, so element (row, col) is at
+      //   pointer[row + col * n_rows].
+      double dot_val = 0.0;
+      for (int k = 0; k < n_rows_U; k++)
+      {
+        dot_val += U_T_data[k + i * n_rows_U] *
+          V_T_data[k + j * n_rows_V];
+      }
+
+      // Evaluate the term yval * log(exp(dot) - s[i])
+      double tmp = std::exp(dot_val) - s_data[i];
+      // IMPORTANT: you might want to add a small check to ensure tmp>0
+      // if there's any possibility it goes non-positive.
+      localSum += yval * std::log(tmp);
+    }
+    sum += localSum;
+  }
+
+  // How partial sums are combined
+  void join(const SparseTermLogLikExactWorker &rhs)
+  {
+    sum += rhs.sum;
+  }
+};
+
+double get_sparse_term_loglik_exact_parallel(
+    const arma::mat &U_T,
+    const arma::mat &V_T,
+    const std::vector<int> &nonzero_y,
+    const std::vector<int> &nonzero_y_i_idx,
+    const std::vector<int> &nonzero_y_j_idx,
+    const arma::vec &s,
+    const int num_nonzero_y
+)
+{
+  // Instantiate the worker
+  SparseTermLogLikExactWorker worker(U_T, V_T, s,
+                                     nonzero_y,
+                                     nonzero_y_i_idx,
+                                     nonzero_y_j_idx);
+
+  // Run the parallel reduction
+  parallelReduce(0, num_nonzero_y, worker);
+
+  // Return the accumulated sum
+  return worker.sum;
+}
 
 double get_dense_term_loglik_exact(
     const arma::mat U_T,
@@ -137,7 +224,7 @@ double get_loglik_exact(
     const int p
 ) {
 
-  double loglik_sparse_term = get_sparse_term_loglik_exact(
+  double loglik_sparse_term = get_sparse_term_loglik_exact_parallel(
     U_T,
     V_T,
     y_nz_vals,
