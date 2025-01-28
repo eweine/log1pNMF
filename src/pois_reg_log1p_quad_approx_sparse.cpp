@@ -609,8 +609,7 @@ List fit_factor_model_log1p_quad_approx_sparse_cpp_src(
 
     if (loglik - prev_lik < 1e-8) {
 
-      Rprintf("Log-likelihood change is very small!!!!");
-      //break;
+      break;
 
     } else {
 
