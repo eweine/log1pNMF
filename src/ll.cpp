@@ -57,30 +57,6 @@ double get_dense_term_loglik_exact(
   return sum;
 }
 
-double get_loglik_quad_approx_full(
-    const arma::mat U_T,
-    const arma::mat V_T,
-    const arma::vec U_cs,
-    const arma::mat U_T_U,
-    const std::vector<int> y_nz_vals,
-    const std::vector<int> y_nz_rows_idx,
-    const std::vector<int> y_nz_cols_idx,
-    const double a1,
-    const double a2
-) {
-
-  double loglik = 0.0;
-
-  double lin_term = a1 * arma::dot(U_cs, arma::sum(V_T, 1));
-
-  arma::mat U_T_U_V_T = U_T_U * V_T;
-  double quad_term = a2 * arma::accu(V_T % U_T_U_V_T);
-
-  loglik = loglik - lin_term - quad_term;
-  return(loglik);
-
-}
-
 double get_sparse_term_loglik_quad_sparse_approx(
     const arma::mat& U_T,
     const arma::mat& V_T,
