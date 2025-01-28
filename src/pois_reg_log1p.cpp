@@ -1,11 +1,12 @@
 #include <RcppArmadillo.h>
 #include <Rcpp.h>
-#include <omp.h>
+#include <RcppParallel.h>
 #include "ll.h"
 #include "utils.h"
 
 using namespace Rcpp;
 using namespace arma;
+using namespace RcppParallel;
 
 
 arma::vec solve_pois_reg_log1p (
@@ -109,10 +110,87 @@ arma::vec solve_pois_reg_log1p (
 
 }
 
-// Y is an nxm matrix (each col is an n-dim data vec)
-// X is an nxp matrix (each row is a p-dim covariate)
-// B is a pxm matrix (each col is a p-dim reg coef)
-arma::mat regress_cols_of_Y_on_X_log1p_pois_exact(
+
+struct RegressColsWorker : public Worker
+{
+  // Read-only inputs
+  const arma::mat          &X;
+  const std::vector<arma::vec> &Y;
+  const std::vector<arma::uvec> &Y_nz_idx;
+  const arma::vec          &s;
+  const bool                common_size_factor;
+  const std::vector<int>   &update_indices;
+  const unsigned int        num_iter;
+  const double              alpha;
+  const double              beta;
+
+  // The matrix B we need to modify in parallel (each thread touches distinct columns)
+  arma::mat                &B;
+
+  // Constructor
+  RegressColsWorker(
+    const arma::mat &X_,
+    const std::vector<arma::vec> &Y_,
+    const std::vector<arma::uvec> &Y_nz_idx_,
+    const arma::vec &s_,
+    const bool common_size_factor_,
+    arma::mat &B_,
+    const std::vector<int> &update_indices_,
+    unsigned int num_iter_,
+    const double alpha_,
+    const double beta_
+  )
+    : X(X_), Y(Y_), Y_nz_idx(Y_nz_idx_), s(s_),
+      common_size_factor(common_size_factor_),
+      update_indices(update_indices_),
+      num_iter(num_iter_),
+      alpha(alpha_), beta(beta_),
+      B(B_)
+  {}
+
+  // operator() processes columns j in [begin, end)
+  void operator()(std::size_t begin, std::size_t end) {
+    for (std::size_t j = begin; j < end; j++) {
+      // If common_size_factor == true, build s_j as a constant vector
+      // Else, s_j = s.elem(Y_nz_idx[j]).
+      if (common_size_factor) {
+        arma::vec s_j(Y[j].n_elem, arma::fill::value(s[j]));
+        B.col(j) = solve_pois_reg_log1p(
+          X,
+          Y[j],
+          Y_nz_idx[j],
+          s_j,
+          B.col(j),   // initial B.col(j)
+          update_indices,
+          num_iter,
+          alpha,
+          beta
+        );
+      } else {
+        // s_j is s indexed by Y_nz_idx[j]
+        arma::vec s_j = s.elem(Y_nz_idx[j]);
+        B.col(j) = solve_pois_reg_log1p(
+          X,
+          Y[j],
+          Y_nz_idx[j],
+          s_j,
+          B.col(j),  // initial B.col(j)
+          update_indices,
+          num_iter,
+          alpha,
+          beta
+        );
+      }
+    }
+  }
+
+  // No join() needed since each j is distinct.
+  // We do not accumulate any shared sum, only writing into distinct columns.
+  void join(const RegressColsWorker & /*rhs*/) {}
+};
+
+
+arma::mat regress_cols_of_Y_on_X_log1p_pois_exact_parallel(
     const arma::mat& X,
     const std::vector<arma::vec>& Y,
     const std::vector<arma::uvec>& Y_nz_idx,
@@ -124,52 +202,22 @@ arma::mat regress_cols_of_Y_on_X_log1p_pois_exact(
     const double alpha,
     const double beta
 ) {
+  // Build the worker
+  RegressColsWorker worker(
+      X, Y, Y_nz_idx, s,
+      common_size_factor,
+      B,               // reference to B
+      update_indices,
+      num_iter,
+      alpha,
+      beta
+  );
 
-  if (common_size_factor) {
+  // Parallelize over columns j in [0, B.n_cols)
+  RcppParallel::parallelFor(0, B.n_cols, worker);
 
-    #pragma omp parallel for shared(B)
-    for (int j = 0; j < B.n_cols; j++) {
-
-      arma::vec s_j(Y[j].n_elem);
-      s_j.fill(s[j]);
-
-      B.col(j) = solve_pois_reg_log1p (
-        X,
-        Y[j],
-        Y_nz_idx[j],
-        s_j,
-        B.col(j),
-        update_indices,
-        num_iter,
-        alpha,
-        beta
-      );
-
-    }
-
-  } else {
-
-    #pragma omp parallel for shared(B)
-    for (int j = 0; j < B.n_cols; j++) {
-
-      B.col(j) = solve_pois_reg_log1p (
-        X,
-        Y[j],
-        Y_nz_idx[j],
-        s.elem(Y_nz_idx[j]),
-        B.col(j),
-        update_indices,
-        num_iter,
-        alpha,
-        beta
-      );
-
-    }
-
-  }
-
-  return(B);
-
+  // Return the updated B
+  return B;
 }
 
 
@@ -251,7 +299,7 @@ List fit_factor_model_log1p_exact_cpp_src(
 
     Rprintf("Iteration %i: objective = %+0.12e\n", iter, loglik);
 
-    U_T = regress_cols_of_Y_on_X_log1p_pois_exact(
+    U_T = regress_cols_of_Y_on_X_log1p_pois_exact_parallel(
       V_T.t(),
       y_rows_data,
       y_rows_idx,
@@ -264,7 +312,7 @@ List fit_factor_model_log1p_exact_cpp_src(
       beta
     );
 
-    V_T = regress_cols_of_Y_on_X_log1p_pois_exact(
+    V_T = regress_cols_of_Y_on_X_log1p_pois_exact_parallel(
       U_T.t(),
       y_cols_data,
       y_cols_idx,
@@ -296,7 +344,7 @@ List fit_factor_model_log1p_exact_cpp_src(
 
     loglik_history.push_back(loglik);
 
-    if (loglik - prev_lik < 1e-12) {
+    if (loglik - prev_lik < 1e-8) {
 
       break;
 
