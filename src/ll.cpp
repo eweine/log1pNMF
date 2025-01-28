@@ -122,27 +122,104 @@ double get_sparse_term_loglik_exact_parallel(
   return worker.sum;
 }
 
-double get_dense_term_loglik_exact(
-    const arma::mat U_T,
-    const arma::mat V_T,
-    const int n,
-    const int p
-) {
+struct DenseTermLogLikExactWorker : public Worker
+{
+  // Pointers to the underlying data
+  const double* U_T_data;
+  const double* V_T_data;
 
-  double sum = 0.0;
+  // Dimensions (number of rows) for U_T and V_T
+  // We assume these match so that dot products make sense
+  const int n_rows_U;
+  const int n_rows_V;
 
-  //#pragma omp parallel for reduction(+:sum)
-  for (int i = 0; i < n; i++) {
+  // Size of outer loops
+  const int n;
+  const int p;
 
-    for (int j = 0; j < p; j++) {
+  // Accumulator for partial sums
+  double sum;
 
-      sum -= exp(dot(U_T.col(i), V_T.col(j)));
-
-    }
+  // Constructor
+  DenseTermLogLikExactWorker(const arma::mat &U_T,
+                             const arma::mat &V_T,
+                             const int n_,
+                             const int p_)
+    : U_T_data(U_T.memptr()),
+      V_T_data(V_T.memptr()),
+      n_rows_U(U_T.n_rows),
+      n_rows_V(V_T.n_rows),
+      n(n_),
+      p(p_),
+      sum(0.0)
+  {
   }
 
-  return sum;
+  // Split constructor for parallelReduce
+  DenseTermLogLikExactWorker(const DenseTermLogLikExactWorker &w, Split)
+    : U_T_data(w.U_T_data),
+      V_T_data(w.V_T_data),
+      n_rows_U(w.n_rows_U),
+      n_rows_V(w.n_rows_V),
+      n(w.n),
+      p(w.p),
+      sum(0.0)
+  {
+  }
+
+  // The main loop for each chunk (1D indexing of i,j pairs)
+  void operator()(std::size_t begin, std::size_t end)
+  {
+    double localSum = 0.0;
+    for (std::size_t idx = begin; idx < end; idx++)
+    {
+      // Decode i, j from single index
+      int i = idx / p;  // row-block index
+      int j = idx % p;  // column-block index
+
+      // Dot product of U_T.col(i) and V_T.col(j)
+      double dot_val = 0.0;
+      for (int k = 0; k < n_rows_U; k++)
+      {
+        // element (k,i) in U_T is at [k + i*n_rows_U]
+        // element (k,j) in V_T is at [k + j*n_rows_V]
+        dot_val += U_T_data[k + i * n_rows_U] *
+          V_T_data[k + j * n_rows_V];
+      }
+
+      // Subtract exp(dot_val)
+      localSum -= std::exp(dot_val);
+    }
+    // Accumulate into this functor's sum
+    sum += localSum;
+  }
+
+  // Join partial sums
+  void join(const DenseTermLogLikExactWorker &rhs)
+  {
+    sum += rhs.sum;
+  }
+};
+
+
+double get_dense_term_loglik_exact_parallel(const arma::mat &U_T,
+                                            const arma::mat &V_T,
+                                            const int n,
+                                            const int p)
+{
+  // Instantiate the worker
+  DenseTermLogLikExactWorker worker(U_T, V_T, n, p);
+
+  // We process [0, n*p) as a 1D range
+  const std::size_t total = static_cast<std::size_t>(n) * p;
+
+  // Execute the parallel reduce over that range
+  parallelReduce(0, total, worker);
+
+  // Return the accumulated result
+  return worker.sum;
 }
+
 
 double get_sparse_term_loglik_quad_sparse_approx(
     const arma::mat& U_T,
@@ -234,7 +311,7 @@ double get_loglik_exact(
     y_nz_vals.size()
   );
 
-  double loglik_dense_term = get_dense_term_loglik_exact(
+  double loglik_dense_term = get_dense_term_loglik_exact_parallel(
     U_T,
     V_T,
     n,
