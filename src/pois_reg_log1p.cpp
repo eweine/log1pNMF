@@ -189,7 +189,7 @@ struct RegressColsWorker : public Worker
   void join(const RegressColsWorker & /*rhs*/) {}
 };
 
-// [[Rcpp::export]]
+
 arma::mat regress_cols_of_Y_on_X_log1p_pois_exact_parallel(
     const arma::mat& X,
     const std::vector<arma::vec>& Y,

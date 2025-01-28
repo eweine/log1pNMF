@@ -346,7 +346,7 @@ struct RegressColsVecSWorker : public Worker
   }
 };
 
-// [[Rcpp::export]]
+
 arma::mat regress_cols_of_Y_on_X_log1p_quad_approx_sparse_vec_s_parallel(
     const arma::mat &X_T,
     const std::vector<arma::vec> &Y,
@@ -446,7 +446,7 @@ struct RegressColsScalarSWorker : public RcppParallel::Worker
   }
 };
 
-// [[Rcpp::export]]
+
 arma::mat regress_cols_of_Y_on_X_log1p_quad_approx_sparse_scalar_s_parallel(
     const arma::mat &X_T,
     const std::vector<arma::vec> &Y,
