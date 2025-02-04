@@ -2,45 +2,27 @@
 % Please edit documentation in R/fit_approx_quad_sparse.R
 \name{fit_factor_model_log1p_quad_approx_sparse}
 \alias{fit_factor_model_log1p_quad_approx_sparse}
-\title{Fit sparse quadratic approximation log1p factor model with C++}
+\title{Fit log1p Poisson Factor Model with Approximate Log Likelihood}
 \usage{
-fit_factor_model_log1p_quad_approx_sparse(
-  Y,
-  K,
-  approx_range = NULL,
-  maxiter = 100,
-  init_U = NULL,
-  init_V = NULL,
-  update_idx = NULL,
-  approx_method = c("chebyshev", "taylor"),
-  init_method = c("random", "frob_nmf"),
-  s = NULL
-)
+fit_factor_model_log1p_quad_approx_sparse(sc, sc_t, n, p, fit, maxiter)
 }
 \arguments{
-\item{Y}{sparse matrix.}
+\item{sc}{summary of sparse matrix to fit model on}
 
-\item{K}{rank of factorization}
+\item{sc_t}{summary of transpose of sparse matrix to fit model on}
 
-\item{approx_range}{range of Chebyschev approximation}
+\item{n}{number of rows of data matrix}
+
+\item{p}{number of columns of data matrix}
+
+\item{fit}{object with model parameters}
 
 \item{maxiter}{maximum number of updates}
-
-\item{init_U}{initialization of U}
-
-\item{init_V}{initialization of V}
-
-\item{update_idx}{indication of which indices should be updated}
-
-\item{approx_method}{method used to approximation exp(x)}
-
-\item{init_method}{method for initialization}
-
-\item{s}{size factor}
 }
 \value{
 list with fit and progress info
 }
 \description{
-Fit sparse quadratic approximation log1p factor model with C++
+Fit log1p Poisson Factor Model with Approximate Log Likelihood
 }
+\keyword{internal}

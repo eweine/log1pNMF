@@ -552,9 +552,6 @@ List fit_factor_model_log1p_quad_approx_sparse_cpp_src(
 
   double prev_lik = loglik;
 
-  std::vector<double> loglik_history;
-  loglik_history.push_back(loglik);
-
   Rprintf("Fitting log1p factor model to %i x %i count matrix.\n",n,p);
 
   for (int iter = 0; iter < max_iter; iter++) {
@@ -605,8 +602,6 @@ List fit_factor_model_log1p_quad_approx_sparse_cpp_src(
       a2
     );
 
-    loglik_history.push_back(loglik);
-
     if (loglik - prev_lik < 1e-8) {
 
       break;
@@ -623,7 +618,6 @@ List fit_factor_model_log1p_quad_approx_sparse_cpp_src(
 
   fit["U"] = U_T.t();
   fit["V"] = V_T.t();
-  fit["loglik"] = loglik_history;
 
   return(fit);
 

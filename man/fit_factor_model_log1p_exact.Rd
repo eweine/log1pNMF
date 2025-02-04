@@ -2,32 +2,27 @@
 % Please edit documentation in R/fit_exact.R
 \name{fit_factor_model_log1p_exact}
 \alias{fit_factor_model_log1p_exact}
-\title{Fit sparse quadratic approximation log1p factor model with C++}
+\title{Fit log1p Poisson Factor Model with Exact Log Likelihood}
 \usage{
-fit_factor_model_log1p_exact(
-  Y,
-  K,
-  maxiter = 100,
-  init_U = NULL,
-  init_V = NULL,
-  init_method = c("random", "frob_nmf"),
-  s = NULL
-)
+fit_factor_model_log1p_exact(sc, sc_t, n, p, fit, maxiter)
 }
 \arguments{
-\item{Y}{sparse matrix.}
+\item{sc}{summary of sparse matrix to fit model on}
 
-\item{K}{rank of factorization}
+\item{sc_t}{summary of transpose of sparse matrix to fit model on}
+
+\item{n}{number of rows of data matrix}
+
+\item{p}{number of columns of data matrix}
+
+\item{fit}{object with model parameters}
 
 \item{maxiter}{maximum number of updates}
-
-\item{init_method}{method for initialization}
-
-\item{approx_range}{range of Chebyschev approximation}
 }
 \value{
-list with fit and progress info
+list with LL and FF
 }
 \description{
-Fit sparse quadratic approximation log1p factor model with C++
+Fit log1p Poisson Factor Model with Exact Log Likelihood
 }
+\keyword{internal}
