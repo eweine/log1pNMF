@@ -1,34 +1,21 @@
-load("~/Downloads/newsgroups.RData")
 library(dplyr)
 library(Matrix)
 library(fastTopics)
 library(passPCA)
-rm(counts)
 
-# I did the following to the original dataset
-# counts <- counts[, !(colnames(counts) %in% stopwords("SMART"))]
-# colnames(counts) <- wordStem(colnames(counts))
+data_dir <- "/home/ericweine/hspc"
+counts <- readr::read_rds(glue::glue("{data_dir}/hspcs.rds"))
 
-counts <- readr::read_rds(
-  "~/Downloads/newsgroups_stemmed_stopwords.rds"
-)
-
-topics <- topics[Matrix::rowSums(counts) > 9]
-counts <- counts[Matrix::rowSums(counts) > 9, ]
-genes_to_use <- which(Matrix::colSums(counts>0)>4)
-counts <- counts[,genes_to_use]
+K <- 10
+cc_vec <- c(1e-3, 1)
 s <- Matrix::rowSums(counts)
 s <- s / mean(s)
-
-
-K <- 25
-cc_vec <- c(1e-3, 1e-2, 1e-1, 1, 1e1, 1e2, 1e3)
 
 n <- nrow(counts)
 p <- ncol(counts)
 
-# turn off BLAS threads and increase rcpp Parallel threads to 8
-RcppParallel::setThreadOptions(numThreads = 8)
+# turn off BLAS threads and increase rcpp Parallel threads to 48
+RcppParallel::setThreadOptions(numThreads = 48)
 RhpcBLASctl::blas_set_num_threads(1)
 
 for (cc in cc_vec) {
@@ -68,48 +55,24 @@ for (cc in cc_vec) {
       )
     )
 
-  if (cc < 10) {
-
-    tictoc::tic()
-    set.seed(1)
-    fit <- fit_factor_model_log1p_exact(
-      Y = counts,
-      K = K,
-      init_U = init_LL,
-      init_V = init_FF,
-      maxiter = 100,
-      s = cc * s
-    )
-    total_time <- tictoc::toc()
-
-    method <- "exact"
-
-  } else {
-
-    tictoc::tic()
-    set.seed(1)
-    fit <- fit_factor_model_log1p_quad_approx_sparse(
-      Y = counts,
-      K = K,
-      init_U = init_LL,
-      init_V = init_FF,
-      maxiter = 100,
-      s = cc * s,
-      approx_method = "taylor"
-    )
-    total_time <- tictoc::toc()
-    method <- "approx"
-
-  }
-
-
+  tictoc::tic()
+  set.seed(1)
+  fit <- fit_factor_model_log1p_exact(
+    Y = counts,
+    K = K,
+    init_U = init_LL,
+    init_V = init_FF,
+    maxiter = 100,
+    s = cc * s
+  )
+  total_time <- tictoc::toc()
 
   fit[["total_time"]] <- total_time$toc
   rownames(fit$U) <- rownames(counts)
   rownames(fit$V) <- colnames(counts)
 
   readr::write_rds(
-    fit, glue::glue("~/Documents/data/news_log1p_c{cc}_k{K}_{method}_100_iter.rds")
+    fit, glue::glue("{data_dir}/hspc_log1p_c{cc}_k{K}_exact_100_iter.rds")
   )
 
 }
@@ -150,9 +113,9 @@ fit0_K <- init_poisson_nmf(
 fit_nmf <- fit_poisson_nmf(
   X = counts,
   fit0 = fit0_K,
-  control = list(list(nc = 8))
+  control = list(list(nc = 48))
 )
 
 readr::write_rds(
-  fit_nmf, glue::glue("~/Documents/data/news_pois_nmf_k{K}_exact_100_iter.rds")
+  fit_nmf, glue::glue("{data_dir}/hspc_pois_nmf_k{K}_exact_100_iter.rds")
 )
