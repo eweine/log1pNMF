@@ -72,10 +72,28 @@ is set to \code{"chebyshev"}. By default, the interval is set to
 \eqn{[0, \log(1 + 1/c)]}, which best approximates values of \eqn{\lambda}
 between \eqn{0} and \eqn{1}. See Details for more information.}
 
-\item{control}{a list of control parameters.}
+\item{control}{a list of control parameters. See Details for more
+information.}
 }
 \value{
-a list containing the fitted values of \eqn{L} and \eqn{F}.
+list with the following components
+\describe{
+  \item{LL}{Loadings of underlying mean structure. An \eqn{n \times K}.
+  matrix}
+  \item{FF}{Factors of underlying mean structure. A \eqn{p \times K} matrix.}
+  \item{s}{An \eqn{n} vector of size factors used.}
+  \item{control}{Control parameters used in optimization.}
+  \item{converged}{Boolean indicating if numerical convergence was reached.}
+  \item{objective_trace}{Vector with the value of the objective function at
+  each iteration.}
+  \item{approx_technique}{Approximating technique used in optimization
+  (if at all).}
+  \item{loglik}{Character indicating which objective was optimized.}
+  \item{a1}{Value of linear coefficient in quadratic approximation
+  (if used).}
+  \item{a2}{Value of quadratic coefficient in quadratic approximation
+  (if used).}
+}
 }
 \description{
 Fit a Poisson non-negative matrix factorization (NMF) model with
@@ -108,4 +126,53 @@ optimizing a Chebyshev polynomial in a specified interval. Use of the
 approximate technique can substantially increase the speed of computation,
 but due to loss of accuracy we do not encourage it's use for values of
 \eqn{c} smaller than \eqn{1}.
+
+The \code{control} argument is a list in which any of the following
+named components will override the default optimization algorithm
+settings (as they are defined by
+\code{fit_poisson_log1p_nmf_control_default}).
+
+\describe{
+
+\item{\code{maxiter}}{Maximum number of iterations for which to optimize
+the full model.}
+
+\item{\code{init_maxiter}}{Maximum number of iterations for which to optimize
+the rank 1 approximation if \code{init_method} is set to \code{"rank1"}.}
+
+\item{\code{ls_alpha}}{alpha parameter for backtracking line search.
+  (Should be a number between 0 and 0.5, typically a number near
+  zero.)}
+
+\item{\code{ls_beta}}{beta parameter for backtracking line search
+  controlling the rate at which the step size is decreased.
+  (Should be a number between 0 and 0.5.)}
+
+\item{\code{num_ccd_iter}}{Number of co-ordinate descent updates to
+  be made to parameters at each iteration of the algorithm.}
+
+\item{\code{tol}}{Numerical tolerance for determining convergence of the
+(approximate) log-likelihood. Fitting will stop if the difference in
+log-likelihood between successive iterations is below this number.}
+
+\item{\code{verbose}}{Boolean indicating if information should be printed
+indicating the progress of the algorithm.}
+
+\item{\code{threads}}{Integer indicating the number of threads to be used
+for optimization.}
+
+}
+}
+\examples{
+set.seed(1)
+dat <- generate_log1p_pois_data(n = 500, p = 250, K = 4)
+
+fit_out <- fit_poisson_log1p_nmf(
+ Y = dat$Y,
+ K = 4,
+ init_method = "random",
+ control = list(verbose = FALSE)
+ )
+
+
 }

@@ -1,12 +1,15 @@
 Package: passPCA
 Type: Package
-Title: What the Package Does (Title Case)
+Title: Maximum Likelihood Estimation of Poisson Non-Negative Matrix 
+    Factorization Models
 Date: 2025-01-28
 Version: 0.1-2
-Author: Who wrote it
-Maintainer: The package maintainer <yourself@somewhere.net>
-Description: More about what it does (maybe more than one line)
-    Use four spaces when indenting paragraphs within the Description.
+Authors@R: c(person("Eric","Weine",role=c("aut","cre"),
+                    email="ericweine15@gmail.com"),
+             person("Peter","Carbonetto",role="aut"),
+             person("Matthew","Stephens",role="aut"))
+Description: Implements (approximate) maximum likelihood estimation of Poisson
+    non-negative matrix factorization models with a log1p link function.
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
