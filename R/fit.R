@@ -116,6 +116,7 @@
 #'   matrix}
 #'   \item{FF}{Factors of underlying mean structure. A \eqn{p \times K} matrix.}
 #'   \item{s}{An \eqn{n} vector of size factors used.}
+#'   \item{cc}{Value of \eqn{c} used.}
 #'   \item{control}{Control parameters used in optimization.}
 #'   \item{converged}{Boolean indicating if numerical convergence was reached.}
 #'   \item{objective_trace}{Vector with the value of the objective function at
@@ -165,6 +166,8 @@ fit_poisson_log1p_nmf <- function(
     keep.null = TRUE
   )
   RcppParallel::setThreadOptions(numThreads = fit$control$threads)
+
+  fit$cc <- cc
 
   if (fit$control$verbose) {
 
@@ -282,17 +285,17 @@ fit_poisson_log1p_nmf <- function(
 
         }
 
-        poly_approx <- pracma::polyApprox(
-          exp,
-          chebyshev_interval[1],
-          chebyshev_interval[2],
-          2
-        )
-
-        a1 <- poly_approx$p[2]
-        a2 <- poly_approx$p[1]
-
       }
+
+      poly_approx <- pracma::polyApprox(
+        exp,
+        chebyshev_interval[1],
+        chebyshev_interval[2],
+        2
+      )
+
+      a1 <- poly_approx$p[2]
+      a2 <- poly_approx$p[1]
 
     }
 
@@ -431,6 +434,7 @@ fit_poisson_log1p_nmf <- function(
       fit <- fit_fn(
         sc = sc,
         sc_t = sc_t,
+        s = fit$s * fit$cc,
         n = nrow(Y),
         p = ncol(Y),
         fit = fit,
@@ -477,6 +481,7 @@ fit_poisson_log1p_nmf <- function(
   fit <- fit_fn(
     sc = sc,
     sc_t = sc_t,
+    s = fit$s * fit$cc,
     n = nrow(Y),
     p = ncol(Y),
     fit = fit,
@@ -488,7 +493,7 @@ fit_poisson_log1p_nmf <- function(
   colnames(fit$LL) <- paste0("k_", 1:ncol(fit$LL))
   colnames(fit$FF) <- paste0("k_", 1:ncol(fit$FF))
 
-  class(fit) <- "log1p_nmf"
+  class(fit) <- "log1p_nmf_fit"
   return(fit)
 
 }

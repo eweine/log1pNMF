@@ -82,6 +82,7 @@ list with the following components
   matrix}
   \item{FF}{Factors of underlying mean structure. A \eqn{p \times K} matrix.}
   \item{s}{An \eqn{n} vector of size factors used.}
+  \item{cc}{Value of \eqn{c} used.}
   \item{control}{Control parameters used in optimization.}
   \item{converged}{Boolean indicating if numerical convergence was reached.}
   \item{objective_trace}{Vector with the value of the objective function at
