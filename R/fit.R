@@ -76,6 +76,8 @@
 #' @return a list containing the fitted values of \eqn{L} and \eqn{F}.
 #' @export
 #'
+#' @importFrom methods as
+#'
 fit_poisson_log1p_nmf <- function(
   Y,
   K = NULL,
@@ -91,7 +93,7 @@ fit_poisson_log1p_nmf <- function(
 ) {
 
   fit <- list()
-  fit$control <- modifyList(
+  fit$control <- utils::modifyList(
     fit_poisson_log1p_nmf_control_default(),
     control,
     keep.null = TRUE
@@ -304,7 +306,7 @@ fit_poisson_log1p_nmf <- function(
       exp_rate <- 1 + sqrt(K * b_hat)
 
       fit$LL <- matrix(
-        data = rexp(
+        data = stats::rexp(
           n = nrow(Y) * K,
           rate = exp_rate
         ),
@@ -313,7 +315,7 @@ fit_poisson_log1p_nmf <- function(
       )
 
       fit$FF <- matrix(
-        data = rexp(
+        data = stats::rexp(
           n = ncol(Y) * K,
           rate = exp_rate
         ),
@@ -332,7 +334,7 @@ fit_poisson_log1p_nmf <- function(
       exp_rate <- 1 + sqrt(b_hat)
 
       fit$LL <- matrix(
-        data = rexp(
+        data = stats::rexp(
           n = nrow(Y),
           rate = exp_rate
         ),
@@ -341,7 +343,7 @@ fit_poisson_log1p_nmf <- function(
       )
 
       fit$FF <- matrix(
-        data = rexp(
+        data = stats::rexp(
           n = ncol(Y),
           rate = exp_rate
         ),
@@ -363,7 +365,7 @@ fit_poisson_log1p_nmf <- function(
       fit$LL <- cbind(
         fit$LL,
           matrix(
-            data = rexp(
+            data = stats::rexp(
               n = nrow(Y) * (K - 1),
               rate = remaining_exp_rate
             ),
@@ -375,7 +377,7 @@ fit_poisson_log1p_nmf <- function(
       fit$FF <- cbind(
         fit$FF,
         matrix(
-          data = rexp(
+          data = stats::rexp(
             n = ncol(Y) * (K - 1),
             rate = remaining_exp_rate
           ),

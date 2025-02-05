@@ -7,13 +7,17 @@ Author: Who wrote it
 Maintainer: The package maintainer <yourself@somewhere.net>
 Description: More about what it does (maybe more than one line)
     Use four spaces when indenting paragraphs within the Description.
-License: What license is it under?
+License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
 RoxygenNote: 7.3.1
 Imports:
     Rcpp (>= 1.0.8),
-    RcppParallel
+    RcppParallel,
+    Matrix (>= 1.7-0),
+    MatrixExtra (>= 0.1.15),
+    pracma (>= 2.4.4),
+    methods
 LinkingTo: 
     Rcpp,
     RcppArmadillo,
