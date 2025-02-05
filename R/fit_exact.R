@@ -21,8 +21,9 @@ fit_factor_model_log1p_exact <- function(
     maxiter
 ) {
 
+  # add size factor to L and F
   U <- cbind(log(fit$s), fit$LL)
-  V <- cbind(rep(1, ncol(Y)), init$FF)
+  V <- cbind(rep(1, p), fit$FF)
   update_idx <- 1:ncol(fit$LL)
 
   new_UV <- fit_factor_model_log1p_exact_cpp_src(
@@ -38,14 +39,19 @@ fit_factor_model_log1p_exact <- function(
     n,
     p,
     as.integer(maxiter),
-    .01,
-    .25,
-    5,
-    update_idx
+    fit$control$ls_alpha,
+    fit$control$ls_beta,
+    fit$control$num_ccd_iter,
+    update_idx,
+    fit$control$verbose,
+    fit$control$tol
   )
 
+  # remove size factor
   fit$LL <- new_UV$U[, -1]
   fit$FF <- new_UV$V[, -1]
+  fit$converged <- new_UV$converged
+  fit$objective_trace <- new_UV$objective_trace
 
   return(fit)
 

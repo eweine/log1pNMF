@@ -90,15 +90,12 @@ fit_poisson_log1p_nmf <- function(
   control = list()
 ) {
 
-  # TODO:
-  # (1) Finish documentation above.
-  # (2) Add control parameters.
-  # (3) Test code.
-  # (4) Add examples.
-
-  # eventually, these should be turned into control parameters
-  init_maxiter <- 5
-  fit_maxiter <- 100
+  fit <- list()
+  fit$control <- modifyList(
+    fit_poisson_log1p_nmf_control_default(),
+    control,
+    keep.null = TRUE
+  )
 
   verify.count.matrix(Y)
   loglik <- match.arg(loglik)
@@ -243,7 +240,6 @@ fit_poisson_log1p_nmf <- function(
 
     }
 
-    fit <- list()
     if (ncol(init_LL) != ncol(init_FF)) {
 
       stop("Number of columns of init_LL and init_FF must match.")
@@ -299,9 +295,13 @@ fit_poisson_log1p_nmf <- function(
 
     }
 
+    b_hat <- Matrix::mean(
+      MatrixExtra::mapSparse(Y, function(x){log1p(x/cc)})
+    )
+
     if (init_method == "random") {
 
-      exp_rate <- sqrt((1 / mean(Y@x)) * K * cc)
+      exp_rate <- 1 + sqrt(K * b_hat)
 
       fit$LL <- matrix(
         data = rexp(
@@ -323,7 +323,13 @@ fit_poisson_log1p_nmf <- function(
 
     } else if (init_method == "rank1") {
 
-      exp_rate <- sqrt((1 / mean(Y@x)) * cc)
+      if (fit$control$verbose) {
+
+        cat("Fitting rank 1 initialization...\n")
+
+      }
+
+      exp_rate <- 1 + sqrt(b_hat)
 
       fit$LL <- matrix(
         data = rexp(
@@ -349,10 +355,10 @@ fit_poisson_log1p_nmf <- function(
         n = nrow(Y),
         p = ncol(Y),
         fit = fit,
-        maxiter = init_maxiter
+        maxiter = fit$control$init_maxiter
       )
 
-      remaining_exp_rate <- sqrt(cc * 15)
+      remaining_exp_rate <- 1 + sqrt(cc * 15)
 
       fit$LL <- cbind(
         fit$LL,
@@ -382,6 +388,12 @@ fit_poisson_log1p_nmf <- function(
 
   }
 
+  if (fit$control$verbose) {
+
+    cat("Fitting model...\n")
+
+  }
+
   # main fit
   fit <- fit_fn(
     sc = sc,
@@ -389,10 +401,33 @@ fit_poisson_log1p_nmf <- function(
     n = nrow(Y),
     p = ncol(Y),
     fit = fit,
-    maxiter = fit_maxiter
+    maxiter = fit$control$maxiter
   )
+
+  rownames(fit$LL) <- rownames(Y)
+  rownames(fit$FF) <- colnames(Y)
+  colnames(fit$LL) <- paste0("k_", 1:ncol(fit$LL))
+  colnames(fit$FF) <- paste0("k_", 1:ncol(fit$FF))
 
   class(fit) <- "log1p_nmf"
   return(fit)
+
+}
+
+#' @rdname fit_poisson_log1p_nmf
+#'
+#' @export
+#'
+fit_poisson_log1p_nmf_control_default <- function() {
+
+  list(
+    maxiter = 100,
+    init_maxiter = 5,
+    ls_alpha = 1e-3,
+    ls_beta = 0.25,
+    num_ccd_iter = 3,
+    tol = 1e-8,
+    verbose = TRUE
+  )
 
 }

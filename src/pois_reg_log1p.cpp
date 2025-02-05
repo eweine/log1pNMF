@@ -238,8 +238,12 @@ List fit_factor_model_log1p_exact_cpp_src(
     const double alpha,
     const double beta,
     const int num_ccd_iter,
-    const std::vector<int>& update_indices
+    const std::vector<int>& update_indices,
+    const bool verbose,
+    const double tol
 ) {
+
+  bool converged = false;
 
   const std::vector<int> col_num_repeats = get_num_repeats_cpp(
     sc_j,
@@ -289,12 +293,48 @@ List fit_factor_model_log1p_exact_cpp_src(
   );
 
   double prev_lik = loglik;
+  int K = U_T.n_rows - 1;
 
-  Rprintf("Fitting log1p factor model to %i x %i count matrix.\n",n,p);
+  std::vector<double> loglik_history;
+  loglik_history.reserve(max_iter);
+  loglik_history.push_back(loglik);
+
+  if (verbose) {
+
+    Rprintf(
+      "Optimizing rank %i log1p factor model to %i x %i count matrix.\n",K,n,p
+    );
+
+  }
+
+  int barWidth = 50; // Adjust as you like
 
   for (int iter = 0; iter < max_iter; iter++) {
 
-    Rprintf("Iteration %i: objective = %+0.12e\n", iter, loglik);
+    if (verbose) {
+      double fraction = (double)iter / (double)max_iter;
+      int filled = (int)(barWidth * fraction);
+
+      // Move to start of line
+      Rprintf("\r[");
+
+      // Fill progress
+      for (int i = 0; i < barWidth; i++) {
+        if (i < filled) {
+          Rprintf("=");
+        } else if (i == filled) {
+          Rprintf(">");
+        } else {
+          Rprintf(" ");
+        }
+      }
+      // Print percentage
+      Rprintf("] %d%%", (int)(fraction * 100));
+
+      // Flush to make sure it shows immediately
+      R_FlushConsole();
+    }
+    // --------------------------------------
 
     U_T = regress_cols_of_Y_on_X_log1p_pois_exact_parallel(
       V_T.t(),
@@ -339,8 +379,11 @@ List fit_factor_model_log1p_exact_cpp_src(
       p
     );
 
-    if (loglik - prev_lik < 1e-8) {
+    loglik_history.push_back(loglik);
 
+    if (loglik - prev_lik < tol) {
+
+      converged = true;
       break;
 
     } else {
@@ -351,10 +394,27 @@ List fit_factor_model_log1p_exact_cpp_src(
 
   }
 
-  List fit;
+  if (verbose) {
 
-  fit["U"] = U_T.t();
-  fit["V"] = V_T.t();
+    // Finalize the progress bar after the loop
+    if (verbose) {
+      // Move to start of line and overwrite
+      Rprintf("\r[");
+      for (int i = 0; i < barWidth; i++) {
+        Rprintf("=");
+      }
+      Rprintf("] 100%%\n");
+      R_FlushConsole();
+    }
+
+  }
+
+  List fit = List::create(
+    _["U"]         = U_T.t(),
+    _["V"]         = V_T.t(),
+    _["converged"] = converged,
+    _["objective_trace"] = loglik_history
+  );
 
   return(fit);
 

@@ -30,7 +30,7 @@ fit_factor_model_log1p_quad_approx_sparse <- function(
     sc_t$x,
     sc_t$i - 1,
     sc_t$j - 1,
-    s,
+    fit$s,
     t(fit$LL),
     t(fit$FF),
     fit$a1,
@@ -38,14 +38,18 @@ fit_factor_model_log1p_quad_approx_sparse <- function(
     n,
     p,
     as.integer(maxiter),
-    .01,
-    .25,
-    5,
-    update_idx
+    fit$control$ls_alpha,
+    fit$control$ls_beta,
+    fit$control$num_ccd_iter,
+    update_idx,
+    fit$control$verbose,
+    fit$control$tol
   )
 
   fit$LL <- new_UV$U
   fit$FF <- new_UV$V
+  fit$converged <- new_UV$converged
+  fit$objective_trace <- new_UV$objective_trace
 
   return(fit)
 

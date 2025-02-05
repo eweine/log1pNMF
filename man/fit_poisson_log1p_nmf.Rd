@@ -2,6 +2,7 @@
 % Please edit documentation in R/fit.R
 \name{fit_poisson_log1p_nmf}
 \alias{fit_poisson_log1p_nmf}
+\alias{fit_poisson_log1p_nmf_control_default}
 \title{Fit a Poisson NMF Model with log1p Link Function}
 \usage{
 fit_poisson_log1p_nmf(
@@ -17,6 +18,8 @@ fit_poisson_log1p_nmf(
   chebyshev_interval = NULL,
   control = list()
 )
+
+fit_poisson_log1p_nmf_control_default()
 }
 \arguments{
 \item{Y}{an \eqn{n \times p} data matrix. For single cell data, this should
@@ -76,7 +79,7 @@ a list containing the fitted values of \eqn{L} and \eqn{F}.
 }
 \description{
 Fit a Poisson non-negative matrix factorization (NMF) model with
-log1p link using (approximate) maximum likelihood.
+a log1p link using (approximate) maximum likelihood.
 }
 \details{
 Here, we fit the model
