@@ -1,0 +1,19 @@
+
+# passPCA
+
+<!-- badges: start -->
+
+[![R-CMD-check](https://github.com/eweine/passPCA/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/eweine/passPCA/actions/workflows/R-CMD-check.yaml)
+<!-- badges: end -->
+
+The goal of passPCA is to …
+
+## Installation
+
+You can install the development version of passPCA from
+[GitHub](https://github.com/) with:
+
+``` r
+# install.packages("devtools")
+devtools::install_github("eweine/passPCA")
+```
