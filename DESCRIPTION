@@ -20,7 +20,8 @@ Imports:
     MatrixExtra (>= 0.1.15),
     pracma (>= 2.4.4),
     methods,
-    distr (>= 2.9.3)
+    distr (>= 2.9.3),
+    RhpcBLASctl (>= 0.23-42)
 LinkingTo: 
     Rcpp,
     RcppArmadillo

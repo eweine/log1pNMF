@@ -176,6 +176,8 @@ fit_poisson_log1p_nmf <- function(
 
   } else {
 
+    # add 1 thread in case of 0 threads
+    fit$control$threads <- max(1, fit$control$threads)
     RhpcBLASctl::omp_set_num_threads(fit$control$threads)
     if (fit$control$threads > 1) {
 
@@ -531,7 +533,7 @@ fit_poisson_log1p_nmf_control_default <- function() {
     num_ccd_iter = 3,
     tol = 1e-8,
     verbose = TRUE,
-    threads = RhpcBLASctl::omp_get_max_threads()
+    threads = RhpcBLASctl::omp_get_max_threads() - 1
   )
 
 }

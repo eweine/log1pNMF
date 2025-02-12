@@ -296,7 +296,7 @@ arma::mat regress_cols_of_Y_on_X_log1p_quad_approx_sparse_vec_s(
 
   // Commenting out parallelism for testing
   #pragma omp parallel for shared(B)
-  for (int j = 0; j < B.n_cols; j++) {
+  for (int j = 0; j < static_cast<int>(B.n_cols); j++) {
 
     B.col(j) = solve_pois_reg_log1p_quad_approx_sparse_vec_s(
       X_T,
@@ -339,7 +339,7 @@ arma::mat regress_cols_of_Y_on_X_log1p_quad_approx_sparse_scalar_s(
 
   // Commenting out parallelism for testing
   #pragma omp parallel for shared(B)
-  for (int j = 0; j < B.n_cols; j++) {
+  for (int j = 0; j < static_cast<int>(B.n_cols); j++) {
 
     B.col(j) = solve_pois_reg_log1p_quad_approx_sparse_scalar_s(
       X_T,
