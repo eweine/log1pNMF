@@ -165,15 +165,36 @@ fit_poisson_log1p_nmf <- function(
     control,
     keep.null = TRUE
   )
-  RcppParallel::setThreadOptions(numThreads = fit$control$threads)
 
   fit$cc <- cc
 
+  # I need to figure out how to use and output OMP threads
+
+  if (is.na(fit$control$threads)) {
+
+    fit$control$threads <- 1
+
+  } else {
+
+    # add 1 thread in case of 0 threads
+    fit$control$threads <- max(1, fit$control$threads)
+    RhpcBLASctl::omp_set_num_threads(fit$control$threads)
+    if (fit$control$threads > 1) {
+
+      # move all threads to openmp
+      RhpcBLASctl::blas_set_num_threads(1)
+
+    }
+
+  }
+
   if (fit$control$verbose) {
 
+    thread_word <- ifelse(fit$control$threads > 1, "threads", "thread")
     message(sprintf(
-      "Using %d RcppParallel threads for optimization",
-      fit$control$threads
+      "Using %d %s for optimization",
+      fit$control$threads,
+      thread_word
       )
     )
 
@@ -512,7 +533,7 @@ fit_poisson_log1p_nmf_control_default <- function() {
     num_ccd_iter = 3,
     tol = 1e-8,
     verbose = TRUE,
-    threads = RcppParallel::defaultNumThreads()
+    threads = RhpcBLASctl::omp_get_max_threads() - 1
   )
 
 }
