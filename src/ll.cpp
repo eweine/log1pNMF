@@ -9,12 +9,12 @@ using namespace Rcpp;
 using namespace arma;
 
 double get_sparse_term_loglik_exact(
-    const arma::mat U_T,
-    const arma::mat V_T,
-    const std::vector<int> nonzero_y,
-    const std::vector<int> nonzero_y_i_idx,
-    const std::vector<int> nonzero_y_j_idx,
-    const arma::vec s,
+    const arma::mat& U_T,
+    const arma::mat& V_T,
+    const std::vector<int>& nonzero_y,
+    const std::vector<int>& nonzero_y_i_idx,
+    const std::vector<int>& nonzero_y_j_idx,
+    const arma::vec& s,
     const int num_nonzero_y
 ) {
 
@@ -36,8 +36,8 @@ double get_sparse_term_loglik_exact(
 }
 
 double get_dense_term_loglik_exact(
-    const arma::mat U_T,
-    const arma::mat V_T,
+    const arma::mat& U_T,
+    const arma::mat& V_T,
     const int n,
     const int p
 ) {

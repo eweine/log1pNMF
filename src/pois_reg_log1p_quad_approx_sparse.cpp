@@ -21,7 +21,7 @@ arma::vec solve_pois_reg_log1p_quad_approx_sparse_scalar_s (
     const double a2,
     arma::vec b,
     const std::vector<int>& update_indices,
-    unsigned int num_iter,
+    int num_iter,
     const double alpha,
     const double beta
 ) {
@@ -45,7 +45,7 @@ arma::vec solve_pois_reg_log1p_quad_approx_sparse_scalar_s (
   vec quad_deriv_vec;
   double t;
   double f_proposed;
-  unsigned int i, j;
+  int i, j;
   double b_j_og;
   double current_lik;
   double cross_term;
@@ -153,7 +153,7 @@ arma::vec solve_pois_reg_log1p_quad_approx_sparse_vec_s (
     const double a2,
     arma::vec b,
     const std::vector<int>& update_indices,
-    unsigned int num_iter,
+    int num_iter,
     const double alpha,
     const double beta
 ) {
@@ -178,7 +178,7 @@ arma::vec solve_pois_reg_log1p_quad_approx_sparse_vec_s (
   vec quad_deriv_vec;
   double t;
   double f_proposed;
-  unsigned int i, j;
+  int i, j;
   double b_j_og;
   double current_lik;
   double cross_term;
@@ -286,7 +286,7 @@ arma::mat regress_cols_of_Y_on_X_log1p_quad_approx_sparse_vec_s(
     const double a1,
     const double a2,
     const std::vector<int>& update_indices,
-    unsigned int num_iter,
+    int num_iter,
     const double alpha,
     const double beta
 ) {
@@ -329,7 +329,7 @@ arma::mat regress_cols_of_Y_on_X_log1p_quad_approx_sparse_scalar_s(
     const double a1,
     const double a2,
     const std::vector<int>& update_indices,
-    unsigned int num_iter,
+    int num_iter,
     const double alpha,
     const double beta
 ) {

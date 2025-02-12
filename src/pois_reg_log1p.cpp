@@ -17,7 +17,7 @@ arma::vec solve_pois_reg_log1p (
     const arma::vec& s,
     arma::vec b,
     const std::vector<int>& update_indices,
-    unsigned int num_iter,
+    int num_iter,
     const double alpha,
     const double beta
 ) {
@@ -33,7 +33,7 @@ arma::vec solve_pois_reg_log1p (
   vec exp_deriv_term;
   double t;
   double f_proposed;
-  unsigned int i, j;
+  int i, j;
   double b_j_og;
 
   double current_lik = sum(exp_eta) - dot(
@@ -122,7 +122,7 @@ arma::mat regress_cols_of_Y_on_X_log1p_pois_exact(
     const bool common_size_factor,
     arma::mat& B,
     const std::vector<int>& update_indices,
-    unsigned int num_iter,
+    int num_iter,
     const double alpha,
     const double beta
 ) {

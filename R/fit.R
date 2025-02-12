@@ -170,17 +170,33 @@ fit_poisson_log1p_nmf <- function(
 
   # I need to figure out how to use and output OMP threads
 
-  # RhpcBLASctl::omp_set_num_threads(fit$control$threads)
-  #
-  # if (fit$control$verbose) {
-  #
-  #   message(sprintf(
-  #     "Using %d threads for optimization",
-  #     fit$control$threads
-  #     )
-  #   )
-  #
-  # }
+  if (is.na(fit$control$threads)) {
+
+    fit$control$threads <- 1
+
+  } else {
+
+    RhpcBLASctl::omp_set_num_threads(fit$control$threads)
+    if (fit$control$threads > 1) {
+
+      # move all threads to openmp
+      RhpcBLASctl::blas_set_num_threads(1)
+
+    }
+
+  }
+
+  if (fit$control$verbose) {
+
+    thread_word <- ifelse(fit$control$threads > 1, "threads", "thread")
+    message(sprintf(
+      "Using %d %s for optimization",
+      fit$control$threads,
+      thread_word
+      )
+    )
+
+  }
 
   verify.count.matrix(Y)
   loglik <- match.arg(loglik)
@@ -515,7 +531,7 @@ fit_poisson_log1p_nmf_control_default <- function() {
     num_ccd_iter = 3,
     tol = 1e-8,
     verbose = TRUE,
-    threads = RcppParallel::defaultNumThreads()
+    threads = RhpcBLASctl::omp_get_max_threads()
   )
 
 }
