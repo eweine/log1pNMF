@@ -16,7 +16,6 @@ LazyData: true
 RoxygenNote: 7.3.1
 Imports:
     Rcpp (>= 1.0.8),
-    RcppParallel,
     Matrix (>= 1.7-0),
     MatrixExtra (>= 0.1.15),
     pracma (>= 2.4.4),
@@ -24,8 +23,7 @@ Imports:
     distr (>= 2.9.3)
 LinkingTo: 
     Rcpp,
-    RcppArmadillo,
-    RcppParallel
+    RcppArmadillo
 Suggests: 
     testthat (>= 3.0.0)
 Config/testthat/edition: 3

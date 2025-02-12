@@ -165,19 +165,22 @@ fit_poisson_log1p_nmf <- function(
     control,
     keep.null = TRUE
   )
-  RcppParallel::setThreadOptions(numThreads = fit$control$threads)
 
   fit$cc <- cc
 
-  if (fit$control$verbose) {
+  # I need to figure out how to use and output OMP threads
 
-    message(sprintf(
-      "Using %d RcppParallel threads for optimization",
-      fit$control$threads
-      )
-    )
-
-  }
+  # RhpcBLASctl::omp_set_num_threads(fit$control$threads)
+  #
+  # if (fit$control$verbose) {
+  #
+  #   message(sprintf(
+  #     "Using %d threads for optimization",
+  #     fit$control$threads
+  #     )
+  #   )
+  #
+  # }
 
   verify.count.matrix(Y)
   loglik <- match.arg(loglik)

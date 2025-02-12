@@ -1,16 +1,13 @@
 #include <RcppArmadillo.h>
 #include <Rcpp.h>
-#include <RcppParallel.h>
 #include "ll.h"
 #include "utils.h"
+#ifdef _OPENMP
+#include <omp.h>
+#endif
 
 using namespace Rcpp;
 using namespace arma;
-using namespace RcppParallel;
-
-// I'm going to create two functions here for ease of computation.
-// The first function will use a scalar size factor
-// The second function will use a vector size factor
 
 
 arma::vec solve_pois_reg_log1p_quad_approx_sparse_scalar_s (
@@ -277,209 +274,95 @@ arma::vec solve_pois_reg_log1p_quad_approx_sparse_vec_s (
 
 }
 
-
-// A worker that processes columns [begin, end) of B in parallel:
-struct RegressColsVecSWorker : public Worker
-{
-  // Inputs needed
-  const arma::mat            &X_T;
-  const std::vector<arma::vec>   &Y;
-  const std::vector<arma::uvec>  &Y_nz_idx;
-  const arma::vec            &s;
-  const arma::mat            &X_T_s;
-  const arma::mat            &X_T_diag_s_X;
-  const double                a1;
-  const double                a2;
-  const std::vector<int>     &update_indices;
-  const unsigned int          num_iter;
-  const double                alpha;
-  const double                beta;
-
-  // The matrix B to be updated
-  arma::mat &B;
-
-  // Constructor
-  RegressColsVecSWorker(const arma::mat &X_T_,
-                        const std::vector<arma::vec> &Y_,
-                        const std::vector<arma::uvec> &Y_nz_idx_,
-                        const arma::vec &s_,
-                        const arma::mat &X_T_s_,
-                        const arma::mat &X_T_diag_s_X_,
-                        double a1_,
-                        double a2_,
-                        const std::vector<int> &update_indices_,
-                        unsigned int num_iter_,
-                        double alpha_,
-                        double beta_,
-                        arma::mat &B_)
-    : X_T(X_T_), Y(Y_), Y_nz_idx(Y_nz_idx_),
-      s(s_),
-      X_T_s(X_T_s_),
-      X_T_diag_s_X(X_T_diag_s_X_),
-      a1(a1_), a2(a2_),
-      update_indices(update_indices_),
-      num_iter(num_iter_),
-      alpha(alpha_), beta(beta_),
-      B(B_)
-  {}
-
-  // operator(): updates columns j in [begin, end)
-  void operator()(std::size_t begin, std::size_t end) {
-    for (std::size_t j = begin; j < end; j++) {
-      // Solve and store into B.col(j)
-      B.col(j) = solve_pois_reg_log1p_quad_approx_sparse_vec_s(
-        X_T,
-        Y[j],
-        Y_nz_idx[j],
-        s.elem(Y_nz_idx[j]),
-        X_T_s,
-        X_T_diag_s_X,
-        a1,
-        a2,
-        B.col(j),
-        update_indices,
-        num_iter,
-        alpha,
-        beta
-      );
-    }
-  }
-};
-
-
-arma::mat regress_cols_of_Y_on_X_log1p_quad_approx_sparse_vec_s_parallel(
-    const arma::mat &X_T,
-    const std::vector<arma::vec> &Y,
-    const std::vector<arma::uvec> &Y_nz_idx,
-    const arma::vec &s,
-    arma::mat &B,
+// Y is an nxm matrix (each col is an n-dim data vec)
+// X is an nxp matrix (each row is a p-dim covariate)
+// B is a pxm matrix (each col is a p-dim reg coef)
+arma::mat regress_cols_of_Y_on_X_log1p_quad_approx_sparse_vec_s(
+    const arma::mat& X_T,
+    const std::vector<arma::vec>& Y,
+    const std::vector<arma::uvec>& Y_nz_idx,
+    const arma::vec& s,
+    arma::mat& B,
     const double a1,
     const double a2,
-    const std::vector<int> &update_indices,
+    const std::vector<int>& update_indices,
     unsigned int num_iter,
     const double alpha,
     const double beta
 ) {
-  // Precompute the same stuff you did before:
-  arma::mat X_T_s = X_T * s;  // (p x 1) times s is (s is n-dim, so X_T is p x n ?)
-  arma::mat X_T_diag_s_X = (X_T.each_row() % s.t()) * X_T.t();
 
-  // Build the worker
-  RegressColsVecSWorker worker(
-      X_T, Y, Y_nz_idx, s,
-      X_T_s, X_T_diag_s_X,
-      a1, a2,
+  const arma::mat X_T_s = X_T * s;
+  const arma::mat X_T_diag_s_X = (X_T.each_row() % s.t()) * X_T.t();
+
+  // Commenting out parallelism for testing
+  #pragma omp parallel for shared(B)
+  for (int j = 0; j < B.n_cols; j++) {
+
+    B.col(j) = solve_pois_reg_log1p_quad_approx_sparse_vec_s(
+      X_T,
+      Y[j],
+      Y_nz_idx[j],
+      s.elem(Y_nz_idx[j]),
+      X_T_s,
+      X_T_diag_s_X,
+      a1,
+      a2,
+      B.col(j),
       update_indices,
       num_iter,
-      alpha, beta,
-      B
-  );
+      alpha,
+      beta
+    );
 
-  // Parallel loop over columns [0, B.n_cols)
-  RcppParallel::parallelFor(0, B.n_cols, worker);
+  }
 
-  return B;
+  return(B);
+
 }
 
-struct RegressColsScalarSWorker : public RcppParallel::Worker
-{
-  // Inputs
-  const arma::mat            &X_T;
-  const std::vector<arma::vec>   &Y;
-  const std::vector<arma::uvec>  &Y_nz_idx;
-  const arma::vec            &s;
-  const arma::mat            &X_cs;
-  const arma::mat            &X_T_X;
-  const double                a1;
-  const double                a2;
-  const std::vector<int>     &update_indices;
-  const unsigned int          num_iter;
-  const double                alpha;
-  const double                beta;
-
-  // Matrix B to update
-  arma::mat &B;
-
-  // Constructor
-  RegressColsScalarSWorker(const arma::mat &X_T_,
-                           const std::vector<arma::vec> &Y_,
-                           const std::vector<arma::uvec> &Y_nz_idx_,
-                           const arma::vec &s_,
-                           const arma::mat &X_cs_,
-                           const arma::mat &X_T_X_,
-                           double a1_,
-                           double a2_,
-                           const std::vector<int> &update_indices_,
-                           unsigned int num_iter_,
-                           double alpha_,
-                           double beta_,
-                           arma::mat &B_)
-    : X_T(X_T_), Y(Y_), Y_nz_idx(Y_nz_idx_),
-      s(s_),
-      X_cs(X_cs_), X_T_X(X_T_X_),
-      a1(a1_), a2(a2_),
-      update_indices(update_indices_),
-      num_iter(num_iter_),
-      alpha(alpha_), beta(beta_),
-      B(B_)
-  {}
-
-  // operator() processes columns j in [begin, end)
-  void operator()(std::size_t begin, std::size_t end) {
-    for (std::size_t j = begin; j < end; j++) {
-      B.col(j) = solve_pois_reg_log1p_quad_approx_sparse_scalar_s(
-        X_T,
-        Y[j],
-        Y_nz_idx[j],
-        s(j),       // single scalar for column j
-        X_cs,
-        X_T_X,
-        a1,
-        a2,
-        B.col(j),
-        update_indices,
-        num_iter,
-        alpha,
-        beta
-      );
-    }
-  }
-};
-
-
-arma::mat regress_cols_of_Y_on_X_log1p_quad_approx_sparse_scalar_s_parallel(
-    const arma::mat &X_T,
-    const std::vector<arma::vec> &Y,
-    const std::vector<arma::uvec> &Y_nz_idx,
-    const arma::vec &s,
-    arma::mat &B,
+arma::mat regress_cols_of_Y_on_X_log1p_quad_approx_sparse_scalar_s(
+    const arma::mat& X_T,
+    const std::vector<arma::vec>& Y,
+    const std::vector<arma::uvec>& Y_nz_idx,
+    const arma::vec& s,
+    arma::mat& B,
     const double a1,
     const double a2,
-    const std::vector<int> &update_indices,
+    const std::vector<int>& update_indices,
     unsigned int num_iter,
     const double alpha,
     const double beta
 ) {
-  // Precompute as in your original code
-  arma::mat X_cs  = arma::sum(X_T, 1);  // sum each row
-  arma::mat X_T_X = X_T * X_T.t();
 
-  // Build the worker
-  RegressColsScalarSWorker worker(
-      X_T, Y, Y_nz_idx, s,
-      X_cs, X_T_X,
-      a1, a2,
+  const arma::mat X_cs = arma::sum(X_T, 1);
+  const arma::mat X_T_X = X_T * X_T.t();
+
+  // Commenting out parallelism for testing
+  #pragma omp parallel for shared(B)
+  for (int j = 0; j < B.n_cols; j++) {
+
+    B.col(j) = solve_pois_reg_log1p_quad_approx_sparse_scalar_s(
+      X_T,
+      Y[j],
+      Y_nz_idx[j],
+      s(j),
+      X_cs,
+      X_T_X,
+      a1,
+      a2,
+      B.col(j),
       update_indices,
       num_iter,
-      alpha, beta,
-      B
-  );
+      alpha,
+      beta
+    );
 
-  // Parallel loop over [0, B.n_cols)
-  RcppParallel::parallelFor(0, B.n_cols, worker);
+  }
 
-  return B;
+  return(B);
+
 }
+
 
 // [[Rcpp::export]]
 List fit_factor_model_log1p_quad_approx_sparse_cpp_src(
@@ -603,7 +486,7 @@ List fit_factor_model_log1p_quad_approx_sparse_cpp_src(
     U_T.each_col() %= arma::sqrt(1/d);
     V_T.each_col() %= arma::sqrt(d);
 
-    V_T = regress_cols_of_Y_on_X_log1p_quad_approx_sparse_vec_s_parallel(
+    V_T = regress_cols_of_Y_on_X_log1p_quad_approx_sparse_vec_s(
       U_T,
       y_cols_data,
       y_cols_idx,
@@ -617,7 +500,7 @@ List fit_factor_model_log1p_quad_approx_sparse_cpp_src(
       beta
     );
 
-    U_T = regress_cols_of_Y_on_X_log1p_quad_approx_sparse_scalar_s_parallel(
+    U_T = regress_cols_of_Y_on_X_log1p_quad_approx_sparse_scalar_s(
       V_T,
       y_rows_data,
       y_rows_idx,
