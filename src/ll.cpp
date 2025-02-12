@@ -1,7 +1,9 @@
 #include <RcppArmadillo.h>
 #include <Rcpp.h>
 #include "ll.h"
-//#include <omp.h>
+#ifdef _OPENMP
+#include <omp.h>
+#endif
 
 using namespace Rcpp;
 using namespace arma;
@@ -18,7 +20,7 @@ double get_sparse_term_loglik_exact(
 
   double sum = 0.0;
 
-  //#pragma omp parallel for reduction(+:sum)
+  #pragma omp parallel for reduction(+:sum)
   for (int r = 0; r < num_nonzero_y; r++) {
 
     sum += nonzero_y[r] * log(
