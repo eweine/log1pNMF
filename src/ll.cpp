@@ -44,7 +44,7 @@ double get_dense_term_loglik_exact(
 
   double sum = 0.0;
 
-  //#pragma omp parallel for reduction(+:sum)
+  #pragma omp parallel for reduction(+:sum)
   for (int i = 0; i < n; i++) {
 
     for (int j = 0; j < p; j++) {
@@ -69,24 +69,19 @@ double get_sparse_term_loglik_quad_sparse_approx(
     const double a2
 ) {
 
-  double sp_term = 0.0;
-  double lin_correction = 0.0;
-  double quad_correction = 0;
+  double ll = 0.0;
   double cp;
 
-  //#pragma omp parallel for reduction(+:sp_term, lin_correction, quad_correction)
+  #pragma omp parallel for reduction(+:ll) private(cp)
   for (int r = 0; r < num_nonzero_y; r++) {
 
     cp = dot(U_T.col(nonzero_y_i_idx[r]), V_T.col(nonzero_y_j_idx[r]));
 
-    sp_term += nonzero_y[r] * log(exp(cp) - 1) -
-      s[nonzero_y_i_idx[r]] * exp(cp);
-    lin_correction += s[nonzero_y_i_idx[r]] * cp;
-    quad_correction += s[nonzero_y_i_idx[r]] * cp * cp;
+    ll += nonzero_y[r] * log(exp(cp) - 1) -
+      s[nonzero_y_i_idx[r]] * exp(cp) + a1 * s[nonzero_y_i_idx[r]] * cp +
+      a2 * s[nonzero_y_i_idx[r]] * cp * cp;
 
   }
-
-  double ll = sp_term + a1 * lin_correction + a2 * quad_correction;
 
   return(ll);
 
