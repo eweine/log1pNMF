@@ -9,7 +9,7 @@ Authors@R: c(person("Eric","Weine",role=c("aut","cre"),
              person("Peter","Carbonetto",role="aut"),
              person("Matthew","Stephens",role="aut"))
 Description: Implements (approximate) maximum likelihood estimation of Poisson
-    non-negative matrix factorization models with a log1p link function.
+    non-negative matrix factorization models with a shifted log link function.
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
