@@ -294,7 +294,6 @@ arma::mat regress_cols_of_Y_on_X_log1p_quad_approx_sparse_vec_s(
   const arma::mat X_T_s = X_T * s;
   const arma::mat X_T_diag_s_X = (X_T.each_row() % s.t()) * X_T.t();
 
-  // Commenting out parallelism for testing
   #pragma omp parallel for shared(B)
   for (int j = 0; j < static_cast<int>(B.n_cols); j++) {
 

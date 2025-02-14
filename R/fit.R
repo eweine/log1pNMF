@@ -169,24 +169,22 @@ fit_poisson_log1p_nmf <- function(
   fit$cc <- cc
 
   # I need to figure out how to use and output OMP threads
-
-  if (is.na(fit$control$threads)) {
-
-    fit$control$threads <- 1
-
-  } else {
-
-    # add 1 thread in case of 0 threads
-    fit$control$threads <- max(1, fit$control$threads)
+  if (openmp_available()) {
+    
     RhpcBLASctl::omp_set_num_threads(fit$control$threads)
     if (fit$control$threads > 1) {
-
+      
       # move all threads to openmp
       RhpcBLASctl::blas_set_num_threads(1)
-
+      
     }
-
+    
+  } else {
+    
+    fit$control$threads <- 1
+    
   }
+
 
   if (fit$control$verbose) {
 
@@ -404,21 +402,21 @@ fit_poisson_log1p_nmf <- function(
 
     if (init_method == "random") {
 
-      exp_rate <- 1 + sqrt(K * b_hat)
-
       fit$LL <- matrix(
-        data = stats::rexp(
+        data = stats::runif(
           n = nrow(Y) * K,
-          rate = exp_rate
+          min = 1e-12,
+          max = 0.05
         ),
         nrow = nrow(Y),
         ncol = K
       )
 
       fit$FF <- matrix(
-        data = stats::rexp(
+        data = stats::runif(
           n = ncol(Y) * K,
-          rate = exp_rate
+          min = 1e-12,
+          max = 0.05
         ),
         nrow = ncol(Y),
         ncol = K
@@ -432,21 +430,22 @@ fit_poisson_log1p_nmf <- function(
 
       }
 
-      exp_rate <- 1 + sqrt(b_hat)
-
+      browser()
       fit$LL <- matrix(
-        data = stats::rexp(
+        data = stats::runif(
           n = nrow(Y),
-          rate = exp_rate
+          min = 1e-12,
+          max = 0.05
         ),
         nrow = nrow(Y),
         ncol = 1
       )
 
       fit$FF <- matrix(
-        data = stats::rexp(
+        data = stats::runif(
           n = ncol(Y),
-          rate = exp_rate
+          min = 1e-12,
+          max = 0.05
         ),
         nrow = ncol(Y),
         ncol = 1
@@ -462,15 +461,10 @@ fit_poisson_log1p_nmf <- function(
         maxiter = fit$control$init_maxiter
       )
 
-      remaining_exp_rate <- 1 + sqrt(cc * 15)
-
       fit$LL <- cbind(
         fit$LL,
           matrix(
-            data = stats::rexp(
-              n = nrow(Y) * (K - 1),
-              rate = remaining_exp_rate
-            ),
+            data = 1e-12,
             nrow = nrow(Y),
             ncol = K - 1
           )
@@ -479,10 +473,7 @@ fit_poisson_log1p_nmf <- function(
       fit$FF <- cbind(
         fit$FF,
         matrix(
-          data = stats::rexp(
-            n = ncol(Y) * (K - 1),
-            rate = remaining_exp_rate
-          ),
+          data = 1e-12,
           nrow = ncol(Y),
           ncol = K - 1
         )
@@ -533,7 +524,7 @@ fit_poisson_log1p_nmf_control_default <- function() {
     num_ccd_iter = 3,
     tol = 1e-8,
     verbose = TRUE,
-    threads = RhpcBLASctl::omp_get_max_threads() - 1
+    threads = max(parallel::detectCores() - 1, 1)
   )
 
 }
