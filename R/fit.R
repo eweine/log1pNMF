@@ -430,7 +430,6 @@ fit_poisson_log1p_nmf <- function(
 
       }
 
-      browser()
       fit$LL <- matrix(
         data = stats::runif(
           n = nrow(Y),
