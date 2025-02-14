@@ -13,6 +13,38 @@ test_that("a basic fit works", {
 
 })
 
+test_that("big c works", {
+  
+  set.seed(1)
+  dat <- generate_log1p_pois_data(n = 500, p = 250, K = 4)
+  fit <- fit_poisson_log1p_nmf(
+    Y = dat$Y,
+    K = 4,
+    cc = 1000,
+    init_method = "random",
+    control = list(verbose = FALSE)
+  )
+  
+  expect_nondecreasing(fit$objective_trace)
+  
+})
+
+test_that("small c works", {
+  
+  set.seed(1)
+  dat <- generate_log1p_pois_data(n = 500, p = 250, K = 4)
+  fit <- fit_poisson_log1p_nmf(
+    Y = dat$Y,
+    K = 4,
+    cc = 1e-4,
+    init_method = "random",
+    control = list(verbose = FALSE)
+  )
+  
+  expect_nondecreasing(fit$objective_trace)
+  
+})
+
 test_that("rank1 initialization works", {
 
   set.seed(1)
