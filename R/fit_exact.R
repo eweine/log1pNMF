@@ -24,7 +24,7 @@ fit_factor_model_log1p_exact <- function(
 ) {
 
   # add size factor to L and F
-  U <- cbind(log(fit$s), fit$LL)
+  U <- cbind(log(s), fit$LL)
   V <- cbind(rep(1, p), fit$FF)
   update_idx <- 1:ncol(fit$LL)
 

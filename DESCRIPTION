@@ -21,7 +21,8 @@ Imports:
     pracma (>= 2.4.4),
     methods,
     distr (>= 2.9.3),
-    RhpcBLASctl (>= 0.23-42)
+    RhpcBLASctl (>= 0.23-42),
+    parallel
 LinkingTo: 
     Rcpp,
     RcppArmadillo
