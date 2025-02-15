@@ -22,7 +22,8 @@ Imports:
     methods,
     distr (>= 2.9.3),
     RhpcBLASctl (>= 0.23-42),
-    parallel
+    parallel,
+    fastTopics (>= 0.6-192)
 LinkingTo: 
     Rcpp,
     RcppArmadillo
