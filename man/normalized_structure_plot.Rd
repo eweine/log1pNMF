@@ -9,7 +9,8 @@ normalized_structure_plot(fit, ...)
 \arguments{
 \item{fit}{object of type \code{log1p_nmf_fit}.}
 
-\item{...}{additional argument to be passed to fastTopics::structure_plot.}
+\item{...}{additional argument to be passed to 
+\code{fastTopics::structure_plot}.}
 }
 \value{
 a \code{ggplot} object.

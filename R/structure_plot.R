@@ -14,7 +14,8 @@ normalize_bars <- function(A) {
 #' details.
 #'
 #' @param fit object of type \code{log1p_nmf_fit}.
-#' @param ... additional argument to be passed to fastTopics::structure_plot.
+#' @param ... additional argument to be passed to 
+#' \code{fastTopics::structure_plot}.
 #'
 #' @return a \code{ggplot} object.
 #' @export
