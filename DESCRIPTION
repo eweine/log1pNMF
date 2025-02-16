@@ -22,11 +22,11 @@ Imports:
     methods,
     distr (>= 2.9.3),
     RhpcBLASctl (>= 0.23-42),
-    parallel,
-    fastTopics (>= 0.6-192)
+    parallel
 LinkingTo: 
     Rcpp,
     RcppArmadillo
 Suggests: 
-    testthat (>= 3.0.0)
+    testthat (>= 3.0.0),
+    fastTopics (>= 0.6-192)
 Config/testthat/edition: 3
