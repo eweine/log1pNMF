@@ -433,7 +433,7 @@ fit_poisson_log1p_nmf <- function(
       fit$LL <- matrix(
         data = stats::runif(
           n = nrow(Y),
-          min = 1e-12,
+          min = 1e-8,
           max = 0.05
         ),
         nrow = nrow(Y),
@@ -443,7 +443,7 @@ fit_poisson_log1p_nmf <- function(
       fit$FF <- matrix(
         data = stats::runif(
           n = ncol(Y),
-          min = 1e-12,
+          min = 1e-8,
           max = 0.05
         ),
         nrow = ncol(Y),
@@ -463,7 +463,7 @@ fit_poisson_log1p_nmf <- function(
       fit$LL <- cbind(
         fit$LL,
           matrix(
-            data = 1e-12,
+            data = 1e-8,
             nrow = nrow(Y),
             ncol = K - 1
           )
@@ -472,7 +472,7 @@ fit_poisson_log1p_nmf <- function(
       fit$FF <- cbind(
         fit$FF,
         matrix(
-          data = 1e-12,
+          data = 1e-8,
           nrow = ncol(Y),
           ncol = K - 1
         )

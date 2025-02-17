@@ -91,7 +91,7 @@ arma::vec solve_pois_reg_log1p_quad_approx_sparse_scalar_s (
 
         t = 1.0;
 
-      } else if (b[j] >= 1e-12) {
+      } else if (b[j] > 1e-12) {
 
         t = std::min((b[j] - 1e-12) / newton_dir, 1.0);
 
@@ -223,7 +223,7 @@ arma::vec solve_pois_reg_log1p_quad_approx_sparse_vec_s (
 
         t = 1.0;
 
-      } else if (b[j] >= 1e-12) {
+      } else if (b[j] > 1e-12) {
 
         t = std::min((b[j] - 1e-12) / newton_dir, 1.0);
 

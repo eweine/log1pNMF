@@ -69,7 +69,7 @@ arma::vec solve_pois_reg_log1p (
 
         t = 1.0;
 
-      } else if (b[j] >= 1e-12) {
+      } else if (b[j] > 1e-12) {
 
         t = std::min((b[j] - 1e-12) / newton_dir, 1.0);
 
