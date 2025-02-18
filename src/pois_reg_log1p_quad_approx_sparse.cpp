@@ -442,6 +442,8 @@ List fit_factor_model_log1p_quad_approx_sparse_cpp_src(
   std::vector<double> loglik_history;
   loglik_history.reserve(max_iter);
   loglik_history.push_back(loglik);
+  
+  double max_double = std::numeric_limits<double>::max();
 
   if (verbose) {
 
@@ -497,7 +499,7 @@ List fit_factor_model_log1p_quad_approx_sparse_cpp_src(
       num_ccd_iter,
       alpha,
       beta
-    );
+    ).clamp(0.0, max_double);
 
     U_T = regress_cols_of_Y_on_X_log1p_quad_approx_sparse_scalar_s(
       V_T,
@@ -511,7 +513,7 @@ List fit_factor_model_log1p_quad_approx_sparse_cpp_src(
       num_ccd_iter,
       alpha,
       beta
-    );
+    ).clamp(0.0, max_double);
 
     loglik = get_loglik_quad_approx_sparse(
       U_T,
