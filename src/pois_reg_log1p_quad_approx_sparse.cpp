@@ -104,7 +104,7 @@ arma::vec solve_pois_reg_log1p_quad_approx_sparse_scalar_s (
       newton_dec    = alpha * first_deriv * newton_dir;
       b_j_og        = b[j];
       while (true) {
-        b[j]             = b_j_og - t * newton_dir;
+        b[j]             = std::max(b_j_og - t * newton_dir, 1e-12);
         eta_nz_proposed     = eta_nz + (b[j] - b_j_og) * X_nz.col(j);
         exp_eta_nz_proposed = exp(eta_nz_proposed);
         exp_eta_nz_m1_proposed = exp_eta_nz_proposed - 1;
@@ -236,7 +236,7 @@ arma::vec solve_pois_reg_log1p_quad_approx_sparse_vec_s (
       newton_dec    = alpha * first_deriv * newton_dir;
       b_j_og        = b[j];
       while (true) {
-        b[j]             = b_j_og - t * newton_dir;
+        b[j]             = std::max(b_j_og - t * newton_dir, 1e-12);
         eta_nz_proposed     = eta_nz + (b[j] - b_j_og) * X_nz.col(j);
         exp_eta_nz_proposed = exp(eta_nz_proposed);
         exp_eta_nz_m1_proposed = exp_eta_nz_proposed - 1;
@@ -443,8 +443,6 @@ List fit_factor_model_log1p_quad_approx_sparse_cpp_src(
   loglik_history.reserve(max_iter);
   loglik_history.push_back(loglik);
   
-  double max_double = std::numeric_limits<double>::max();
-
   if (verbose) {
 
     Rprintf(
@@ -499,7 +497,7 @@ List fit_factor_model_log1p_quad_approx_sparse_cpp_src(
       num_ccd_iter,
       alpha,
       beta
-    ).clamp(0.0, max_double);
+    );
 
     U_T = regress_cols_of_Y_on_X_log1p_quad_approx_sparse_scalar_s(
       V_T,
@@ -513,7 +511,7 @@ List fit_factor_model_log1p_quad_approx_sparse_cpp_src(
       num_ccd_iter,
       alpha,
       beta
-    ).clamp(0.0, max_double);
+    );
 
     loglik = get_loglik_quad_approx_sparse(
       U_T,

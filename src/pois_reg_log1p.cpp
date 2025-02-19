@@ -82,7 +82,7 @@ arma::vec solve_pois_reg_log1p (
       newton_dec    = alpha * first_deriv * newton_dir;
       b_j_og        = b[j];
       while (true) {
-        b[j]             = b_j_og - t * newton_dir;
+        b[j]             = std::max(b_j_og - t * newton_dir, 1e-12);
         eta_proposed     = eta + (b[j] - b_j_og) * X.col(j);
         exp_eta = exp(eta_proposed);
         exp_eta_nz_m1 = exp_eta.elem(y_nz_idx) - s;
@@ -252,8 +252,6 @@ List fit_factor_model_log1p_exact_cpp_src(
   loglik_history.reserve(max_iter);
   loglik_history.push_back(loglik);
   
-  double max_double = std::numeric_limits<double>::max();
-
   if (verbose) {
 
     Rprintf(
@@ -302,7 +300,7 @@ List fit_factor_model_log1p_exact_cpp_src(
       num_ccd_iter,
       alpha,
       beta
-    ).clamp(0.0, max_double);
+    );
 
     V_T = regress_cols_of_Y_on_X_log1p_pois_exact(
       U_T.t(),
@@ -315,7 +313,7 @@ List fit_factor_model_log1p_exact_cpp_src(
       num_ccd_iter,
       alpha,
       beta
-    ).clamp(0.0, max_double);
+    );
 
     arma::vec d = mean(U_T, 1) / mean(V_T, 1);
     d(0) = 1.0;
