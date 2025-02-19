@@ -429,7 +429,7 @@ fit_poisson_log1p_nmf <- function(
         cat("Fitting rank 1 initialization...\n")
 
       }
-
+      
       fit$LL <- matrix(
         data = stats::runif(
           n = nrow(Y),

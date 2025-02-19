@@ -29,7 +29,9 @@ arma::vec solve_pois_reg_log1p (
   vec eta = X * b;
   vec exp_eta = exp(eta);
   vec exp_eta_nz_m1 = exp_eta.elem(y_nz_idx) - s;
+  vec exp_eta_nz_m1_proposed;
   vec eta_proposed;
+  vec exp_eta_proposed;
   vec exp_deriv_term;
   double t;
   double f_proposed;
@@ -65,33 +67,44 @@ arma::vec solve_pois_reg_log1p (
       newton_dir     = first_deriv / second_deriv;
 
       // I need to handle the non-negativity constraint here
-      if (newton_dir < 0) {
-
-        t = 1.0;
-
-      } else if (b[j] > 1e-12) {
-
-        t = std::min((b[j] - 1e-12) / newton_dir, 1.0);
-
-      } else {
-
+      if (std::isfinite(newton_dir)) {
+        
+        if (newton_dir < 0) {
+          
+          t = 1.0;
+          
+        } else if (b[j] > 1e-12) {
+          
+          t = std::min((b[j] - 1e-12) / newton_dir, 1.0);
+          
+        } else {
+          
+          continue;
+          
+        }
+        
+      } else{
+        
         continue;
-
+        
       }
 
       newton_dec    = alpha * first_deriv * newton_dir;
       b_j_og        = b[j];
       while (true) {
+        
         b[j]             = std::max(b_j_og - t * newton_dir, 1e-12);
         eta_proposed     = eta + (b[j] - b_j_og) * X.col(j);
-        exp_eta = exp(eta_proposed);
-        exp_eta_nz_m1 = exp_eta.elem(y_nz_idx) - s;
-        f_proposed = sum(exp_eta) - dot(
+        exp_eta_proposed = exp(eta_proposed);
+        exp_eta_nz_m1_proposed = exp_eta_proposed.elem(y_nz_idx) - s;
+        f_proposed = sum(exp_eta_proposed) - dot(
           y,
-          log(exp_eta_nz_m1)
+          log(exp_eta_nz_m1_proposed)
         );
-        if (f_proposed <= current_lik - t*newton_dec) {
+        if (std::isfinite(f_proposed) && f_proposed <= current_lik - t*newton_dec) {
           eta = eta_proposed;
+          exp_eta = exp_eta_proposed;
+          exp_eta_nz_m1 = exp_eta_nz_m1_proposed;
           current_lik = f_proposed;
           break;
         } else {
