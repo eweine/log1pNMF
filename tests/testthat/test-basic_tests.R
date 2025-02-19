@@ -9,6 +9,8 @@ test_that("a basic fit works", {
     control = list(verbose = FALSE)
   )
 
+  expect_true(all(fit$LL>=0))
+  expect_true(all(fit$FF>=0))
   expect_nondecreasing(fit$objective_trace)
 
 })
@@ -25,6 +27,8 @@ test_that("big c works", {
     control = list(verbose = FALSE)
   )
   
+  expect_true(all(fit$LL>=0))
+  expect_true(all(fit$FF>=0))
   expect_nondecreasing(fit$objective_trace)
   
 })
@@ -41,6 +45,8 @@ test_that("small c works", {
     control = list(verbose = FALSE)
   )
   
+  expect_true(all(fit$LL>=0))
+  expect_true(all(fit$FF>=0))
   expect_nondecreasing(fit$objective_trace)
   
 })
@@ -56,6 +62,8 @@ test_that("rank1 initialization works", {
     control = list(verbose = FALSE)
   )
 
+  expect_true(all(fit$LL>=0))
+  expect_true(all(fit$FF>=0))
   expect_nondecreasing(fit$objective_trace)
 
 })
@@ -73,6 +81,8 @@ test_that("exact loglikelihood works", {
     control = list(verbose = FALSE)
   )
 
+  expect_true(all(fit$LL>=0))
+  expect_true(all(fit$FF>=0))
   expect_nondecreasing(fit$objective_trace)
 
 })
@@ -100,6 +110,10 @@ test_that("exact produces better fits than approximate", {
     control = list(verbose = FALSE)
   )
   Lambda_hat_approx <- fitted(fit_approx)
+  expect_true(all(fit_approx$LL>=0))
+  expect_true(all(fit_approx$FF>=0))
+  expect_true(all(fit_exact$LL>=0))
+  expect_true(all(fit_exact$FF>=0))
 
   ll_exact <- sum(
     dpois(
@@ -133,6 +147,8 @@ test_that("Chebyshev approximation works", {
     control = list(verbose = FALSE)
   )
 
+  expect_true(all(fit$LL>=0))
+  expect_true(all(fit$FF>=0))
   expect_nondecreasing(fit$objective_trace)
 
 })
@@ -178,6 +194,10 @@ test_that("true value of c improves fit", {
   )
 
   testthat::expect_gt(ll_exact, ll_misspec)
+  expect_true(all(fit_approx$LL>=0))
+  expect_true(all(fit_approx$FF>=0))
+  expect_true(all(fit_exact$LL>=0))
+  expect_true(all(fit_exact$FF>=0))
 
 })
 
@@ -221,6 +241,10 @@ test_that("providing custom initializations works", {
     )
   )
 
+  expect_true(all(fit$LL>=0))
+  expect_true(all(fit$FF>=0))
+  expect_true(all(fit2$LL>=0))
+  expect_true(all(fit2$FF>=0))
   testthat::expect_gt(ll_final, ll_init)
 
 })
@@ -240,5 +264,7 @@ test_that("providing custom size factors works", {
 
   expect_nondecreasing(fit$objective_trace)
   expect_equal(fit$s, s)
+  expect_true(all(fit$LL>=0))
+  expect_true(all(fit$FF>=0))
 
 })
