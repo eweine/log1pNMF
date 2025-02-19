@@ -194,8 +194,8 @@ test_that("true value of c improves fit", {
   )
 
   testthat::expect_gt(ll_exact, ll_misspec)
-  expect_true(all(fit_approx$LL>=0))
-  expect_true(all(fit_approx$FF>=0))
+  expect_true(all(fit_misspec$LL>=0))
+  expect_true(all(fit_misspec$FF>=0))
   expect_true(all(fit_exact$LL>=0))
   expect_true(all(fit_exact$FF>=0))
 

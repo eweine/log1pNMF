@@ -87,18 +87,26 @@ arma::vec solve_pois_reg_log1p_quad_approx_sparse_scalar_s (
       newton_dir     = first_deriv / second_deriv;
 
       // I need to handle the non-negativity constraint here
-      if (newton_dir < 0) {
-
-        t = 1.0;
-
-      } else if (b[j] > 1e-12) {
-
-        t = std::min((b[j] - 1e-12) / newton_dir, 1.0);
-
-      } else {
-
+      if (std::isfinite(newton_dir)) {
+        
+        if (newton_dir < 0) {
+          
+          t = 1.0;
+          
+        } else if (b[j] > 1e-12) {
+          
+          t = std::min((b[j] - 1e-12) / newton_dir, 1.0);
+          
+        } else {
+          
+          continue;
+          
+        }
+        
+      } else{
+        
         continue;
-
+        
       }
 
       newton_dec    = alpha * first_deriv * newton_dir;
@@ -118,8 +126,7 @@ arma::vec solve_pois_reg_log1p_quad_approx_sparse_scalar_s (
           s * a2 * X_0_T_X_0(j, j) * (b[j] * b[j]) +
           s * cross_term * b[j];
 
-        if (f_proposed <= current_lik - t*newton_dec) {
-          eta_nz = eta_nz_proposed;
+        if (std::isfinite(f_proposed) && f_proposed <= current_lik - t*newton_dec) {
           eta_nz = eta_nz_proposed;
           exp_eta_nz = exp_eta_nz_proposed;
           exp_eta_nz_m1 = exp_eta_nz_m1_proposed;
