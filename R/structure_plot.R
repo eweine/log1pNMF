@@ -37,7 +37,7 @@ normalize_bars <- function(A) {
 normalized_structure_plot <- function(fit, ...) {
   
   fastTopics::structure_plot(
-    normalize_bars(fit$LL), ...
+    normalize_bars(pmax(fit$LL, 0)), ...
   )
   
 }

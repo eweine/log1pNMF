@@ -50,8 +50,8 @@ fit_factor_model_log1p_exact <- function(
   )
 
   # remove size factor
-  fit$LL <- new_UV$U[, -1]
-  fit$FF <- new_UV$V[, -1]
+  fit$LL <- new_UV$U[, -1, drop = FALSE]
+  fit$FF <- new_UV$V[, -1, drop = FALSE]
   fit$converged <- new_UV$converged
   fit$objective_trace <- new_UV$objective_trace
 
