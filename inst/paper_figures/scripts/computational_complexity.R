@@ -22,7 +22,7 @@ get_log1p_approx_o <- function(n, m, k, pct_0) {
 
 }
 
-m <- 20000
+m <- 10000
 n_vec <- seq(26, 1000000, 10)
 k <- 25
 pct_0 <- 0.95
@@ -61,22 +61,24 @@ ga <- ggplot(data = o_df, aes(x = n, y = o, color = Calculation)) +
     trans = "log10"
   ) +
   scale_y_continuous(
-    breaks = c(1, pretty(o_df$o[o_df$o != 1]))  # Ensure 1 is included
+    breaks = c(1, 5, 10, 20),
+    trans = "log10"  # Ensure 1 is included
   ) +
-  ylab("Complexity Relative to Topic Model") +
+  ylab("Complexity Relative to Topic Model (log10 scale)") +
   xlab("n (log10 scale)") +
   cowplot::theme_cowplot() +
-  ggtitle("m = 20,000, K = 25, Sparsity = 95%") +
+  ggtitle("m = 10,000, K = 25, Sparsity = 95%") +
   geom_hline(yintercept = 1, linetype = "dashed") +
   scale_color_manual(values=c("blue", "red")) +
   theme(
     plot.title = element_text(size = 14, face = "bold"),
-    axis.title = element_text(size = 12),
+    axis.title.x = element_text(size = 12),
+    axis.title.y = element_text(size = 10),
     axis.text = element_text(size = 10)
   )
 
 
-m <- 20000
+m <- 10000
 n <- 10000
 k_vec <- seq(1, 250, 1)
 pct_0 <- 0.95
@@ -112,11 +114,12 @@ library(ggplot2)
 gb <- ggplot(data = o_df, aes(x = K, y = o, color = Calculation)) +
   geom_line(linewidth=1) +
   scale_y_continuous(
-    transform = "log10" # Ensure 1 is included
+    transform = "log10", # Ensure 1 is included
+    breaks = c(1, 5, 10, 20)
   ) +
   ylab("Complexity Relative to Topic Model (log10 scale)") +
   cowplot::theme_cowplot() +
-  ggtitle("n = 10,000, m = 20,000, Sparsity = 95%") +
+  ggtitle("n = 10,000, m = 10,000, Sparsity = 95%") +
   geom_hline(yintercept = 1, linetype = "dashed") +
   scale_color_manual(values=c("blue", "red")) +
   theme(
@@ -129,7 +132,7 @@ gb <- ggplot(data = o_df, aes(x = K, y = o, color = Calculation)) +
 # finally, I think it would be useful to look at this
 # as a function of how sparse the data are
 
-m <- 20000
+m <- 10000
 n <- 10000
 k <- 25
 pct_0_vec <- seq(0.01, 0.99, 0.001)
@@ -172,7 +175,7 @@ gc <- ggplot(data = o_df, aes(x = pct_0, y = o, color = Calculation)) +
   ylab("Complexity Relative to Topic Model (log10 scale)") +
   xlab("Sparsity") +
   cowplot::theme_cowplot() +
-  ggtitle("n = 10,000, m = 20,000, K = 25") +
+  ggtitle("n = 10,000, m = 10,000, K = 25") +
   geom_hline(yintercept = 1, linetype = "dashed") +
   scale_color_manual(values=c("blue", "red")) +
   theme(

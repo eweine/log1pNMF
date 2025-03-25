@@ -60,4 +60,4 @@ src/*.so
 vignettes/*.log
 
 inst/experiments/results/*
-
+inst/paper_figures/data/raw_data/*
