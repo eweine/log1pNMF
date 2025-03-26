@@ -77,7 +77,7 @@ double get_sparse_term_loglik_quad_sparse_approx(
 
     cp = dot(U_T.col(nonzero_y_i_idx[r]), V_T.col(nonzero_y_j_idx[r]));
 
-    ll += nonzero_y[r] * log(exp(cp) - 1) -
+    ll += nonzero_y[r] * log(expm1(cp)) -
       s[nonzero_y_i_idx[r]] * exp(cp) + a1 * s[nonzero_y_i_idx[r]] * cp +
       a2 * s[nonzero_y_i_idx[r]] * cp * cp;
 
