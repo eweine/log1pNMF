@@ -72,7 +72,7 @@ for (cc in cc_vec) {
     distinct_list[[k]] <- fastTopics:::get_distinctive_features(
       effects_matrix = F_norm,
       k = glue::glue("k{k}"), n = n_top, feature_sign = "positive"
-      )
+    )
     
     jaccard_vec <- c(jaccard_vec, jaccard_index(
       top_list[[k]],
@@ -168,7 +168,7 @@ g1 <- ggplot(data = df_cor, aes(x = cc, y = correlation)) +
   geom_line() +
   cowplot::theme_cowplot() +
   scale_y_continuous(limits = c(0, 1), expand = c(0, 0)) +
-  scale_x_log10() +
+  scale_x_continuous(breaks = c(1e-3, 1, 1e3), transform = "log10") +
   xlab("c (log10 scale)") +
   ylab("Median Factor Correlation") +
   geom_hline(yintercept = cor_vec["Inf"], color = "red", linetype = "dashed") +
@@ -181,7 +181,7 @@ g2 <- ggplot(data = df_sparsity_l, aes(x = cc, y = sparsity)) +
   geom_line() +
   cowplot::theme_cowplot() +
   scale_y_continuous(limits = c(0, 1), expand = c(0, 0)) +
-  scale_x_log10() +
+  scale_x_continuous(breaks = c(1e-3, 1, 1e3), transform = "log10") +
   xlab("c (log10 scale)") +
   ylab("Median Loading Sparsity") +
   geom_hline(yintercept = l_sparsity_vec["Inf"], color = "red", linetype = "dashed") +
@@ -194,7 +194,7 @@ g3 <- ggplot(data = df_sparsity_f, aes(x = cc, y = sparsity)) +
   geom_line() +
   cowplot::theme_cowplot() +
   scale_y_continuous(limits = c(0, 1), expand = c(0, 0)) +
-  scale_x_log10() +
+  scale_x_continuous(breaks = c(1e-3, 1, 1e3), transform = "log10") +
   xlab("c (log10 scale)") +
   ylab("Median Factor Sparsity") +
   geom_hline(yintercept = f_sparsity_vec["Inf"], color = "red", linetype = "dashed") +
@@ -203,18 +203,12 @@ g3 <- ggplot(data = df_sparsity_f, aes(x = cc, y = sparsity)) +
   )
 
 
-g <- ggarrange(g1,g3,g2, nrow = 1)
+g <- ggarrange(g1,g3,g2, nrow = 1, labels = c("D", "E", "F"))
 
 g <- annotate_figure(g,
                      top = text_grob(glue::glue("Pancreas K = {K}"), size = 20, face = "bold"))
 
-ggsave(
-  "../pdfs/pancreas_sparsity.pdf",
-  g,
-  device = "pdf",
-  width = 9,
-  height = 3
-)
+readr::write_rds(g, "../data/pancreas_sparsity_ggplot.rds")
 
 celltype <- sample_info$celltype
 celltype <-
@@ -264,7 +258,8 @@ g_log1p_scatter <- ggplot(data = means_df, aes(x = log1p(delta_expr), y = log1p(
     segment.color = 'grey40',  # color of connecting lines
     segment.size = 0.4,    
     min.segment.length = 0,
-    nudge_x = 0.25
+    nudge_x = 0.25,
+    nudge_y = 0.5
   ) +
   cowplot::theme_cowplot() +
   ggtitle("Delta Vs. Gamma Expression - log1p Transformed") +
@@ -398,10 +393,148 @@ g3 <- ggarrange(
 g <- ggarrange(
   g1, g2, g3, nrow = 3, ncol = 1,
   heights = c(2, 1, 1)
-  )
+)
 
 g <- annotate_figure(g,
                      top = text_grob(glue::glue("Pancreas K = {K}"), size = 20, face = "bold"))
+
+means_df <- means_df %>%
+  dplyr::mutate(
+    log1p_k5 = normalize_bars(fit_list[["1"]]$LL, fit_list[["1"]]$FF)[, "k5"],
+    log1p_k8 = normalize_bars(fit_list[["1"]]$LL, fit_list[["1"]]$FF)[, "k8"],
+    tm_k5 = normalize_bars(fit_list[["Inf"]]$L, fit_list[["Inf"]]$F)[, "k5"],
+    tm_k8 = normalize_bars(fit_list[["Inf"]]$L, fit_list[["Inf"]]$F)[, "k8"]
+  )
+
+
+plot(log1p(means_df$gamma_expr), means_df$log1p_k8)
+plot(log1p(means_df$delta_expr), means_df$log1p_k5)
+
+plot(log1p(means_df$gamma_expr), log1p(means_df$tm_k8))
+plot(log1p(means_df$delta_expr), log1p(means_df$tm_k5))
+
+plot(means_df$log1p_k5, means_df$log1p_k8)
+plot(log1p(means_df$tm_k5), log1p(means_df$tm_k8))
+
+g_log1p_gamma <- ggplot(data = means_df, aes(x = log1p(gamma_expr), y = log1p_k8)) +
+  geom_point(size = 0.75, alpha = 0.33) +
+  xlab("log(1 + Mean Expression in Gamma Cells)") +
+  ylab("Gene Scores - Factor 8 (Pink)") +
+  geom_text_repel(
+    data = subset(means_df, gene %in% genes_to_label),
+    aes(label = gene),
+    size = 4,                # adjust text size as desired
+    box.padding = 0.5,       # adjust padding around labels
+    max.overlaps = Inf,       # ensure all labels appear
+    segment.color = 'grey40',  # color of connecting lines
+    segment.size = 0.4,    
+    min.segment.length = 0,
+    nudge_x = 0.5,
+    nudge_y = 0.5
+  ) +
+  cowplot::theme_cowplot() +
+  ggtitle("Gamma Cells - Mean Expression Vs. Score") +
+  theme(
+    plot.title = element_text(size = 10),      # Title size
+    axis.title.x = element_text(size = 8),     # X-axis label size
+    axis.title.y = element_text(size = 8)      # Y-axis label size
+  )
+
+g_log1p_delta <- ggplot(data = means_df, aes(x = log1p(delta_expr), y = log1p_k5)) +
+  geom_point(size = 0.75, alpha = 0.33) +
+  xlab("log(1 + Mean Expression in Delta Cells)") +
+  ylab("Gene Scores - Factor 5 (Orange)") +
+  geom_text_repel(
+    data = subset(means_df, gene %in% genes_to_label),
+    aes(label = gene),
+    size = 4,                # adjust text size as desired
+    box.padding = 0.5,       # adjust padding around labels
+    max.overlaps = Inf,       # ensure all labels appear
+    segment.color = 'grey40',  # color of connecting lines
+    segment.size = 0.4,    
+    min.segment.length = 0,
+    nudge_x = 0.5,
+    nudge_y = 0.5
+  ) +
+  cowplot::theme_cowplot() +
+  ggtitle("Delta Cells - Mean Expression Vs. log1p Model Score") +
+  theme(
+    plot.title = element_text(size = 10),      # Title size
+    axis.title.x = element_text(size = 8),     # X-axis label size
+    axis.title.y = element_text(size = 8)      # Y-axis label size
+  )
+
+g_tm_gamma <- ggplot(data = means_df, aes(x = log1p(gamma_expr), y = log1p(tm_k8))) +
+  geom_point(size = 0.75, alpha = 0.33) +
+  xlab("log(1 + Mean Expression in Gamma Cells)") +
+  ylab("log(1 + Gene Scores - Factor 8 (Pink))") +
+  geom_text_repel(
+    data = subset(means_df, gene %in% genes_to_label),
+    aes(label = gene),
+    size = 4,                # adjust text size as desired
+    box.padding = 0.5,       # adjust padding around labels
+    max.overlaps = Inf,       # ensure all labels appear
+    segment.color = 'grey40',  # color of connecting lines
+    segment.size = 0.4,    
+    min.segment.length = 0,
+    nudge_x = 0.5,
+    nudge_y = 0.5
+  ) +
+  cowplot::theme_cowplot() +
+  ggtitle("Gamma Cells - Mean Expression Vs. ID Link Model Score") +
+  theme(
+    plot.title = element_text(size = 10),      # Title size
+    axis.title.x = element_text(size = 8),     # X-axis label size
+    axis.title.y = element_text(size = 8)      # Y-axis label size
+  )
+
+g_tm_delta <- ggplot(data = means_df, aes(x = log1p(delta_expr), y = log1p(tm_k5))) +
+  geom_point(size = 0.75, alpha = 0.33) +
+  xlab("log(1 + Mean Expression in Delta Cells)") +
+  ylab("log(1 + Gene Scores - Factor 5 (Orange))") +
+  geom_text_repel(
+    data = subset(means_df, gene %in% genes_to_label),
+    aes(label = gene),
+    size = 4,                # adjust text size as desired
+    box.padding = 0.5,       # adjust padding around labels
+    max.overlaps = Inf,       # ensure all labels appear
+    segment.color = 'grey40',  # color of connecting lines
+    segment.size = 0.4,    
+    min.segment.length = 0,
+    nudge_x = 0.5,
+    nudge_y = 0.5
+  ) +
+  cowplot::theme_cowplot() +
+  ggtitle("Delta Cells - Mean Expression Vs. ID Link Model Score") +
+  theme(
+    plot.title = element_text(size = 10),      # Title size
+    axis.title.x = element_text(size = 8),     # X-axis label size
+    axis.title.y = element_text(size = 8)      # Y-axis label size
+  )
+
+
+g1 <- ggarrange(
+  g_log1p_sp, g_tm_sp,
+  nrow = 2, ncol = 1,
+  labels = c("A", "B")
+)
+
+g2 <- ggarrange(
+  g_log1p_delta, g_log1p_gamma,
+  nrow = 1, ncol = 2,
+  labels = c("C", "D")
+)
+
+g3 <- ggarrange(
+  g_tm_delta, g_tm_gamma,
+  nrow = 1, ncol = 2,
+  labels = c("E", "F")
+)
+
+g <- ggarrange(
+  g1, g2, g3, nrow = 3, ncol = 1,
+  heights = c(2, 1, 1)
+)
 
 ggsave(
   "../pdfs/pancreas_structure.pdf",
@@ -411,3 +544,87 @@ ggsave(
   height = 11.5
 )
 
+# here, I want to make correlation plots
+
+gcor_a <- ggplot(data = means_df, aes(x = log1p_k5, y = log1p_k8)) +
+  geom_point(size = 0.75, alpha = 0.33) +
+  geom_text_repel(
+    data = subset(means_df, gene %in% genes_to_label),
+    aes(label = gene),
+    size = 4,                # adjust text size as desired
+    box.padding = 0.5,       # adjust padding around labels
+    max.overlaps = Inf,       # ensure all labels appear
+    segment.color = 'grey40',  # color of connecting lines
+    segment.size = 0.4,    
+    min.segment.length = 0,
+    nudge_x = 0.5,
+    nudge_y = 0.5
+  ) +
+  cowplot::theme_cowplot() +
+  theme(
+    plot.title = element_text(size = 10),      # Title size
+    axis.title.x = element_text(size = 8),     # X-axis label size
+    axis.title.y = element_text(size = 8)      # Y-axis label size
+  ) +
+  xlab("Log1p model Factor 5 (Orange)") +
+  ylab("Log1p model Factor 8 (Pink)")
+
+gcor_b <- ggplot(data = means_df, aes(x = log1p(tm_k5), y = log1p(tm_k8))) +
+  geom_point(size = 0.75, alpha = 0.33) +
+  geom_text_repel(
+    data = subset(means_df, gene %in% genes_to_label),
+    aes(label = gene),
+    size = 4,                # adjust text size as desired
+    box.padding = 0.5,       # adjust padding around labels
+    max.overlaps = Inf,       # ensure all labels appear
+    segment.color = 'grey40',  # color of connecting lines
+    segment.size = 0.4,    
+    min.segment.length = 0,
+    nudge_x = 0.5,
+    nudge_y = 0.5
+  ) +
+  cowplot::theme_cowplot() +
+  theme(
+    plot.title = element_text(size = 10),      # Title size
+    axis.title.x = element_text(size = 8),     # X-axis label size
+    axis.title.y = element_text(size = 8)      # Y-axis label size
+  ) +
+  xlab("log(1 + Topic Model Factor 5 (Orange))") +
+  ylab("log(1 + Topic Model Factor 8 (Pink))")
+
+ggarrange(gcor_a, gcor_b, nrow = 1, ncol = 2)
+
+library(reshape2)
+df <- melt(fit_list$`1`$cor_mat)
+
+df$Var1 <- factor(df$Var1, levels = rev(rownames(fit_list$`1`$cor_mat)))
+df$Var2 <- factor(df$Var2, levels = colnames(fit_list$`1`$cor_mat))
+
+hma <- ggplot(df, aes(x = Var2, y = Var1, fill = value)) +
+  geom_tile() +
+  # White for 0 and red for 1 (assuming all correlations are within [0, 1])
+  scale_fill_gradient(limits = c(0, 1), low = "white", high = "red") +
+  theme_minimal() +
+  # Optional improvements to remove extra grid lines, etc.
+  theme(panel.grid = element_blank()) +
+  labs(x = "Column", y = "Row", fill = "Corr") +
+  ggtitle("Separman Correlation log1p model")
+
+rownames(fit_list$`Inf`$cor_mat) <- paste0("k", 1:9)
+colnames(fit_list$`Inf`$cor_mat) <- paste0("k", 1:9)
+df <- melt(fit_list$`Inf`$cor_mat)
+df$Var1 <- factor(df$Var1, levels = rev(rownames(fit_list$`1`$cor_mat)))
+df$Var2 <- factor(df$Var2, levels = colnames(fit_list$`1`$cor_mat))
+
+
+hmb <- ggplot(df, aes(x = Var2, y = Var1, fill = value)) +
+  geom_tile() +
+  # White for 0 and red for 1 (assuming all correlations are within [0, 1])
+  scale_fill_gradient(limits = c(0, 1), low = "white", high = "red") +
+  theme_minimal() +
+  # Optional improvements to remove extra grid lines, etc.
+  theme(panel.grid = element_blank()) +
+  labs(x = "Column", y = "Row", fill = "Corr") +
+  ggtitle("Separman Correlation topic model")
+
+ggarrange(hma, hmb, nrow = 1, ncol = 2)

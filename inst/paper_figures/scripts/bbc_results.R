@@ -161,13 +161,7 @@ g <- ggarrange(g1,g3,g2, nrow = 1, labels = "AUTO")
 g <- annotate_figure(g,
                 top = text_grob("BBC K = 10", size = 20, face = "bold"))
 
-ggsave(
-  "../pdfs/bbc_sparsity.pdf",
-  g,
-  device = "pdf",
-  width = 11.5,
-  height = 3.7
-)
+readr::write_rds(g, "../data/bbc_sparsity_ggplot.rds")
 
 plot_list <- list()
 cc_vec <- c(1e-3)
@@ -214,15 +208,12 @@ g <- ggarrange(
   labels = "AUTO"
 )
 
-g <- annotate_figure(g,
-                     top = text_grob("BBC K = 10", size = 20, face = "bold"))
-
 ggsave(
   "../pdfs/bbc_structure.pdf",
   g,
   device = "pdf",
   width = 9,
-  height = 6
+  height = 5
 )
 
 # now, I want to look for top and distinctive words for each factor

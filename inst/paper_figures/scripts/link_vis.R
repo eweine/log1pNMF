@@ -9,7 +9,7 @@ out_list <- list()
 for (cc in c(1e-3, 1e-2, 1e-1, 1, 10, 100, 1e3)) {
   
   lambda <- seq(0, 100, 0.01)
-  b <- log1p(lambda / cc)
+  b <- max(1, cc) * log1p(lambda / cc)
   out_list[[as.character(cc)]] <- data.frame(
     lambda = lambda, 
     b = b,
@@ -35,7 +35,7 @@ g <- ggplot(data = out_df, aes(x = lambda, y = b)) +
     labeller = labeller(cc = function(x) paste("c =", x))) +
   cowplot::theme_cowplot() +
   xlab(bquote("   " ~ lambda)) +
-  ylab(bquote(log(1 + lambda / c)))
+  ylab(bquote(g[c](lambda)))
 
 ggsave(
   "/Users/eweine/Documents/passPCA/inst/paper_figures/pdfs/link_vis.pdf",
