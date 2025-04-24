@@ -9,7 +9,7 @@ m <- 400
 k <- 4
 L <- matrix(0,n,k)
 F <- matrix(0,m,k)
-shift_factor <- 1
+shift_factor <- 0.5
 for (j in 1:k) {
   i <- sample(m,40)
   F[i,j] <- abs(rnorm(40))
@@ -20,7 +20,7 @@ for (i in seq(1,n/2)) {
 }
 for (i in seq(n/2+1,n)) {
   j <- sample(k,2)
-  L[i,j] <- 0.5
+  L[i,j] <- c(0.25,0.75)
 }
 B <- tcrossprod(L,F)
 ginv <- function (x, s = 1)
