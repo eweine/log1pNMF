@@ -9,7 +9,7 @@ m <- 400
 k <- 4
 L <- matrix(0,n,k)
 F <- matrix(0,m,k)
-shift_factor <- 2
+shift_factor_true <- 2
 for (j in 1:k) {
   i <- sample(m,100)
   F[i,j] <- abs(rnorm(100))
@@ -30,7 +30,7 @@ F[i,1] <- abs(10*rnorm(40))
 B <- tcrossprod(L,F)
 ginv <- function (x, s = 1)
   s * exp(x/max(1,s) - 1)
-X <- rpois(n*m,ginv(B,s = shift_factor))
+X <- rpois(n*m,ginv(B,s = shift_factor_true))
 X <- matrix(X,n,m)
 storage.mode(X) <- "double"
 
@@ -99,22 +99,20 @@ for (shift_factor in shift_factors) {
 
 # Plot shift factor vs. MSE for L.
 par(mfcol = c(1,3))
+i <- which.min(abs(shift_factor_true - shift_factors))
 plot(shift_factors,L_mse,pch = 20,log = "x",col = "tomato",
      xlab = "shift factor",ylab = "MSE(L)")
 lines(shift_factors,L_mse,col = "tomato")
-i <- which.min(L_mse)
 points(shift_factors[i],L_mse[i],pch = 1,cex = 1.2,col = "black")
 
 # Plot shift factor vs. MSE for F.
 plot(shift_factors,F_mse,col = "royalblue",pch = 20,log = "x",
      xlab = "shift factor",ylab = "MSE(F)")
 lines(shift_factors,F_mse,col = "royalblue")
-i <- which.min(F_mse)
 points(shift_factors[i],F_mse[i],pch = 1,cex = 1.2,col = "black")
 
 # Plot shift factor vs. log-likelihood.
-plot(shift_factors,loglik,pch = 20,log = "x",col = "limegreen",
+plot(shift_factors,loglik,pch = 20,log = "x",col = "dodgerblue",
      xlab = "shift factor")
-lines(shift_factors,loglik,col = "limegreen")
-i <- which.max(loglik)
+lines(shift_factors,loglik,col = "dodgerblue")
 points(shift_factors[i],loglik[i],pch = 1,cex = 1.2,col = "black")
