@@ -98,11 +98,11 @@ for (shift_factor in shift_factors) {
 }
 
 # Plot shift factor vs. MSE for L.
-par(mfrow = c(2,2))
+par(mfrow = c(2,3))
 i <- which.min(abs(shift_factor_true - shift_factors))
-plot(shift_factors,L_mse,pch = 20,log = "x",col = "tomato",
+plot(shift_factors,L_mse,pch = 20,log = "x",col = "darkorchid",
      xlab = "shift factor",ylab = "MSE(L)")
-lines(shift_factors,L_mse,col = "tomato")
+lines(shift_factors,L_mse,col = "darkorchid")
 points(shift_factors[i],L_mse[i],pch = 1,cex = 1.2,col = "black")
 
 # Plot shift factor vs. MSE for F.
@@ -122,9 +122,16 @@ hoyer <- function (x) {
   n <- length(x)
   return((sqrt(n) - sum(abs(x))/sqrt(sum(x^2)))/(sqrt(n - 1)))
 }
-sparsity <- sapply(fits,function (x) median(apply(x$FF,2,hoyer)))
-plot(shift_factors,sparsity,pch = 20,log = "x",col = "darkorange",
-     xlab = "shift factor")
-lines(shift_factors,sparsity,col = "darkorange")
-points(shift_factors[i],sparsity[i],pch = 1,cex = 1.2,col = "black")
+sparsity_F <- sapply(fits,function (x) median(apply(x$FF,2,hoyer)))
+plot(shift_factors,sparsity_F,pch = 20,log = "x",col = "darkorange",
+     xlab = "shift factor",ylab = "sparsity in F")
+lines(shift_factors,sparsity_F,col = "darkorange")
+points(shift_factors[i],sparsity_F[i],pch = 1,cex = 1.2,col = "black")
+
+# Plot the sparsity of L.
+sparsity_L <- sapply(fits,function (x) median(apply(x$LL,2,hoyer)))
+plot(shift_factors,sparsity_L,pch = 20,log = "x",col = "tomato",
+     xlab = "shift factor",ylab = "sparsity in L")
+lines(shift_factors,sparsity_L,col = "tomato")
+points(shift_factors[i],sparsity_L[i],pch = 1,cex = 1.2,col = "black")
 
