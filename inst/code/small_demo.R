@@ -4,7 +4,7 @@ set.seed(1)
 
 # Simulate a data set from a Poisson NMF model with the shifted log
 # link.
-n <- 100
+n <- 200
 m <- 400
 k <- 4
 L <- matrix(0,n,k)
@@ -14,9 +14,13 @@ for (j in 1:k) {
   i <- sample(m,40)
   F[i,j] <- abs(rnorm(40))
 }
-for (i in 1:n) {
+for (i in seq(1,n/2)) {
   j <- sample(k,1)
   L[i,j] <- 1
+}
+for (i in seq(n/2+1,n)) {
+  j <- sample(k,2)
+  L[i,j] <- 0.5
 }
 B <- tcrossprod(L,F)
 ginv <- function (x, s = 1)
@@ -33,7 +37,7 @@ fit <- fit_poisson_log1p_nmf(X,k,s = rep(1,n),cc = shift_factor,
 # Compare the estimates to the truth.
 L_est <- fit$LL
 F_est <- fit$FF
-kset <- apply(cor(L,L_est),2,which.max)
+kset <- apply(cor(L_est,L),2,which.max)
 L_est <- L_est[,kset]
 F_est <- F_est[,kset]
 s     <- apply(L_est,2,max)
@@ -41,5 +45,5 @@ L_est <- L_est %*% diag(1/s)
 F_est <- F_est %*% diag(s)
 print(cor(L,L_est))
 print(cor(F,F_est))
-plot(F[,kset],fit$FF,pch = 20,xlab = "truth",ylab = "estimate")
+plot(F,F_est,pch = 20,xlab = "truth",ylab = "estimate")
 abline(a = 0,b = 1,col = "magenta",lty = "dotted")
