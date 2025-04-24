@@ -131,7 +131,7 @@ test_that("exact produces better fits than approximate", {
     )
   )
 
-  testthat::expect_gt(ll_exact, ll_approx)
+  expect_gt(ll_exact, ll_approx)
 
 })
 
@@ -193,7 +193,7 @@ test_that("true value of c improves fit", {
     )
   )
 
-  testthat::expect_gt(ll_exact, ll_misspec)
+  expect_gt(ll_exact, ll_misspec)
   expect_true(all(fit_misspec$LL>=0))
   expect_true(all(fit_misspec$FF>=0))
   expect_true(all(fit_exact$LL>=0))
@@ -245,7 +245,7 @@ test_that("providing custom initializations works", {
   expect_true(all(fit$FF>=0))
   expect_true(all(fit2$LL>=0))
   expect_true(all(fit2$FF>=0))
-  testthat::expect_gt(ll_final, ll_init)
+  expect_gt(ll_final, ll_init)
 
 })
 
