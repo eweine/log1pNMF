@@ -80,7 +80,11 @@ for (shift_factor in shift_factors) {
   F_mse[as.character(shift_factor)] <- mean((F_est - F)^2)
 }
 plot(shift_factors,L_mse,pch = 20,log = "x",col = "tomato",
-     xlab = "shift factor",ylab = "MSE",ylim = range(c(L_mse,F_mse)))
+     xlab = "shift factor",ylab = "MSE",ylim = c(0,0.3))
 lines(shift_factors,L_mse,col = "tomato")
+i <- which.min(L_mse)
+points(shift_factors[i],L_mse[i],pch = 1,cex = 1.2,col = "black")
 points(shift_factors,F_mse,col = "royalblue",pch = 20)
 lines(shift_factors,F_mse,col = "royalblue")
+i <- which.min(F_mse)
+points(shift_factors[i],F_mse[i],pch = 1,cex = 1.2,col = "black")
