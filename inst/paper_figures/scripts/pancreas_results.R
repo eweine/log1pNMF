@@ -5,26 +5,13 @@ library(cowplot)
 library(dplyr)
 library(ggpubr)
 library(passPCA)
+library(lsa)
 
 load("../data/experiment_results.Rdata")
 
 set.seed(1)
 
 K <- 9
-
-jaccard_index <- function(vec1, vec2) {
-  
-  set1 <- unique(vec1)
-  
-  set2 <- unique(vec2)
-  
-  intersection <- length(intersect(set1, set2))
-  
-  union <- length(union(set1, set2))
-  
-  return(intersection / union)
-  
-}
 
 set.seed(1)
 
@@ -51,6 +38,37 @@ hoyer_sparsity <- function(x) {
   
 }
 
+orthogonality_defect <- function(M) {
+  # check inputs
+  if (!is.matrix(M) || !is.numeric(M)) {
+    stop("M must be a numeric matrix")
+  }
+  K <- ncol(M)
+  if (K < 1) {
+    stop("M must have at least one column")
+  }
+  
+  # compute Gram matrix G = M^T M
+  G <- crossprod(M)  # equivalent to t(M) %*% M, but faster
+  
+  # determinant (in log‐space) for stability
+  detG <- determinant(G, logarithm = TRUE)
+  if (detG$sign <= 0) {
+    warning("Gram matrix is singular or not positive definite; returning Inf")
+    return(Inf)
+  }
+  
+  # compute product of column norms in log‐space
+  log_norms <- 0.5 * log(diag(G))  # ½ log(‖col_i‖²) = log(‖col_i‖)
+  log_prod  <- sum(log_norms)
+  log_detG  <- detG$modulus         # log(det G)
+  
+  # orthogonality defect δ = (∏‖m_i‖) / sqrt(det G)
+  delta <- exp(log_prod - 0.5 * log_detG)
+  return(as.numeric(delta))
+}
+
+
 fit_list <- list()
 cc_vec <- c(1e-3, 1e-2, 1e-1, 1, 1e1, 1e2, 1e3)
 
@@ -62,29 +80,7 @@ for (cc in cc_vec) {
   colnames(fit_list[[as.character(cc)]]$LL) <- paste0("k", 1:K)
   
   F_norm <- passPCA:::normalize_bars(fit_list[[as.character(cc)]]$FF)
-  top_list <- list()
-  distinct_list <- list()
-  jaccard_vec <- c()
-  
-  for (k in 1:K) {
-    
-    top_list[[k]] <- names(sort(F_norm[,k], decreasing = TRUE))[1:n_top]
-    distinct_list[[k]] <- fastTopics:::get_distinctive_features(
-      effects_matrix = F_norm,
-      k = glue::glue("k{k}"), n = n_top, feature_sign = "positive"
-    )
-    
-    jaccard_vec <- c(jaccard_vec, jaccard_index(
-      top_list[[k]],
-      distinct_list[[k]]
-    ))
-    
-  }
-  
-  fit_list[[as.character(cc)]]$top_genes <- top_list
-  fit_list[[as.character(cc)]]$distinct_genes <- distinct_list
-  fit_list[[as.character(cc)]]$jaccard <- jaccard_vec
-  
+
   fit_list[[as.character(cc)]]$l_sparsity <- apply(
     fit_list[[as.character(cc)]]$LL, 2, hoyer_sparsity
   )
@@ -93,7 +89,8 @@ for (cc in cc_vec) {
     fit_list[[as.character(cc)]]$FF, 2, hoyer_sparsity
   )
   
-  fit_list[[as.character(cc)]]$cor_mat <- cor(fit_list[[as.character(cc)]]$FF, method = "spearman")
+  fit_list[[as.character(cc)]]$cosine_mat <- cosine(fit_list[[as.character(cc)]]$FF)
+  fit_list[[as.character(cc)]]$od <- orthogonality_defect(fit_list[[as.character(cc)]]$FF)
   
 }
 
@@ -103,28 +100,6 @@ fit_list[["Inf"]]$Ls <- Matrix::Diagonal(x = 1/s) %*% fit_list[["Inf"]]$L
 
 F_norm <- passPCA:::normalize_bars(fit_list[["Inf"]]$F)
 colnames(F_norm) <- paste0("k",1:K)
-top_list <- list()
-distinct_list <- list()
-jaccard_vec <- c()
-
-for (k in 1:K) {
-  
-  top_list[[k]] <- names(sort(F_norm[,k], decreasing = TRUE))[1:n_top]
-  distinct_list[[k]] <- fastTopics:::get_distinctive_features(
-    effects_matrix = F_norm,
-    k = glue::glue("k{k}"), n = n_top, feature_sign = "positive"
-  )
-  
-  jaccard_vec <- c(jaccard_vec, jaccard_index(
-    top_list[[k]],
-    distinct_list[[k]]
-  ))
-  
-}
-
-fit_list[["Inf"]]$top_genes <- top_list
-fit_list[["Inf"]]$distinct_genes <- distinct_list
-fit_list[["Inf"]]$jaccard <- jaccard_vec
 
 fit_list[["Inf"]]$l_sparsity <- apply(
   fit_list[["Inf"]]$Ls, 2, hoyer_sparsity
@@ -134,16 +109,13 @@ fit_list[["Inf"]]$f_sparsity <- apply(
   fit_list[["Inf"]]$F, 2, hoyer_sparsity
 )
 
-fit_list[["Inf"]]$cor_mat <- cor(fit_list[["Inf"]]$F, method = "spearman")
+fit_list[["Inf"]]$cosine_mat <- cosine(fit_list[["Inf"]]$F)
 
+od_vec <- unlist(lapply(fit_list, function(x) {median(x$od)}))
 l_sparsity_vec <- unlist(lapply(fit_list, function(x) {median(x$l_sparsity)}))
 f_sparsity_vec <- unlist(lapply(fit_list, function(x) {median(x$f_sparsity)}))
-cor_vec <- unlist(
-  lapply(fit_list, function(x) {median(x$cor_mat[lower.tri(x$cor_mat)])})
-)
-
-jaccard_vec <- unlist(
-  lapply(fit_list, function(x) {median(x$jaccard)})
+cosine_vec <- unlist(
+  lapply(fit_list, function(x) {median(x$cosine_mat[lower.tri(x$cosine_mat)])})
 )
 
 df_sparsity_l <- data.frame(
@@ -156,14 +128,14 @@ df_sparsity_f <- data.frame(
   sparsity = f_sparsity_vec
 ) %>% filter(is.finite(cc))
 
-df_cor <- data.frame(
-  cc = as.numeric(names(cor_vec)),
-  correlation = cor_vec
+df_cos <- data.frame(
+  cc = as.numeric(names(cosine_vec)),
+  cosine = cosine_vec
 ) %>% filter(is.finite(cc))
 
 library(ggplot2)
 
-g1 <- ggplot(data = df_cor, aes(x = cc, y = correlation)) +
+g1 <- ggplot(data = df_cos, aes(x = cc, y = cosine)) +
   geom_point() +
   geom_line() +
   cowplot::theme_cowplot() +
@@ -171,9 +143,9 @@ g1 <- ggplot(data = df_cor, aes(x = cc, y = correlation)) +
   scale_x_continuous(breaks = c(1e-3, 1, 1e3), transform = "log10") +
   xlab("c (log10 scale)") +
   ylab("Median Factor Correlation") +
-  geom_hline(yintercept = cor_vec["Inf"], color = "red", linetype = "dashed") +
+  geom_hline(yintercept = cosine_vec["Inf"], color = "red", linetype = "dashed") +
   ggplot2::annotate(
-    geom="text", x=0.004, y=cor_vec["Inf"] + 0.05, label="ID Link", color="red"
+    geom="text", x=0.004, y=cosine_vec["Inf"] + 0.05, label="ID Link", color="red"
   )
 
 g2 <- ggplot(data = df_sparsity_l, aes(x = cc, y = sparsity)) +
