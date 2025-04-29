@@ -11,6 +11,24 @@ Rcpp::Rostream<true>&  Rcpp::Rcout = Rcpp::Rcpp_cout_get();
 Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
+// get_loglik_exact
+double get_loglik_exact(const arma::mat& U_T, const arma::mat& V_T, const std::vector<int>& y_nz_vals, const std::vector<int>& y_nz_rows_idx, const std::vector<int>& y_nz_cols_idx, const arma::vec& s, const int n, const int p);
+RcppExport SEXP _passPCA_get_loglik_exact(SEXP U_TSEXP, SEXP V_TSEXP, SEXP y_nz_valsSEXP, SEXP y_nz_rows_idxSEXP, SEXP y_nz_cols_idxSEXP, SEXP sSEXP, SEXP nSEXP, SEXP pSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::mat& >::type U_T(U_TSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type V_T(V_TSEXP);
+    Rcpp::traits::input_parameter< const std::vector<int>& >::type y_nz_vals(y_nz_valsSEXP);
+    Rcpp::traits::input_parameter< const std::vector<int>& >::type y_nz_rows_idx(y_nz_rows_idxSEXP);
+    Rcpp::traits::input_parameter< const std::vector<int>& >::type y_nz_cols_idx(y_nz_cols_idxSEXP);
+    Rcpp::traits::input_parameter< const arma::vec& >::type s(sSEXP);
+    Rcpp::traits::input_parameter< const int >::type n(nSEXP);
+    Rcpp::traits::input_parameter< const int >::type p(pSEXP);
+    rcpp_result_gen = Rcpp::wrap(get_loglik_exact(U_T, V_T, y_nz_vals, y_nz_rows_idx, y_nz_cols_idx, s, n, p));
+    return rcpp_result_gen;
+END_RCPP
+}
 // openmp_available
 bool openmp_available();
 RcppExport SEXP _passPCA_openmp_available() {
@@ -81,6 +99,7 @@ END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
+    {"_passPCA_get_loglik_exact", (DL_FUNC) &_passPCA_get_loglik_exact, 8},
     {"_passPCA_openmp_available", (DL_FUNC) &_passPCA_openmp_available, 0},
     {"_passPCA_fit_factor_model_log1p_exact_cpp_src", (DL_FUNC) &_passPCA_fit_factor_model_log1p_exact_cpp_src, 18},
     {"_passPCA_fit_factor_model_log1p_quad_approx_sparse_cpp_src", (DL_FUNC) &_passPCA_fit_factor_model_log1p_quad_approx_sparse_cpp_src, 20},

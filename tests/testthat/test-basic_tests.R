@@ -268,3 +268,26 @@ test_that("providing custom size factors works", {
   expect_true(all(fit$FF>=0))
 
 })
+
+test_that("logLik is correct", {
+  
+  set.seed(1)
+  dat <- generate_log1p_pois_data(n = 500, p = 250, K = 4)
+  fit <- fit_poisson_log1p_nmf(
+    Y = dat$Y,
+    K = 4,
+    init_method = "random",
+    control = list(verbose = FALSE)
+  )
+  
+  ll_method <- logLik(fit, dat$Y)
+  ll_brute <- sum(
+    dpois(
+      as.vector(as.matrix(dat$Y)), fitted(fit), log = TRUE
+    )
+  )
+  
+  expect_equal(ll_method, ll_brute)
+  
+})
+

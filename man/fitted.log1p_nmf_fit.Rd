@@ -11,7 +11,7 @@
 typically the result of calling \code{\link{fit_poisson_log1p_nmf}}.}
 
 \item{\dots}{Additional arguments passed to the generic
-\code{fitted} method.}
+\code{fitted} method (that will not do anything).}
 }
 \value{
 An n x p matrix of fitted means. Calculated as
