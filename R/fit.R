@@ -511,6 +511,8 @@ fit_poisson_log1p_nmf <- function(
 
 #' @rdname fit_poisson_log1p_nmf
 #'
+#' @importFrom parallel detectCores
+#'
 #' @export
 #'
 fit_poisson_log1p_nmf_control_default <- function() {
