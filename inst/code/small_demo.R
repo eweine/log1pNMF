@@ -37,7 +37,7 @@ storage.mode(X) <- "double"
 # Function to compute the log-likelihood for a given Poisson log1p NMF
 # model.
 compute_loglik <- function (fit, X) {
-  return(sum(dpois(X,fitted(fit)),log = TRUE))
+  return(sum(dpois(X,fitted(fit),log = TRUE)))
 }
 
 # Fit a Poisson NMF model with the shifted log link.
@@ -93,8 +93,8 @@ for (shift_factor in shift_factors) {
   s     <- apply(L_est,2,max)
   L_est <- L_est %*% diag(1/s)
   F_est <- F_est %*% diag(s)
-  # L_cor[as.character(shift_factor)] <- mean((L_est - L)^2)
-  # F_cor[as.character(shift_factor)] <- mean((F_est - F)^2)
+  # L_mse[as.character(shift_factor)] <- mean((L_est - L)^2)
+  # F_mse[as.character(shift_factor)] <- mean((F_est - F)^2)
   L_cor[as.character(shift_factor)] <- mean(diag(cor(L_est,L)))
   F_cor[as.character(shift_factor)] <- mean(diag(cor(F_est,F)))
 }
