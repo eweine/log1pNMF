@@ -25,7 +25,7 @@ fitted.log1p_nmf_fit <- function (object, ...) {
 
   }
 
-  Lambda <- object$cc * (exp(tcrossprod(object$LL, object$FF)) - 1)
+  Lambda <- object$cc * (exp(tcrossprod(object$LL, object$FF) / object$alpha) - 1)
   return(Lambda)
 
 }

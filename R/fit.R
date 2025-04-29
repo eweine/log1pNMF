@@ -5,13 +5,13 @@
 #'
 #' @details Here, we fit the model
 #' \deqn{y_{ij} \sim \textrm{Poisson}(s_{i}\lambda_{ij})}
-#' \deqn{\log(1 + \lambda_{ij} / c) = \sum_{k = 1}^{K} \ell_{ik}f_{jk},} where
-#' \eqn{Y} is an \eqn{n \times p} matrix of non-negative counts, \eqn{L} is a
+#' \deqn{\alpha \times \log(1 + \lambda_{ij} / c) = \sum_{k = 1}^{K} \ell_{ik}f_{jk},}
+#' where \eqn{Y} is an \eqn{n \times p} matrix of non-negative counts, \eqn{L} is a
 #' non-negative \eqn{n \times K} matrix of "loadings," \eqn{F} is a
 #' non-negative \eqn{p \times K} matrix of "factors," \eqn{s_{i}} is a
 #' "size-factor" controlling for the total size of the \eqn{i^{\textrm{th}}}
-#' row of \eqn{Y}, and \eqn{c} is a tuning parameter controlling the shape of
-#' the link function.
+#' row of \eqn{Y}, \eqn{c} is a tuning parameter controlling the shape of
+#' the link function, and \eqn{\alpha} is a scaling constant defined as \eqn{max(1, c)}.
 #'
 #' Exact optimization of the log-likelihood of this function can be slow, owing
 #' mostly to the fact that \eqn{\exp(\sum_{k = 1}^{K} \ell_{ik}f_{jk})} must be
@@ -499,6 +499,17 @@ fit_poisson_log1p_nmf <- function(
     maxiter = fit$control$maxiter
   )
 
+  # alpha scaling
+  sqrt_alpha <- sqrt(max(1, cc))
+  if (sqrt_alpha > 1) {
+    
+    fit$LL <- fit$LL * sqrt_alpha
+    fit$FF <- fit$FF * sqrt_alpha
+    
+  }
+  
+  fit$alpha <- sqrt_alpha ^ 2
+  
   rownames(fit$LL) <- rownames(Y)
   rownames(fit$FF) <- colnames(Y)
   colnames(fit$LL) <- paste0("k_", 1:ncol(fit$LL))
