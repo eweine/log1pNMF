@@ -43,10 +43,6 @@ Y <- matrix(
 Y <- as(Y, "CsparseMatrix")
 library(passPCA)
 
-compute_loglik <- function (fit, X) {
-  return(sum(dpois(X,fitted(fit),log = TRUE)))
-}
-
 compute_condition_number <- function (x) {
   e <- eigen(cor(x))$values
   n <- length(e)
@@ -78,10 +74,11 @@ for (i in seq_along(ccs)) {
     cc          = cc_val,
     loglik      = "exact",
     init_method = "random",
-    control     = list(maxiter = 1000)
+    control     = list(maxiter = 1000),
+    s = FALSE
   )
   
-  results$loglik[i] <- compute_loglik(fit, as.matrix(Y))
+  results$loglik[i] <- logLik(fit, Y)
   
   Lmat <- fit$LL
   Fmat <- fit$FF
