@@ -86,7 +86,9 @@ list with the following components
   \item{control}{Control parameters used in optimization.}
   \item{converged}{Boolean indicating if numerical convergence was reached.}
   \item{objective_trace}{Vector with the value of the objective function at
-  each iteration.}
+  each iteration. This is the log-likelihood (or approximate log-likelihood)
+  of the data \eqn{Y} under the shifted log link model excluding constants 
+  with respect to \eqn{L} and \eqn{F}.}
   \item{approx_technique}{Approximating technique used in optimization
   (if at all).}
   \item{loglik}{Character indicating which objective was optimized.}
