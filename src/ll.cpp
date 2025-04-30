@@ -121,6 +121,7 @@ double get_loglik_quad_approx_sparse(
 }
 
 
+// [[Rcpp::export]]
 double get_loglik_exact(
     const arma::mat& U_T,
     const arma::mat& V_T,
