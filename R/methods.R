@@ -67,20 +67,20 @@ logLik.log1p_nmf_fit <- function (object, Y, ...) {
   sqrt_alpha <- sqrt(max(1, object$cc))
   s <- object$s * object$cc
   
-  U <- cbind(log(s), object$LL)
-  V <- cbind(rep(1, p), object$FF)
+  U <- cbind(log(s), (1 / sqrt_alpha) * object$LL)
+  V <- cbind(rep(1, p), (1 / sqrt_alpha) * object$FF)
 
   sc <- Matrix::summary(Y)
   ll <- get_loglik_exact(
-    sqrt_alpha * t(U),
-    sqrt_alpha * t(V),
+    t(U),
+    t(V),
     sc$x,
     sc$i - 1,
     sc$j - 1,
     s,
     n,
     p
-  ) + sum(s) - sum(lfactorial(Y@x))
+  ) + n*p*object$cc - sum(lfactorial(Y@x))
   
   return(ll)
   

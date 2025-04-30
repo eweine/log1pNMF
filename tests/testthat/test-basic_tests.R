@@ -283,7 +283,7 @@ test_that("logLik is correct", {
   ll_method <- logLik(fit, dat$Y)
   ll_brute <- sum(
     dpois(
-      as.vector(as.matrix(dat$Y)), fitted(fit), log = TRUE
+      as.vector(as.matrix(dat$Y)), diag(fit$s) %*% fitted(fit), log = TRUE
     )
   )
   
