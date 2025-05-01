@@ -2,7 +2,7 @@
 % Please edit documentation in R/methods.R
 \name{fitted.log1p_nmf_fit}
 \alias{fitted.log1p_nmf_fit}
-\title{Get Fitted Values (i.e. values of \eqn{\lambda}) for log1p NMF Model}
+\title{Get Fitted Values for log1p NMF Model}
 \usage{
 \method{fitted}{log1p_nmf_fit}(object, ...)
 }
@@ -14,10 +14,10 @@ typically the result of calling \code{\link{fit_poisson_log1p_nmf}}.}
 \code{fitted} method (that will not do anything).}
 }
 \value{
-An n x p matrix of fitted means. Calculated as
-  \deqn{\exp(LF')} using the \code{fit} object.
+An n x p matrix of fitted means.
 }
 \description{
 \code{fitted} method for the
-  \dQuote{log1p_nmf} class.
+  \code{log1p_nmf} class. Computes a matrix of values where entry i, j is
+\eqn{s_{i}\lambda_{ij}}.
 }

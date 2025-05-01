@@ -1,9 +1,10 @@
 #' @rdname fitted.log1p_nmf_fit
 #'
-#' @title Get Fitted Values (i.e. values of \eqn{\lambda}) for log1p NMF Model
+#' @title Get Fitted Values for log1p NMF Model
 #'
 #' @description \code{fitted} method for the
-#'   \dQuote{log1p_nmf} class.
+#'   \code{log1p_nmf} class. Computes a matrix of values where entry i, j is
+#' \eqn{s_{i}\lambda_{ij}}.
 #'
 #' @param object An object of class \dQuote{log1p_nmf_fit},
 #'   typically the result of calling \code{\link{fit_poisson_log1p_nmf}}.
@@ -11,8 +12,7 @@
 #' @param \dots Additional arguments passed to the generic
 #'   \code{fitted} method (that will not do anything).
 #'
-#' @return An n x p matrix of fitted means. Calculated as
-#'   \deqn{\exp(LF')} using the \code{fit} object.
+#' @return An n x p matrix of fitted means. 
 #'
 #' @method fitted log1p_nmf_fit
 #'
@@ -26,7 +26,8 @@ fitted.log1p_nmf_fit <- function (object, ...) {
   }
 
   Lambda <- object$cc * (exp(tcrossprod(object$LL, object$FF) / object$alpha) - 1)
-  return(Lambda)
+  fitted_vals <- object$s * Lambda
+  return(fitted_vals)
 
 }
 
