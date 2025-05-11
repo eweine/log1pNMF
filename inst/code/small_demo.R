@@ -33,6 +33,9 @@ ginv <- function (x, s = 1)
 X <- rpois(n*m,ginv(B,s = shift_factor_true))
 X <- matrix(X,n,m)
 storage.mode(X) <- "double"
+ll_true <- sum(
+  dpois(as.vector(X), as.vector(ginv(B,s = shift_factor_true)), log = TRUE)
+)
 
 # Function to compute the log-likelihood for a given Poisson log1p NMF
 # model.
@@ -44,7 +47,7 @@ compute_loglik <- function (fit, X) {
 k   <- k + 1
 fit <- fit_poisson_log1p_nmf(X,k,s = rep(1,n),cc = shift_factor_true,
                              init_LL = L,init_FF = F,loglik = "exact",
-                             control = list(maxiter = 500,threads = 1))
+                             control = list(maxiter = 1000,threads = 7))
 
 # Compare the estimates to the truth.
 L_est <- fit$LL
@@ -62,7 +65,7 @@ print(cor(F,F_est))
 
 # Now fit a Poisson NMF model with the shifted log like for different
 # values of the shift factor.
-shift_factors <- round(10^seq(-1.3,1,length.out = 20),digits = 4)
+shift_factors <- sort(c(round(10^seq(-1.3,1,length.out = 20),digits = 4), 2))
 fits   <- vector("list",length(shift_factors))
 loglik <- rep(0,length(shift_factors))
 L_cor  <- rep(0,length(shift_factors))
@@ -77,7 +80,7 @@ for (shift_factor in shift_factors) {
   # Fit the model.
   fit <- fit_poisson_log1p_nmf(X,k,s = rep(1,n),cc = shift_factor,
                                init_LL = L,init_FF = F,loglik = "exact",
-                               control = list(maxiter = 200,threads = 1,
+                               control = list(maxiter = 1000,threads = 7,
                                               verbose = FALSE))
   fits[[as.character(shift_factor)]] <- fit
 
@@ -118,6 +121,32 @@ plot(shift_factors,loglik,pch = 20,log = "x",col = "dodgerblue",
      xlab = "shift factor")
 lines(shift_factors,loglik,col = "dodgerblue")
 points(shift_factors[i],loglik[i],pch = 1,cex = 1.2,col = "black")
+
+
+df_plot <- data.frame(
+  x = shift_factors, y = loglik
+)
+
+library(ggplot2)
+
+ggplot(data = df_plot, aes(x = x, y = y)) +
+  geom_point(color = "dodgerblue") +
+  geom_line(color = "dodgerblue") +
+  geom_hline(yintercept = ll_true, linetype = "dashed", color = "red") +
+  scale_x_log10() +
+  ylab("Log Likelihood") +
+  xlab("c") +
+  cowplot::theme_cowplot() +
+  geom_point(
+    data   = subset(df_plot, x == 2),
+    shape  = 21,         # circle with border + fill
+    colour = "black",    # border color
+    fill   = NA,         # no fill
+    size   = 2,          # adjust outer diameter
+    stroke = 1.5         # adjust border thickness
+  )
+  
+
 
 # Plot the condition number of F.
 compute_condition_number <- function (x) {
