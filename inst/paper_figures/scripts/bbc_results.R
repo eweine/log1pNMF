@@ -95,7 +95,7 @@ fit_list[["Inf"]]$cor_mat <- cor(fit_list[["Inf"]]$F, method = "spearman")
 l_sparsity_vec <- unlist(lapply(fit_list, function(x) {median(x$l_sparsity)}))
 f_sparsity_vec <- unlist(lapply(fit_list, function(x) {median(x$f_sparsity)}))
 cor_vec <- unlist(
-  lapply(fit_list, function(x) {median(x$cor_mat[lower.tri(x$cor_mat)])})
+  lapply(fit_list, function(x) {median(abs(x$cor_mat[lower.tri(x$cor_mat)]))})
 )
 
 df_sparsity_l <- data.frame(
@@ -123,7 +123,7 @@ g1 <- ggplot(data = df_cor, aes(x = cc, y = correlation)) +
   scale_y_continuous(limits = c(0, 1), expand = c(0, 0)) +
   scale_x_continuous(breaks = c(1e-3, 1, 1e3), transform = "log10") +
   xlab("c (log10 scale)") +
-  ylab("Median Factor Correlation") +
+  ylab("Median Abs. Factor Correlation") +
   geom_hline(yintercept = cor_vec["Inf"], color = "red", linetype = "dashed") +
   ggplot2::annotate(
     geom="text", x=0.004, y=cor_vec["Inf"] + 0.05, label="ID Link", color="red"
@@ -163,6 +163,16 @@ g <- annotate_figure(g,
 
 readr::write_rds(g, "../data/bbc_sparsity_ggplot.rds")
 
+g <- ggarrange(g1,g3,g2, nrow = 1, labels = c("A", "B", "C"))
+
+ggplot2::ggsave(
+  "../pdfs/bbc_sparsity.pdf",
+  g,
+  device = "pdf",
+  width = 11.5,
+  height = 4
+)
+
 plot_list <- list()
 cc_vec <- c(1e-3)
 
@@ -190,7 +200,12 @@ sp <- normalized_structure_plot(
   topics = topic_order
 )
 plot_list[[glue::glue("c = 0.001")]] <- sp$plot + 
-  ggtitle(glue::glue("Loadings of log1p Link Poisson NMF With c = 0.001"))
+  ggtitle(glue::glue("Loadings of log1p Link Poisson NMF With c = 0.001")) +
+  theme(
+    plot.title = element_text(size = 12),
+    axis.title.y = element_text(size = 12),
+    axis.text.x = element_text(size = 12)
+  )
 
 tm_sp <- structure_plot(
   fit_list[["Inf"]],
@@ -199,7 +214,12 @@ tm_sp <- structure_plot(
 )
 
 plot_list[["Topic Model"]] <- tm_sp$plot + 
-  ggtitle("Loadings of Identity Link Poisson NMF / Topic Model")
+  ggtitle("Loadings of Identity Link Poisson NMF / Topic Model") +
+  theme(
+    plot.title = element_text(size = 12),
+    axis.title.y = element_text(size = 12),
+    axis.text.x = element_text(size = 12)
+  )
 
 
 g <- ggarrange(
@@ -209,11 +229,11 @@ g <- ggarrange(
 )
 
 ggsave(
-  "../pdfs/bbc_structure.pdf",
+  "../pdfs/bbc_structure.png",
   g,
-  device = "pdf",
-  width = 9,
-  height = 5
+  device = "png",
+  width = 11,
+  height = 6
 )
 
 # now, I want to look for top and distinctive words for each factor

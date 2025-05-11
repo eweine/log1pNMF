@@ -49,6 +49,12 @@ compute_condition_number <- function (x) {
   return(e[1]/e[n])
 }
 
+compute_med_cor <- function(x) {
+  
+  median(abs(cor(x, method = "spearman")[lower.tri(diag(ncol(x)))]))
+  
+}
+
 hoyer <- function (x) {
   n <- length(x)
   return((sqrt(n) - sum(abs(x))/sqrt(sum(x^2)))/(sqrt(n - 1)))
@@ -62,7 +68,8 @@ results <- data.frame(
   loglik    = NA_real_,
   cond_num  = NA_real_,
   hoyerL     = NA_real_,
-  hoyerF = NA_real_
+  hoyerF = NA_real_,
+  med_cor = NA_real_
 )
 
 for (i in seq_along(ccs)) {
@@ -84,6 +91,7 @@ for (i in seq_along(ccs)) {
   Fmat <- fit$FF
   
   results$cond_num[i] <- compute_condition_number(Fmat)
+  results$med_cor[i] <- compute_med_cor(Fmat)
   
   hoyersL <- apply(Lmat, 2, hoyer)
   hoyersF <- apply(Fmat, 2, hoyer)
