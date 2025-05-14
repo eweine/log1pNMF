@@ -356,14 +356,19 @@ g_log1p_high <- annotation_heatmap(
 )
 rownames(fit_list[["0.1"]]$LL) <- rownames(counts)
 
+si_islet <- sample_info %>%
+  dplyr::filter(celltype %in% c("alpha", "beta", "delta", "gamma"))
+
 topic_order <- rev(paste0(
   "k",
   c(1, 2, 4, 9, 5, 7, 3, 8, 6)
 ))
 
+fit_list[[as.character(1)]]$LL <- fit_list[[as.character(1)]]$LL[si_islet$id, ]
+
 log1p_sp <- normalized_structure_plot(
   fit_list[[as.character(1)]],
-  grouping = celltype,gap = 35,perplexity = 70,n = Inf, font.size = 12,
+  grouping = paste(si_islet$celltype, substr(si_islet$id, 1, 3)),gap = 35,perplexity = 70,n = Inf, font.size = 12,
   topics = topic_order
 ) 
 
