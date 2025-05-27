@@ -173,7 +173,10 @@ g1 <- ggplot(data = df_cor, aes(x = cc, y = correlation)) +
   ylab("Median Abs. Factor Correlation") +
   geom_hline(yintercept = cor_vec["Inf"], color = "red", linetype = "dashed") +
   ggplot2::annotate(
-    geom="text", x=0.004, y=cor_vec["Inf"] + 0.05, label="ID Link", color="red"
+    geom="text", x=0.004, y=cor_vec["Inf"] + 0.05, label="ID Link", color="red",
+    size = 5
+  )  + theme(
+    axis.title = element_text(size = 14, face = "bold")
   )
 
 g2 <- ggplot(data = df_sparsity_l, aes(x = cc, y = sparsity)) +
@@ -186,7 +189,10 @@ g2 <- ggplot(data = df_sparsity_l, aes(x = cc, y = sparsity)) +
   ylab("Median Loading Sparsity") +
   geom_hline(yintercept = l_sparsity_vec["Inf"], color = "red", linetype = "dashed") +
   ggplot2::annotate(
-    geom="text", x=0.004, y=l_sparsity_vec["Inf"] + 0.05, label="ID Link", color="red"
+    geom="text", x=0.004, y=l_sparsity_vec["Inf"] + 0.05, label="ID Link", color="red",
+    size = 5
+  )  + theme(
+    axis.title = element_text(size = 14, face = "bold")
   )
 
 g3 <- ggplot(data = df_sparsity_f, aes(x = cc, y = sparsity)) +
@@ -199,7 +205,10 @@ g3 <- ggplot(data = df_sparsity_f, aes(x = cc, y = sparsity)) +
   ylab("Median Factor Sparsity") +
   geom_hline(yintercept = f_sparsity_vec["Inf"], color = "red", linetype = "dashed") +
   ggplot2::annotate(
-    geom="text", x=0.004, y=f_sparsity_vec["Inf"] + 0.05, label="ID Link", color="red"
+    geom="text", x=0.004, y=f_sparsity_vec["Inf"] + 0.05, label="ID Link", color="red",
+    size = 5
+  ) + theme(
+    axis.title = element_text(size = 14, face = "bold")
   )
 
 
@@ -210,15 +219,15 @@ g <- annotate_figure(g,
 
 readr::write_rds(g, "../data/pancreas_sparsity_ggplot.rds")
 
-# g <- ggarrange(g1,g3,g2, nrow = 1, labels = c("A", "B", "C"))
-# 
-# ggplot2::ggsave(
-#   "../pdfs/pancreas_sparsity.pdf",
-#   g,
-#   device = "pdf",
-#   width = 11.5,
-#   height = 4
-# )
+g <- ggarrange(g1,g3,g2, nrow = 1, labels = c("A", "B", "C"))
+
+ggplot2::ggsave(
+  "../pdfs/pancreas_sparsity.pdf",
+  g,
+  device = "pdf",
+  width = 11.5,
+  height = 4
+)
 
 celltype <- sample_info$celltype
 celltype <-
@@ -356,21 +365,21 @@ g_log1p_high <- annotation_heatmap(
 )
 rownames(fit_list[["0.1"]]$LL) <- rownames(counts)
 
-si_islet <- sample_info %>%
-  dplyr::filter(celltype %in% c("alpha", "beta", "delta", "gamma"))
-
-topic_order <- rev(paste0(
-  "k",
-  c(1, 2, 4, 9, 5, 7, 3, 8, 6)
-))
-
-fit_list[[as.character(1)]]$LL <- fit_list[[as.character(1)]]$LL[si_islet$id, ]
-
-log1p_sp <- normalized_structure_plot(
-  fit_list[[as.character(1)]],
-  grouping = paste(si_islet$celltype, substr(si_islet$id, 1, 3)),gap = 35,perplexity = 70,n = Inf, font.size = 12,
-  topics = topic_order
-) 
+# si_islet <- sample_info %>%
+#   dplyr::filter(celltype %in% c("alpha", "beta", "delta", "gamma"))
+# 
+# topic_order <- rev(paste0(
+#   "k",
+#   c(1, 2, 4, 9, 5, 7, 3, 8, 6)
+# ))
+# 
+# fit_list[[as.character(1)]]$LL <- fit_list[[as.character(1)]]$LL[si_islet$id, ]
+# 
+# log1p_sp <- normalized_structure_plot(
+#   fit_list[[as.character(1)]],
+#   grouping = paste(si_islet$celltype, substr(si_islet$id, 1, 3)),gap = 35,perplexity = 70,n = Inf, font.size = 12,
+#   topics = topic_order
+# ) 
 
 g_log1p_sp <- log1p_sp$plot + 
   ggtitle("Loadings of log1p Link Poisson NMF With c = 1") +
@@ -450,7 +459,7 @@ g_log1p_scatter <- ggplot(data = means_df, aes(x = log1p(delta_expr), y = log1p(
   geom_text_repel(
     data = subset(means_df, gene %in% genes_to_label),
     aes(label = gene),
-    size = 5.5,                # adjust text size as desired
+    size = 7,                # adjust text size as desired
     box.padding = 0.5,       # adjust padding around labels
     max.overlaps = Inf,       # ensure all labels appear
     segment.color = 'grey40',  # color of connecting lines
@@ -461,9 +470,9 @@ g_log1p_scatter <- ggplot(data = means_df, aes(x = log1p(delta_expr), y = log1p(
   cowplot::theme_cowplot() +
   ggtitle("Delta vs. Gamma Expression - log1p Transformed") +
   theme(
-    plot.title = element_text(size = 12),      # Title size
-    axis.title.x = element_text(size = 12),     # X-axis label size
-    axis.title.y = element_text(size = 12)      # Y-axis label size
+    plot.title = element_text(size = 12, face = "bold"),      # Title size
+    axis.title.x = element_text(size = 14, face = "bold"),     # X-axis label size
+    axis.title.y = element_text(size = 14, face = "bold")      # Y-axis label size
   )
 
 g_raw_scatter <- ggplot(data = means_df, aes(x = delta_expr, y = gamma_expr)) +
@@ -473,7 +482,7 @@ g_raw_scatter <- ggplot(data = means_df, aes(x = delta_expr, y = gamma_expr)) +
   geom_text_repel(
     data = subset(means_df, gene %in% genes_to_label),
     aes(label = gene),
-    size = 5.5,                # adjust text size as desired
+    size = 7,                # adjust text size as desired
     box.padding = 1,       # adjust padding around labels
     max.overlaps = Inf,       # ensure all labels appear
     segment.color = 'grey40',  # color of connecting lines
@@ -484,9 +493,9 @@ g_raw_scatter <- ggplot(data = means_df, aes(x = delta_expr, y = gamma_expr)) +
   cowplot::theme_cowplot() +
   ggtitle("Delta vs. Gamma Expression - Raw") +
   theme(
-    plot.title = element_text(size = 12),      # Title size
-    axis.title.x = element_text(size = 12),     # X-axis label size
-    axis.title.y = element_text(size = 12)      # Y-axis label size
+    plot.title = element_text(size = 12, face = "bold"),      # Title size
+    axis.title.x = element_text(size = 14, face = "bold"),     # X-axis label size
+    axis.title.y = element_text(size = 14, face = "bold")      # Y-axis label size
   )
 
 g_log1p_gamma <- ggplot(data = means_df, aes(x = log1p(gamma_expr), y = log1p_k8)) +
@@ -496,7 +505,7 @@ g_log1p_gamma <- ggplot(data = means_df, aes(x = log1p(gamma_expr), y = log1p_k8
   geom_text_repel(
     data = subset(means_df, gene %in% genes_to_label),
     aes(label = gene),
-    size = 5.5,                # adjust text size as desired
+    size = 7,                # adjust text size as desired
     box.padding = 0.5,       # adjust padding around labels
     max.overlaps = Inf,       # ensure all labels appear
     segment.color = 'grey40',  # color of connecting lines
@@ -508,9 +517,9 @@ g_log1p_gamma <- ggplot(data = means_df, aes(x = log1p(gamma_expr), y = log1p_k8
   cowplot::theme_cowplot() +
   ggtitle("Gamma - Mean Expression Vs. log1p Model Score") +
   theme(
-    plot.title = element_text(size = 12),      # Title size
-    axis.title.x = element_text(size = 12),     # X-axis label size
-    axis.title.y = element_text(size = 12)      # Y-axis label size
+    plot.title = element_text(size = 12, face = "bold"),      # Title size
+    axis.title.x = element_text(size = 14, face = "bold"),     # X-axis label size
+    axis.title.y = element_text(size = 14, face = "bold")      # Y-axis label size
   )
 
 g_log1p_delta <- ggplot(data = means_df, aes(x = log1p(delta_expr), y = log1p_k5)) +
@@ -520,7 +529,7 @@ g_log1p_delta <- ggplot(data = means_df, aes(x = log1p(delta_expr), y = log1p_k5
   geom_text_repel(
     data = subset(means_df, gene %in% genes_to_label),
     aes(label = gene),
-    size = 5.5,                # adjust text size as desired
+    size = 7,                # adjust text size as desired
     box.padding = 0.5,       # adjust padding around labels
     max.overlaps = Inf,       # ensure all labels appear
     segment.color = 'grey40',  # color of connecting lines
@@ -532,9 +541,9 @@ g_log1p_delta <- ggplot(data = means_df, aes(x = log1p(delta_expr), y = log1p_k5
   cowplot::theme_cowplot() +
   ggtitle("Delta - Mean Expression Vs. log1p Model Score") +
   theme(
-    plot.title = element_text(size = 12),      # Title size
-    axis.title.x = element_text(size = 12),     # X-axis label size
-    axis.title.y = element_text(size = 12)      # Y-axis label size
+    plot.title = element_text(size = 12, face = "bold"),      # Title size
+    axis.title.x = element_text(size = 14, face = "bold"),     # X-axis label size
+    axis.title.y = element_text(size = 14, face = "bold")      # Y-axis label size
   )
 
 g_tm_gamma <- ggplot(data = means_df, aes(x = log1p(gamma_expr), y = log1p(tm_k8))) +
@@ -544,7 +553,7 @@ g_tm_gamma <- ggplot(data = means_df, aes(x = log1p(gamma_expr), y = log1p(tm_k8
   geom_text_repel(
     data = subset(means_df, gene %in% genes_to_label),
     aes(label = gene),
-    size = 5.5,                # adjust text size as desired
+    size = 7,                # adjust text size as desired
     box.padding = 0.5,       # adjust padding around labels
     max.overlaps = Inf,       # ensure all labels appear
     segment.color = 'grey40',  # color of connecting lines
@@ -556,9 +565,9 @@ g_tm_gamma <- ggplot(data = means_df, aes(x = log1p(gamma_expr), y = log1p(tm_k8
   cowplot::theme_cowplot() +
   ggtitle("Gamma - Mean Expression Vs. Topic Model Score") +
   theme(
-    plot.title = element_text(size = 12),      # Title size
-    axis.title.x = element_text(size = 12),     # X-axis label size
-    axis.title.y = element_text(size = 12)      # Y-axis label size
+    plot.title = element_text(size = 12, face = "bold"),      # Title size
+    axis.title.x = element_text(size = 14, face = "bold"),     # X-axis label size
+    axis.title.y = element_text(size = 14, face = "bold")      # Y-axis label size
   )
 
 g_tm_delta <- ggplot(data = means_df, aes(x = log1p(delta_expr), y = log1p(tm_k5))) +
@@ -568,7 +577,7 @@ g_tm_delta <- ggplot(data = means_df, aes(x = log1p(delta_expr), y = log1p(tm_k5
   geom_text_repel(
     data = subset(means_df, gene %in% genes_to_label),
     aes(label = gene),
-    size = 5.5,                # adjust text size as desired
+    size = 7,                # adjust text size as desired
     box.padding = 0.5,       # adjust padding around labels
     max.overlaps = Inf,       # ensure all labels appear
     segment.color = 'grey40',  # color of connecting lines
@@ -580,9 +589,9 @@ g_tm_delta <- ggplot(data = means_df, aes(x = log1p(delta_expr), y = log1p(tm_k5
   cowplot::theme_cowplot() +
   ggtitle("Delta - Mean Expression Vs. Topic Model Score") +
   theme(
-    plot.title = element_text(size = 12),      # Title size
-    axis.title.x = element_text(size = 12),     # X-axis label size
-    axis.title.y = element_text(size = 12)      # Y-axis label size
+    plot.title = element_text(size = 12, face = "bold"),      # Title size
+    axis.title.x = element_text(size = 14, face = "bold"),     # X-axis label size
+    axis.title.y = element_text(size = 14, face = "bold")      # Y-axis label size
   )
 
 i_dg <- which(sample_info$celltype %in% c("delta", "gamma"))
@@ -598,9 +607,9 @@ log1p_sp_dg <- normalized_structure_plot(
 g_structure_dg_log1p <- log1p_sp_dg$plot + 
   ggtitle("log1p Model") +
   theme(
-    plot.title = element_text(size = 12),
-    axis.title.y = element_text(size = 12),
-    axis.text.x = element_text(size = 12)
+    plot.title = element_text(size = 14, face = "bold"),
+    axis.text = element_text(size = 14),
+    axis.title.y = element_text(size = 14)
   )
 
 g_structure_dg_tm <- structure_plot(
@@ -609,9 +618,9 @@ g_structure_dg_tm <- structure_plot(
   gap = 35,perplexity = 70, font.size = 12, loadings_order = lo,
 )$plot + ggtitle("Topic Model") +
   theme(
-    plot.title = element_text(size = 12),
-    axis.title.y = element_text(size = 12),
-    axis.text.x = element_text(size = 12)
+    plot.title = element_text(size = 14, face = "bold"),
+    axis.text = element_text(size = 14),
+    axis.title.y = element_text(size = 14)
   )
 
 g_sp_dg <- ggarrange(

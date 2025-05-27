@@ -9,6 +9,10 @@ openmp_available <- function() {
     .Call(`_passPCA_openmp_available`)
 }
 
+solve_pois_reg_log1p <- function(X, y, y_nz_idx, s, b, update_indices, num_iter, alpha, beta) {
+    .Call(`_passPCA_solve_pois_reg_log1p`, X, y, y_nz_idx, s, b, update_indices, num_iter, alpha, beta)
+}
+
 fit_factor_model_log1p_exact_cpp_src <- function(sc_x, sc_i, sc_j, sc_T_x, sc_T_i, sc_T_j, s, U_T, V_T, n, p, max_iter, alpha, beta, num_ccd_iter, update_indices, verbose, tol) {
     .Call(`_passPCA_fit_factor_model_log1p_exact_cpp_src`, sc_x, sc_i, sc_j, sc_T_x, sc_T_i, sc_T_j, s, U_T, V_T, n, p, max_iter, alpha, beta, num_ccd_iter, update_indices, verbose, tol)
 }

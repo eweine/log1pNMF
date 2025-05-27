@@ -10,6 +10,7 @@ using namespace Rcpp;
 using namespace arma;
 
 
+// [[Rcpp::export]]
 arma::vec solve_pois_reg_log1p (
     const arma::mat& X,
     const arma::vec y,
@@ -73,9 +74,9 @@ arma::vec solve_pois_reg_log1p (
           
           t = 1.0;
           
-        } else if (b[j] > 1e-12) {
+        } else if (b[j] > 1e-16) {
           
-          t = std::min((b[j] - 1e-12) / newton_dir, 1.0);
+          t = std::min((b[j] - 1e-16) / newton_dir, 1.0);
           
         } else {
           
@@ -93,7 +94,7 @@ arma::vec solve_pois_reg_log1p (
       b_j_og        = b[j];
       while (true) {
         
-        b[j]             = std::max(b_j_og - t * newton_dir, 1e-12);
+        b[j]             = std::max(b_j_og - t * newton_dir, 1e-16);
         eta_proposed     = eta + (b[j] - b_j_og) * X.col(j);
         exp_eta_proposed = exp(eta_proposed);
         exp_eta_nz_m1_proposed = exp_eta_proposed.elem(y_nz_idx) - s;
@@ -109,7 +110,7 @@ arma::vec solve_pois_reg_log1p (
           break;
         } else {
           t *= beta;
-          if(t < 1e-12) {
+          if(t < 1e-16) {
 
             b[j] = b_j_og;
             break;
