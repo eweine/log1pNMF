@@ -75,7 +75,7 @@ genes_to_use <- which(Matrix::colSums(Y>0)>4)
 Y <- Y[, genes_to_use]
 
 library(fastTopics)
-library(passPCA)
+library(log1pNMF)
 s <- Matrix::rowSums(Y)
 s <- s / mean(s)
 
@@ -139,7 +139,7 @@ for (cc in cc_vec) {
   rownames(fit$V) <- colnames(Y)
 
   readr::write_rds(
-    fit, glue::glue("~/Documents/data/passPCA/cancer/cancer_log1p_c{cc}_k14_exact_100_iter_intercept.rds")
+    fit, glue::glue("~/Documents/data/log1pNMF/cancer/cancer_log1p_c{cc}_k14_exact_100_iter_intercept.rds")
   )
 
 }
@@ -184,7 +184,7 @@ fit_nmf <- fit_poisson_nmf(
 )
 
 readr::write_rds(
-  fit_nmf, glue::glue("~/Documents/data/passPCA/cancer/cancer_pois_nmf_k14_exact_100_iter_intercept.rds")
+  fit_nmf, glue::glue("~/Documents/data/log1pNMF/cancer/cancer_pois_nmf_k14_exact_100_iter_intercept.rds")
 )
 
 
@@ -202,7 +202,7 @@ md <- md %>%
 
 structure_plot(fit_nmf, grouping = paste(md$cancer, md$treatment), gap = 20)
 
-fit_c1 <- readr::read_rds("~/Documents/data/passPCA/cancer/cancer_log1p_c1_k14_exact_100_iter_intercept.rds")
+fit_c1 <- readr::read_rds("~/Documents/data/log1pNMF/cancer/cancer_log1p_c1_k14_exact_100_iter_intercept.rds")
 
 structure_plot(
   normalize_bars(fit_c1$U),

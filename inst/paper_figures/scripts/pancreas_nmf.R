@@ -4,7 +4,7 @@ library(ggplot2)
 library(cowplot)
 library(dplyr)
 library(ggpubr)
-library(passPCA)
+library(log1pNMF)
 
 set.seed(1)
 
@@ -52,7 +52,7 @@ nmf_fit0 <- fastTopics::init_poisson_nmf(
 )
 nmf <- fit_poisson_nmf(X = counts, fit0 = nmf_fit0, control = list(nc = 7), numiter = 250)
 
-readr::write_rds(nmf, "~/Documents/data/passPCA/pancreas/pancreas_pois_nmf_k9_exact_250_iter.rds")
+readr::write_rds(nmf, "~/Documents/data/log1pNMF/pancreas/pancreas_pois_nmf_k9_exact_250_iter.rds")
 
 celltype <- sample_info$celltype
 celltype <-

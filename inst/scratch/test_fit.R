@@ -1,6 +1,6 @@
 # here, I want to test the matrix factorization code
 
-library(passPCA)
+library(log1pNMF)
 library(Matrix)
 set.seed(1)
 n <- 2500

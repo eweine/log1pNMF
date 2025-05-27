@@ -1,4 +1,4 @@
-library(passPCA)
+library(log1pNMF)
 set.seed(1)
 n <- 400
 p <- 400

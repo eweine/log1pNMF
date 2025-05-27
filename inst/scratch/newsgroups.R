@@ -2,7 +2,7 @@ load("~/Downloads/newsgroups.RData")
 library(dplyr)
 library(Matrix)
 library(fastTopics)
-library(passPCA)
+library(log1pNMF)
 rm(counts)
 
 # I did the following to the original dataset

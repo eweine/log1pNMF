@@ -3,7 +3,7 @@
 To install the package, run
 
 ```
-remotes::install_github("eweine/passPCA")
+remotes::install_github("eweine/log1pNMF")
 ```
 
 ## Using OpenMP

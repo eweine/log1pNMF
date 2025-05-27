@@ -3,11 +3,11 @@
 
 load("~/Documents/data/fastglmpca/raw_data/droplet.RData")
 
-fit_c1 <- readr::read_rds("~/Documents/passPCA/inst/experiments/results/log1p_quad_approx_c1_droplets_7_factors_2500_iter.rds")
-fit_c2 <- readr::read_rds("~/Documents/passPCA/inst/experiments/results/log1p_quad_approx_c2_droplets_7_factors_2500_iter.rds")
-fit_c4 <- readr::read_rds("~/Documents/passPCA/inst/experiments/results/log1p_quad_approx_c4_droplets_7_factors_2500_iter.rds")
-fit_c8 <- readr::read_rds("~/Documents/passPCA/inst/experiments/results/log1p_quad_approx_c8_droplets_7_factors_2500_iter.rds")
-fit_c16 <- readr::read_rds("~/Documents/passPCA/inst/experiments/results/log1p_quad_approx_c16_droplets_7_factors_2500_iter.rds")
+fit_c1 <- readr::read_rds("~/Documents/log1pNMF/inst/experiments/results/log1p_quad_approx_c1_droplets_7_factors_2500_iter.rds")
+fit_c2 <- readr::read_rds("~/Documents/log1pNMF/inst/experiments/results/log1p_quad_approx_c2_droplets_7_factors_2500_iter.rds")
+fit_c4 <- readr::read_rds("~/Documents/log1pNMF/inst/experiments/results/log1p_quad_approx_c4_droplets_7_factors_2500_iter.rds")
+fit_c8 <- readr::read_rds("~/Documents/log1pNMF/inst/experiments/results/log1p_quad_approx_c8_droplets_7_factors_2500_iter.rds")
+fit_c16 <- readr::read_rds("~/Documents/log1pNMF/inst/experiments/results/log1p_quad_approx_c16_droplets_7_factors_2500_iter.rds")
 
 
 s <- Matrix::rowSums(counts) / mean(Matrix::rowSums(counts))
@@ -63,10 +63,10 @@ p5 <- structure_plot(fit_c16$U, grouping = samples$tissue, gap = 75) + ggtitle("
 # now, want to look at plots for other models
 # first, the actual NMF fit
 
-nmf_pois_fit <- readr::read_rds("~/Documents/passPCA/inst/experiments/results/pois_nmf_droplets_7_factors_2500_iter.rds")
+nmf_pois_fit <- readr::read_rds("~/Documents/log1pNMF/inst/experiments/results/pois_nmf_droplets_7_factors_2500_iter.rds")
 p6 <- structure_plot(nmf_pois_fit, grouping = samples$tissue, gap = 75) + ggtitle("Poisson NMF")
 
-nmf_frob_fit <- readr::read_rds("~/Documents/passPCA/inst/experiments/results/log1p_frobenius_nmf_droplets.rds")
+nmf_frob_fit <- readr::read_rds("~/Documents/log1pNMF/inst/experiments/results/log1p_frobenius_nmf_droplets.rds")
 
 nmf_frob_fit$U <- nmf_frob_fit$w %*% diag(nmf_frob_fit$d)
 nmf_frob_fit$U <- as.matrix(Matrix::colScale(nmf_frob_fit$U, 1/apply(nmf_frob_fit$U,2,max)))

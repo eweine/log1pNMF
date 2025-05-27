@@ -11,7 +11,7 @@
 #' @return list with LL and FF
 #' @keywords internal
 #'
-#' @useDynLib passPCA, .registration = TRUE
+#' @useDynLib log1pNMF, .registration = TRUE
 #' @importFrom Rcpp sourceCpp
 fit_factor_model_log1p_exact <- function(
     sc,

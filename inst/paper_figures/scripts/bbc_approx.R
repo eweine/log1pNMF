@@ -37,7 +37,7 @@ counts <- counts[,words_to_use]
 s <- Matrix::rowSums(counts)
 s <- s / mean(s)
 
-library(passPCA)
+library(log1pNMF)
 library(Matrix)
 library(dplyr)
 
@@ -100,7 +100,7 @@ for (cc in cc_vec) {
   rownames(fit$V) <- colnames(counts)
 
   readr::write_rds(
-    fit, glue::glue("~/Documents/data/passPCA/bbc_log1p_c{cc}_k25_approx_taylor_100_iter.rds")
+    fit, glue::glue("~/Documents/data/log1pNMF/bbc_log1p_c{cc}_k25_approx_taylor_100_iter.rds")
   )
 
 }

@@ -41,7 +41,7 @@ Y <- matrix(
 )
 
 Y <- as(Y, "CsparseMatrix")
-library(passPCA)
+library(log1pNMF)
 
 compute_condition_number <- function (x) {
   e <- eigen(cor(x))$values

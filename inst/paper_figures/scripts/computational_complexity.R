@@ -197,7 +197,7 @@ f1 <- ggarrange(
 )
 
 ggsave(
-  "/Users/eweine/Documents/passPCA/inst/paper_figures/pdfs/computational_scaling.pdf",
+  "/Users/eweine/Documents/log1pNMF/inst/paper_figures/pdfs/computational_scaling.pdf",
   f1,
   device = "pdf",
   width = 8.25,

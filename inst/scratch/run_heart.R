@@ -1,4 +1,4 @@
-library(passPCA)
+library(log1pNMF)
 library(Matrix)
 library(dplyr)
 set.seed(1)

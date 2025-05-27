@@ -13,7 +13,7 @@ Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 
 // get_loglik_exact
 double get_loglik_exact(const arma::mat& U_T, const arma::mat& V_T, const std::vector<int>& y_nz_vals, const std::vector<int>& y_nz_rows_idx, const std::vector<int>& y_nz_cols_idx, const arma::vec& s, const int n, const int p);
-RcppExport SEXP _passPCA_get_loglik_exact(SEXP U_TSEXP, SEXP V_TSEXP, SEXP y_nz_valsSEXP, SEXP y_nz_rows_idxSEXP, SEXP y_nz_cols_idxSEXP, SEXP sSEXP, SEXP nSEXP, SEXP pSEXP) {
+RcppExport SEXP _log1pNMF_get_loglik_exact(SEXP U_TSEXP, SEXP V_TSEXP, SEXP y_nz_valsSEXP, SEXP y_nz_rows_idxSEXP, SEXP y_nz_cols_idxSEXP, SEXP sSEXP, SEXP nSEXP, SEXP pSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -31,7 +31,7 @@ END_RCPP
 }
 // openmp_available
 bool openmp_available();
-RcppExport SEXP _passPCA_openmp_available() {
+RcppExport SEXP _log1pNMF_openmp_available() {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -41,7 +41,7 @@ END_RCPP
 }
 // fit_factor_model_log1p_exact_cpp_src
 List fit_factor_model_log1p_exact_cpp_src(const std::vector<int>& sc_x, const std::vector<int>& sc_i, const std::vector<int>& sc_j, const std::vector<int>& sc_T_x, const std::vector<int>& sc_T_i, const std::vector<int>& sc_T_j, const arma::vec& s, arma::mat& U_T, arma::mat& V_T, const int n, const int p, const int max_iter, const double alpha, const double beta, const int num_ccd_iter, const std::vector<int>& update_indices, const bool verbose, const double tol);
-RcppExport SEXP _passPCA_fit_factor_model_log1p_exact_cpp_src(SEXP sc_xSEXP, SEXP sc_iSEXP, SEXP sc_jSEXP, SEXP sc_T_xSEXP, SEXP sc_T_iSEXP, SEXP sc_T_jSEXP, SEXP sSEXP, SEXP U_TSEXP, SEXP V_TSEXP, SEXP nSEXP, SEXP pSEXP, SEXP max_iterSEXP, SEXP alphaSEXP, SEXP betaSEXP, SEXP num_ccd_iterSEXP, SEXP update_indicesSEXP, SEXP verboseSEXP, SEXP tolSEXP) {
+RcppExport SEXP _log1pNMF_fit_factor_model_log1p_exact_cpp_src(SEXP sc_xSEXP, SEXP sc_iSEXP, SEXP sc_jSEXP, SEXP sc_T_xSEXP, SEXP sc_T_iSEXP, SEXP sc_T_jSEXP, SEXP sSEXP, SEXP U_TSEXP, SEXP V_TSEXP, SEXP nSEXP, SEXP pSEXP, SEXP max_iterSEXP, SEXP alphaSEXP, SEXP betaSEXP, SEXP num_ccd_iterSEXP, SEXP update_indicesSEXP, SEXP verboseSEXP, SEXP tolSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -69,7 +69,7 @@ END_RCPP
 }
 // fit_factor_model_log1p_quad_approx_sparse_cpp_src
 List fit_factor_model_log1p_quad_approx_sparse_cpp_src(const std::vector<int>& sc_x, const std::vector<int>& sc_i, const std::vector<int>& sc_j, const std::vector<int>& sc_T_x, const std::vector<int>& sc_T_i, const std::vector<int>& sc_T_j, const arma::vec& s, arma::mat& U_T, arma::mat& V_T, const double a1, const double a2, const int n, const int p, const int max_iter, const double alpha, const double beta, const int num_ccd_iter, const std::vector<int>& update_indices, const bool verbose, const double tol);
-RcppExport SEXP _passPCA_fit_factor_model_log1p_quad_approx_sparse_cpp_src(SEXP sc_xSEXP, SEXP sc_iSEXP, SEXP sc_jSEXP, SEXP sc_T_xSEXP, SEXP sc_T_iSEXP, SEXP sc_T_jSEXP, SEXP sSEXP, SEXP U_TSEXP, SEXP V_TSEXP, SEXP a1SEXP, SEXP a2SEXP, SEXP nSEXP, SEXP pSEXP, SEXP max_iterSEXP, SEXP alphaSEXP, SEXP betaSEXP, SEXP num_ccd_iterSEXP, SEXP update_indicesSEXP, SEXP verboseSEXP, SEXP tolSEXP) {
+RcppExport SEXP _log1pNMF_fit_factor_model_log1p_quad_approx_sparse_cpp_src(SEXP sc_xSEXP, SEXP sc_iSEXP, SEXP sc_jSEXP, SEXP sc_T_xSEXP, SEXP sc_T_iSEXP, SEXP sc_T_jSEXP, SEXP sSEXP, SEXP U_TSEXP, SEXP V_TSEXP, SEXP a1SEXP, SEXP a2SEXP, SEXP nSEXP, SEXP pSEXP, SEXP max_iterSEXP, SEXP alphaSEXP, SEXP betaSEXP, SEXP num_ccd_iterSEXP, SEXP update_indicesSEXP, SEXP verboseSEXP, SEXP tolSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -99,14 +99,14 @@ END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_passPCA_get_loglik_exact", (DL_FUNC) &_passPCA_get_loglik_exact, 8},
-    {"_passPCA_openmp_available", (DL_FUNC) &_passPCA_openmp_available, 0},
-    {"_passPCA_fit_factor_model_log1p_exact_cpp_src", (DL_FUNC) &_passPCA_fit_factor_model_log1p_exact_cpp_src, 18},
-    {"_passPCA_fit_factor_model_log1p_quad_approx_sparse_cpp_src", (DL_FUNC) &_passPCA_fit_factor_model_log1p_quad_approx_sparse_cpp_src, 20},
+    {"_log1pNMF_get_loglik_exact", (DL_FUNC) &_log1pNMF_get_loglik_exact, 8},
+    {"_log1pNMF_openmp_available", (DL_FUNC) &_log1pNMF_openmp_available, 0},
+    {"_log1pNMF_fit_factor_model_log1p_exact_cpp_src", (DL_FUNC) &_log1pNMF_fit_factor_model_log1p_exact_cpp_src, 18},
+    {"_log1pNMF_fit_factor_model_log1p_quad_approx_sparse_cpp_src", (DL_FUNC) &_log1pNMF_fit_factor_model_log1p_quad_approx_sparse_cpp_src, 20},
     {NULL, NULL, 0}
 };
 
-RcppExport void R_init_passPCA(DllInfo *dll) {
+RcppExport void R_init_log1pNMF(DllInfo *dll) {
     R_registerRoutines(dll, NULL, CallEntries, NULL, NULL);
     R_useDynamicSymbols(dll, FALSE);
 }

@@ -51,7 +51,7 @@ for (cc in cc_vec) {
 }
 
 pancreas_fit_list[["Inf"]] <- readr::read_rds(
-  glue::glue("~/Documents/data/passPCA/pancreas/pancreas_pois_nmf_k{K}_exact_250_iter.rds")
+  glue::glue("~/Documents/data/log1pNMF/pancreas/pancreas_pois_nmf_k{K}_exact_250_iter.rds")
 )
 
 res_list$pancreas <- pancreas_fit_list

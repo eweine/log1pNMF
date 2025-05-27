@@ -196,7 +196,7 @@ init <- abs(rnorm(5))
 # for the exact method
 
 tic()
-b_cpp_exact <- passPCA:::solve_pois_reg_log1p (
+b_cpp_exact <- log1pNMF:::solve_pois_reg_log1p (
   X,
   y[y != 0],
   as.integer(which(y != 0) - 1),
@@ -212,7 +212,7 @@ set.seed(1)
 init <- abs(rnorm(5))
 
 tic()
-b_cpp_linear <-  passPCA:::solve_pois_reg_log1p_lin_approx (
+b_cpp_linear <-  log1pNMF:::solve_pois_reg_log1p_lin_approx (
   X[y_nz_idx, ],
   y[y != 0],
   a1_linear * colSums(X[y_z_idx, ]),
@@ -228,7 +228,7 @@ set.seed(1)
 init <- abs(rnorm(5))
 
 tic()
-b_cpp_quad <-  passPCA:::solve_pois_reg_log1p_quad_approx (
+b_cpp_quad <-  log1pNMF:::solve_pois_reg_log1p_quad_approx (
   X[y_nz_idx, ],
   y[y != 0],
   a1_quad * colSums(X[y_z_idx, ]),
@@ -246,7 +246,7 @@ set.seed(1)
 init <- abs(rnorm(5))
 
 tic()
-b_cpp_quad_full <-  passPCA:::solve_pois_reg_log1p_quad_approx_full (
+b_cpp_quad_full <-  log1pNMF:::solve_pois_reg_log1p_quad_approx_full (
   X[y_nz_idx, ],
   y[y != 0],
   a1_quad_full * colSums(X),

@@ -81,7 +81,7 @@ out_df <- out_df %>%
 
 out_df$lfsr <- ashr::get_lfsr(a_out)
 
-readr::write_rds(out_df, "~/Documents/data/passPCA/experiment_results/gtex_artery_sex_diff.rds")
+readr::write_rds(out_df, "~/Documents/data/log1pNMF/experiment_results/gtex_artery_sex_diff.rds")
 
 
 

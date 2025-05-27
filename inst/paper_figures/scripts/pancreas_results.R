@@ -4,7 +4,7 @@ library(ggplot2)
 library(cowplot)
 library(dplyr)
 library(ggpubr)
-library(passPCA)
+library(log1pNMF)
 
 load("../data/experiment_results.Rdata")
 
@@ -61,7 +61,7 @@ for (cc in cc_vec) {
   colnames(fit_list[[as.character(cc)]]$FF) <- paste0("k", 1:K)
   colnames(fit_list[[as.character(cc)]]$LL) <- paste0("k", 1:K)
   
-  F_norm <- passPCA:::normalize_bars(fit_list[[as.character(cc)]]$FF)
+  F_norm <- log1pNMF:::normalize_bars(fit_list[[as.character(cc)]]$FF)
   top_list <- list()
   distinct_list <- list()
   jaccard_vec <- c()
@@ -101,7 +101,7 @@ fit_list[["Inf"]] <- res_list$pancreas$`Inf`
 
 fit_list[["Inf"]]$Ls <- Matrix::Diagonal(x = 1/s) %*% fit_list[["Inf"]]$L
 
-F_norm <- passPCA:::normalize_bars(fit_list[["Inf"]]$F)
+F_norm <- log1pNMF:::normalize_bars(fit_list[["Inf"]]$F)
 colnames(F_norm) <- paste0("k",1:K)
 top_list <- list()
 distinct_list <- list()

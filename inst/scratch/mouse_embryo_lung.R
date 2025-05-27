@@ -101,10 +101,10 @@ nmf_fit <- fastTopics::fit_poisson_nmf(
 )
 
 readr::write_rds(
-  nmf_fit, "~/Documents/data/passPCA/lung_embryo_results/nmf_k12.rds"
+  nmf_fit, "~/Documents/data/log1pNMF/lung_embryo_results/nmf_k12.rds"
 )
 
-library(passPCA)
+library(log1pNMF)
 library(Matrix)
 cc_vec <- c(0.0001, 1e-3, 1e-2, 1e-1, 1, 1e1, 1e2, 1e3)
 rs <- Matrix::rowSums(counts)
@@ -161,14 +161,14 @@ for (cc in cc_vec) {
   rownames(fit$V) <- colnames(counts)
 
   readr::write_rds(
-    fit, glue::glue("~/Documents/data/passPCA/lung_embryo_results/log1p_c{cc}_k12.rds")
+    fit, glue::glue("~/Documents/data/log1pNMF/lung_embryo_results/log1p_c{cc}_k12.rds")
   )
 
 }
 
 fit_list <- list()
 
-fit_list[["nmf"]] <- readr::read_rds("~/Documents/data/passPCA/lung_embryo_results/nmf_k12.rds")
+fit_list[["nmf"]] <- readr::read_rds("~/Documents/data/log1pNMF/lung_embryo_results/nmf_k12.rds")
 
 cc_vec <- c(0.0001, 1e-3, 1e-2, 1e-1, 1, 1e1, 1e2, 1e3)
 
@@ -177,20 +177,20 @@ for (cc in cc_vec) {
   print(cc)
 
   fit_list[[as.character(cc)]] <- readr::read_rds(
-    glue::glue("~/Documents/data/passPCA/lung_embryo_results/log1p_c{cc}_k12.rds")
+    glue::glue("~/Documents/data/log1pNMF/lung_embryo_results/log1p_c{cc}_k12.rds")
   )
 
 }
 
 readr::write_rds(
-  fit_list, glue::glue("~/Documents/data/passPCA/lung_embryo_results/k12_fit_list.rds")
+  fit_list, glue::glue("~/Documents/data/log1pNMF/lung_embryo_results/k12_fit_list.rds")
 )
 
 ############ Code to fit full models above
 
 
 set.seed(1)
-log1p_k1 <- passPCA::fit_factor_model_log1p_quad_approx_sparse(
+log1p_k1 <- log1pNMF::fit_factor_model_log1p_quad_approx_sparse(
   Y = counts,
   K = 1,
   maxiter = 10,
@@ -221,7 +221,7 @@ init_FF <- log1p_k1$V %>%
   )
 
 set.seed(1)
-log1p_k11 <- passPCA::fit_factor_model_log1p_quad_approx_sparse(
+log1p_k11 <- log1pNMF::fit_factor_model_log1p_quad_approx_sparse(
   Y = counts,
   K = K,
   maxiter = 100,
@@ -239,12 +239,12 @@ nmf <- fit_poisson_nmf(
   control = list(nc = 6)
 )
 
-readr::write_rds(nmf, "~/Documents/data/passPCA/experiment_results/nmf_pois_k11_mouse_embryo_lung.rds")
+readr::write_rds(nmf, "~/Documents/data/log1pNMF/experiment_results/nmf_pois_k11_mouse_embryo_lung.rds")
 
-#readr::write_rds(log1p_k11, "~/Documents/data/passPCA/experiment_results/log1p_pois_k11_mouse_embryo_lung.rds")
+#readr::write_rds(log1p_k11, "~/Documents/data/log1pNMF/experiment_results/log1p_pois_k11_mouse_embryo_lung.rds")
 
 log1p_k11 <- readr::read_rds(
-  "~/Documents/data/passPCA/experiment_results/log1p_pois_k11_mouse_embryo_lung.rds"
+  "~/Documents/data/log1pNMF/experiment_results/log1p_pois_k11_mouse_embryo_lung.rds"
   )
 
 normalize_bars <- function(LL) {
@@ -406,17 +406,17 @@ df2 <- data.frame(
 
 counts_sum <- Matrix::summary(counts)
 
-readr::write_csv(counts_sum, "~/Documents/data/passPCA/mouse_dev_lung_sum.csv")
+readr::write_csv(counts_sum, "~/Documents/data/log1pNMF/mouse_dev_lung_sum.csv")
 cells$bc <- rownames(cells)
 rownames(cells) <- NULL
-readr::write_csv(cells, "~/Documents/data/passPCA/mouse_dev_lung_cells.csv")
+readr::write_csv(cells, "~/Documents/data/log1pNMF/mouse_dev_lung_cells.csv")
 genes <- genes %>% dplyr::filter(rownames(genes) %in% colnames(counts))
 genes$ensembl <- rownames(genes)
 rownames(genes) <- NULL
-readr::write_csv(genes, "~/Documents/data/passPCA/mouse_dev_lung_genes.csv")
+readr::write_csv(genes, "~/Documents/data/log1pNMF/mouse_dev_lung_genes.csv")
 
 
-cnmf_usage <- readr::read_csv("/Users/eweine/Documents/data/passPCA/mouse_lung_dev_cnmf_usage.csv")
+cnmf_usage <- readr::read_csv("/Users/eweine/Documents/data/log1pNMF/mouse_lung_dev_cnmf_usage.csv")
 cnmf_LL <- cnmf_usage %>%
   dplyr::select(-bc) %>%
   as.matrix()

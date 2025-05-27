@@ -40,7 +40,7 @@ dtm2 <- dtm2[,words_to_use]
 s <- Matrix::rowSums(dtm2)
 s <- s / mean(s)
 
-library(passPCA)
+library(log1pNMF)
 library(Matrix)
 library(dplyr)
 #cc_vec <- c(1e3)

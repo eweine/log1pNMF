@@ -11,7 +11,7 @@ counts <- as(dmat, "CsparseMatrix")
 rm(dmats, dmat, dat)
 gc()
 
-save(counts, ct, file = "~/Documents/data/passPCA/liu_data.Rdata")
+save(counts, ct, file = "~/Documents/data/log1pNMF/liu_data.Rdata")
 
 # now, the task is just to run the algorithm across
 # different values of c. I'm not sure how small I should let
@@ -70,10 +70,10 @@ nmf_fit <- fastTopics::fit_poisson_nmf(
 )
 
 readr::write_rds(
-  nmf_fit, "~/Documents/data/passPCA/liu_results/nmf_k25.rds"
+  nmf_fit, "~/Documents/data/log1pNMF/liu_results/nmf_k25.rds"
 )
 
-library(passPCA)
+library(log1pNMF)
 library(Matrix)
 cc_vec <- c(0.0001, 1e-3, 1e-2, 1e-1, 1, 1e1, 1e2, 1e3)
 
@@ -127,23 +127,23 @@ for (cc in cc_vec) {
   rownames(fit$V) <- colnames(counts)
 
   readr::write_rds(
-    fit, glue::glue("~/Documents/data/passPCA/liu_results/log1p_c{cc}_k25.rds")
+    fit, glue::glue("~/Documents/data/log1pNMF/liu_results/log1p_c{cc}_k25.rds")
   )
 
 }
 
 fit_list <- list()
-fit_list[["nmf"]] <- readr::read_rds("~/Documents/data/passPCA/liu_results/nmf_k25.rds")
+fit_list[["nmf"]] <- readr::read_rds("~/Documents/data/log1pNMF/liu_results/nmf_k25.rds")
 
 for (cc in cc_vec) {
 
   fit_list[[as.character(cc)]] <- readr::read_rds(
-    glue::glue("~/Documents/data/passPCA/liu_results/log1p_c{cc}_k25.rds")
+    glue::glue("~/Documents/data/log1pNMF/liu_results/log1p_c{cc}_k25.rds")
   )
 
 }
 
-readr::write_rds(fit_list, "~/Documents/data/passPCA/liu_results/fit_list.rds")
+readr::write_rds(fit_list, "~/Documents/data/log1pNMF/liu_results/fit_list.rds")
 
 # there are a variety of analyses I should run here
 # the first two I would like to look at are the sparsity and
@@ -192,7 +192,7 @@ ll_list <- list(
 
 ll_list$ll_vec <- ll_vec
 
-readr::write_rds(ll_list, "~/Documents/data/passPCA/liu_results/loglik.rds")
+readr::write_rds(ll_list, "~/Documents/data/log1pNMF/liu_results/loglik.rds")
 
 library(ggplot2)
 ggplot(data = df) +

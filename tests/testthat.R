@@ -7,6 +7,6 @@
 # * https://testthat.r-lib.org/articles/special-files.html
 
 library(testthat)
-library(passPCA)
+library(log1pNMF)
 
-test_check("passPCA")
+test_check("log1pNMF")

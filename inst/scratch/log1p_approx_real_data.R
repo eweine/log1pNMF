@@ -6,7 +6,7 @@ m <- pbmc_facs$counts
 m <- m[,Matrix::colSums(m) >= 100]
 
 set.seed(1)
-log1p_mod <- passPCA::fit_factor_model_log1p_quad_approx_sparse(
+log1p_mod <- log1pNMF::fit_factor_model_log1p_quad_approx_sparse(
   Y = m,
   K = 6,
   maxiter = 100,
@@ -14,27 +14,27 @@ log1p_mod <- passPCA::fit_factor_model_log1p_quad_approx_sparse(
 )
 
 readr::write_rds(
-  log1p_mod, "~/Documents/data/passPCA/experiment_results/pbmc_facs_k6_mle.rds"
+  log1p_mod, "~/Documents/data/log1pNMF/experiment_results/pbmc_facs_k6_mle.rds"
 )
 
 set.seed(1)
-ff <- passPCA::run_flash_log1p_with_greedy_init(
+ff <- log1pNMF::run_flash_log1p_with_greedy_init(
   Y = m,
   var_type = 2
 )
 
 readr::write_rds(
-  ff, "~/Documents/data/passPCA/experiment_results/pbmc_facs_flash_greedy_init.rds"
+  ff, "~/Documents/data/log1pNMF/experiment_results/pbmc_facs_flash_greedy_init.rds"
 )
 
 set.seed(1)
-ff2 <- passPCA::run_flash_log1p_with_MLE_init(
+ff2 <- log1pNMF::run_flash_log1p_with_MLE_init(
   Y = m,
   K = 6
 )
 
 readr::write_rds(
-  ff2, "~/Documents/data/passPCA/experiment_results/pbmc_facs_flash_mle_init.rds"
+  ff2, "~/Documents/data/log1pNMF/experiment_results/pbmc_facs_flash_mle_init.rds"
 )
 
 # I would also like to fit a model here using the previous flash pipeline
@@ -51,7 +51,7 @@ ff3 <- flashier::flash(m_tilde,
              backfit = TRUE)
 
 readr::write_rds(
-  ff3, "~/Documents/data/passPCA/experiment_results/pbmc_facs_flash_old.rds"
+  ff3, "~/Documents/data/log1pNMF/experiment_results/pbmc_facs_flash_old.rds"
 )
 
 m1 <- as.matrix(Matrix::readMM(
@@ -84,7 +84,7 @@ m <- m[,Matrix::colSums(m) >= 100]
 
 
 set.seed(1)
-log1p_mod <- passPCA::fit_factor_model_log1p_quad_approx_sparse(
+log1p_mod <- log1pNMF::fit_factor_model_log1p_quad_approx_sparse(
   Y = m,
   K = 5,
   maxiter = 100,
@@ -92,17 +92,17 @@ log1p_mod <- passPCA::fit_factor_model_log1p_quad_approx_sparse(
 )
 
 readr::write_rds(
-  log1p_mod, "~/Documents/data/passPCA/experiment_results/nkt_k5_mle.rds"
+  log1p_mod, "~/Documents/data/log1pNMF/experiment_results/nkt_k5_mle.rds"
 )
 
 set.seed(1)
-ff <- passPCA::run_flash_log1p_with_greedy_init(
+ff <- log1pNMF::run_flash_log1p_with_greedy_init(
   Y = m,
   var_type = 2
 )
 
 readr::write_rds(
-  ff, "~/Documents/data/passPCA/experiment_results/nkt_flash_greedy_init.rds"
+  ff, "~/Documents/data/log1pNMF/experiment_results/nkt_flash_greedy_init.rds"
 )
 
 m_tilde <- MatrixExtra::mapSparse(m, log1p)
@@ -119,5 +119,5 @@ ff3 <- flashier::flash(m_tilde,
 
 
 readr::write_rds(
-  ff3, "~/Documents/data/passPCA/experiment_results/nkt_flash_old.rds"
+  ff3, "~/Documents/data/log1pNMF/experiment_results/nkt_flash_old.rds"
 )

@@ -1,4 +1,4 @@
-Package: passPCA
+Package: log1pNMF
 Type: Package
 Title: Maximum Likelihood Estimation of Poisson Non-Negative Matrix 
     Factorization Models

@@ -8,7 +8,7 @@ n <- 500
 p <- 500
 K <- 5
 library(Matrix)
-library(passPCA)
+library(log1pNMF)
 library(NNLM)
 
 # I would like the simulation to result in fairly sparse data...

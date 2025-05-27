@@ -41,7 +41,7 @@ a0 <- poly_approx$p[3]
 a1 <- poly_approx$p[2]
 a2 <- poly_approx$p[1]
 
-fit_out <- passPCA:::solve_pois_reg_log1p_quad_approx_sparse_vec_s_fit_c(
+fit_out <- log1pNMF:::solve_pois_reg_log1p_quad_approx_sparse_vec_s_fit_c(
   t(X),
   y[y_nz_R_idx],
   y_nz_R_idx - 1,

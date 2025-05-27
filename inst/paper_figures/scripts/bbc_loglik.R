@@ -37,12 +37,12 @@ dtm2 <- dtm2[,words_to_use]
 s <- Matrix::rowSums(dtm2)
 s <- s / mean(s)
 
-library(passPCA)
+library(log1pNMF)
 library(Matrix)
 library(dplyr)
 
 fit_list <- readr::read_rds(
-  "~/Documents/data/passPCA/bbc_articles.rds"
+  "~/Documents/data/log1pNMF/bbc_articles.rds"
 )
 
 cc_vec <- c(0.0001, 1e-3, 1e-2, 1e-1, 1, 1e1, 1e2, 1e3, 1e4)
@@ -136,7 +136,7 @@ f2 <- ggarrange(
 )
 
 ggsave(
-  "/Users/eweine/Documents/passPCA/inst/paper_figures/pdfs/bbc_loglik.pdf",
+  "/Users/eweine/Documents/log1pNMF/inst/paper_figures/pdfs/bbc_loglik.pdf",
   f2,
   device = "pdf",
   width = 8,

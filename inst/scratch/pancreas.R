@@ -2,7 +2,7 @@ library(Matrix)
 library(fastTopics)
 library(ggplot2)
 library(cowplot)
-library(passPCA)
+library(log1pNMF)
 library(dplyr)
 library(fastTopics)
 
@@ -81,7 +81,7 @@ for (cc in cc_vec) {
   rownames(fit$V) <- colnames(counts)
 
   readr::write_rds(
-    fit, glue::glue("~/Documents/data/passPCA/pancreas/pancreas_log1p_c{cc}_k9_exact_100_iter.rds")
+    fit, glue::glue("~/Documents/data/log1pNMF/pancreas/pancreas_log1p_c{cc}_k9_exact_100_iter.rds")
   )
 
 }
@@ -126,7 +126,7 @@ fit_nmf <- fit_poisson_nmf(
 )
 
 readr::write_rds(
-  fit_nmf, glue::glue("~/Documents/data/passPCA/pancreas/pancreas_pois_nmf_k9_exact_100_iter.rds")
+  fit_nmf, glue::glue("~/Documents/data/log1pNMF/pancreas/pancreas_pois_nmf_k9_exact_100_iter.rds")
 )
 
 library(fastTopics)
@@ -136,14 +136,14 @@ for (cc in cc_vec) {
 
   fit_list[[as.character(cc)]] <- readr::read_rds(
     glue::glue(
-      "~/Documents/data/passPCA/pancreas/pancreas_log1p_c{cc}_k9_exact_100_iter.rds"
+      "~/Documents/data/log1pNMF/pancreas/pancreas_log1p_c{cc}_k9_exact_100_iter.rds"
     )
   )
 
 }
 
 fit_list[["Inf"]] <- readr::read_rds(
-  glue::glue("~/Documents/data/passPCA/pancreas/pancreas_pois_nmf_k9_exact_100_iter.rds")
+  glue::glue("~/Documents/data/log1pNMF/pancreas/pancreas_pois_nmf_k9_exact_100_iter.rds")
 )
 
 normalize_bars <- function(LL) {

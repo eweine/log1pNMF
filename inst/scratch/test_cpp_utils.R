@@ -5,19 +5,19 @@ load("~/Documents/data/fastglmpca/raw_data/droplet.RData")
 
 sc <- summary(counts)
 
-col_num_repeats <- passPCA:::get_num_repeats(
+col_num_repeats <- log1pNMF:::get_num_repeats(
   sc$j,
   ncol(counts),
   length(sc$j)
 )
 
-y_cols_list <- passPCA:::create_vals_list(
+y_cols_list <- log1pNMF:::create_vals_list(
   ncol(counts),
   col_num_repeats,
   sc$x
 )
 
-y_cols_idx <- passPCA:::create_vals_list(
+y_cols_idx <- log1pNMF:::create_vals_list(
   ncol(counts),
   col_num_repeats,
   sc$i - 1 # account for 0 indexing in C++
@@ -26,19 +26,19 @@ y_cols_idx <- passPCA:::create_vals_list(
 
 sc_t <- summary(Matrix::t(counts))
 
-row_num_repeats <- passPCA:::get_num_repeats(
+row_num_repeats <- log1pNMF:::get_num_repeats(
   sc_t$j,
   nrow(counts),
   length(sc_t$j)
 )
 
-y_rows_list <- passPCA:::create_vals_list(
+y_rows_list <- log1pNMF:::create_vals_list(
   nrow(counts),
   row_num_repeats,
   sc_t$x
 )
 
-y_rows_idx <- passPCA:::create_vals_list(
+y_rows_idx <- log1pNMF:::create_vals_list(
   nrow(counts),
   row_num_repeats,
   sc_t$i - 1 # account for 0 indexing in C++
@@ -78,7 +78,7 @@ y_list[[2]] <- as.integer(y2[y2 > 0])
 y_idx_list[[1]] <- as.integer(which(y1 > 0) - 1)
 y_idx_list[[2]] <- as.integer(which(y2 > 0) - 1)
 
-reg_mat_out <- passPCA:::regress_cols_of_Y_on_X_log1p_pois_exact(
+reg_mat_out <- log1pNMF:::regress_cols_of_Y_on_X_log1p_pois_exact(
   X,
   y_list,
   y_idx_list,

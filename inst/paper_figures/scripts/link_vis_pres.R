@@ -32,7 +32,7 @@ g <- ggplot(data = out_df, aes(x = lambda, y = b)) +
   ylab(expression(alpha ~ "×" ~ log(1 + lambda / c)))
 
 ggsave(
-  "/Users/eweine/Documents/passPCA/inst/paper_figures/pdfs/link_vis_pres.pdf",
+  "/Users/eweine/Documents/log1pNMF/inst/paper_figures/pdfs/link_vis_pres.pdf",
   g,
   device = "pdf",
   width = 5,

@@ -70,7 +70,7 @@ ft4 <- fit_poisson_nmf(X = Y, k = 4, control = list(nc = 7), numiter = 250)
 set.seed(1)
 ft7 <- fit_poisson_nmf(X = Y, k = 7, control = list(nc = 7), numiter = 250)
 
-library(passPCA)
+library(log1pNMF)
 
 structure_plot(ft4, loadings_order = 1:n)
 structure_plot(ft7, loadings_order = 1:n)

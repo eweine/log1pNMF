@@ -9,7 +9,7 @@ counts <- counts[Matrix::rowSums(counts) > 0, ]
 
 #nmf <- readr::read_rds("/Users/eweine/Documents/data/mouse_log1p_c1e-04_k15_exact_100_iter.rds")
 
-library(passPCA)
+library(log1pNMF)
 
 #normalized_structure_plot(mod, grouping = cells$maintype)
 

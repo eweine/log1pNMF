@@ -53,7 +53,7 @@ pois_nmf_k15 <- fit_poisson_nmf(
   numiter = 250
 )
 
-readr::write_rds(pois_nmf_k15, "~/Documents/data/passPCA/experiment_results/mouse_brain_k12_nmf_pois.rds")
+readr::write_rds(pois_nmf_k15, "~/Documents/data/log1pNMF/experiment_results/mouse_brain_k12_nmf_pois.rds")
 
 # the last thing to do here is to run frobenius NMF on the log1p
 # transformed data. I think it is best to do this on Midway

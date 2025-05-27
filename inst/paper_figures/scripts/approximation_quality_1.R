@@ -8,7 +8,7 @@ n <- 500
 p <- 500
 K <- 5
 library(Matrix)
-library(passPCA)
+library(log1pNMF)
 # I would like the simulation to result in fairly sparse data...
 library(distr)
 LL <- matrix(nrow = n,ncol = K)

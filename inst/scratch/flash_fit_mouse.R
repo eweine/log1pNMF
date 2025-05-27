@@ -13,7 +13,7 @@ counts <- counts[sample(x = rownames(counts), size = 7500, replace = FALSE), ]
 counts <- counts[, Matrix::colSums(counts) > 0]
 counts <- as(counts, "CsparseMatrix")
 
-ff <- passPCA::run_flash_log1p_with_greedy_init(
+ff <- log1pNMF::run_flash_log1p_with_greedy_init(
   Y = counts,
   var_type = 2,
   greedy_Kmax = 20

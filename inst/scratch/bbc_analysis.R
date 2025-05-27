@@ -37,7 +37,7 @@ dtm2 <- dtm2[,words_to_use]
 s <- Matrix::rowSums(dtm2)
 s <- s / mean(s)
 
-library(passPCA)
+library(log1pNMF)
 library(Matrix)
 library(dplyr)
 cc_vec <- c(1e-4)
@@ -130,7 +130,7 @@ nmf_fit0 <- fastTopics::init_poisson_nmf(
 )
 nmf <- fit_poisson_nmf(X = dtm2, k = 50, control = list(nc = 4))
 
-fit_list <- readr::read_rds("~/Documents/data/passPCA/bbc_articles.rds")
+fit_list <- readr::read_rds("~/Documents/data/log1pNMF/bbc_articles.rds")
 fit_list[["nmf"]] <- nmf
 fit_list[[as.character(1e-4)]] <- fit
-readr::write_rds(fit_list, "~/Documents/data/passPCA/bbc_articles.rds")
+readr::write_rds(fit_list, "~/Documents/data/log1pNMF/bbc_articles.rds")

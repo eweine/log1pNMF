@@ -105,7 +105,7 @@ for (i in 1:n_sims) {
     backfit = TRUE
   )
 
-  library(passPCA)
+  library(log1pNMF)
 
   log1p_fit <- fit_factor_model_log1p_quad_approx_sparse(
     Y = as(Y, "sparseMatrix"),

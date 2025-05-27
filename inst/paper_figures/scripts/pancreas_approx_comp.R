@@ -4,7 +4,7 @@ library(ggplot2)
 library(cowplot)
 library(dplyr)
 library(ggpubr)
-library(passPCA)
+library(log1pNMF)
 
 set.seed(1)
 
@@ -130,7 +130,7 @@ colnames(nmf_k9$W) <- paste0(
 nmf_k9$W <- nmf_k9$W[,paste0("k", 1:9)]
 
 g_frob_sp <- structure_plot(
-  passPCA:::normalize_bars(nmf_k9$W), 
+  log1pNMF:::normalize_bars(nmf_k9$W), 
   grouping = celltype,
   topics = topic_order,
   gap = 30,perplexity = 70, font.size = 12, loadings_order = log1p_sp$loadings_order
@@ -227,7 +227,7 @@ g2 <- ggarrange(
 g <- ggarrange(g1, g2, nrow = 1, ncol = 2, widths = c(2.5, 1))
 
 ggsave(
-  "/Users/eweine/Documents/passPCA/inst/paper_figures/pdfs/pancreas_approx_comp.pdf",
+  "/Users/eweine/Documents/log1pNMF/inst/paper_figures/pdfs/pancreas_approx_comp.pdf",
   g,
   device = "pdf",
   width = 11,

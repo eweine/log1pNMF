@@ -1,7 +1,7 @@
 library(dplyr)
 library(Matrix)
 library(fastTopics)
-library(passPCA)
+library(log1pNMF)
 
 data_dir <- "/home/ericweine/hspc"
 counts <- readr::read_rds(glue::glue("{data_dir}/hspcs.rds"))

@@ -52,7 +52,7 @@ c_vec <- c(
 for (i in 1:length(c_vec)) {
 
   set.seed(1)
-  log1p <- passPCA::fit_factor_model_log1p_exact(
+  log1p <- log1pNMF::fit_factor_model_log1p_exact(
     Y = Y,
     K = 5,
     maxiter = 10000,
@@ -62,12 +62,12 @@ for (i in 1:length(c_vec)) {
   readr::write_rds(
     log1p,
     glue::glue(
-      "~/Documents/data/passPCA/comp_approx/log1p_exact_c{c_vec[i]}.rds"
+      "~/Documents/data/log1pNMF/comp_approx/log1p_exact_c{c_vec[i]}.rds"
     )
   )
 
   set.seed(1)
-  log1p_approx <- passPCA::fit_factor_model_log1p_quad_approx_sparse(
+  log1p_approx <- log1pNMF::fit_factor_model_log1p_quad_approx_sparse(
     Y = Y,
     K = 5,
     maxiter = 10000,
@@ -78,7 +78,7 @@ for (i in 1:length(c_vec)) {
   readr::write_rds(
     log1p_approx,
     glue::glue(
-      "~/Documents/data/passPCA/comp_approx/log1p_approx_taylor_c{c_vec[i]}.rds"
+      "~/Documents/data/log1pNMF/comp_approx/log1p_approx_taylor_c{c_vec[i]}.rds"
     )
   )
 
@@ -88,7 +88,7 @@ for (i in 1:length(c_vec)) {
   readr::write_rds(
     frob_approx,
     glue::glue(
-      "~/Documents/data/passPCA/comp_approx/frob_approx_c{c_vec[i]}.rds"
+      "~/Documents/data/log1pNMF/comp_approx/frob_approx_c{c_vec[i]}.rds"
     )
   )
 
@@ -109,19 +109,19 @@ for (i in 1:length(c_vec)) {
 
   log1p <- readr::read_rds(
     glue::glue(
-      "~/Documents/data/passPCA/comp_approx/log1p_exact_c{c_vec[i]}.rds"
+      "~/Documents/data/log1pNMF/comp_approx/log1p_exact_c{c_vec[i]}.rds"
     )
   )
 
   log1p_approx <- readr::read_rds(
     glue::glue(
-      "~/Documents/data/passPCA/comp_approx/log1p_approx_taylor_c{c_vec[i]}.rds"
+      "~/Documents/data/log1pNMF/comp_approx/log1p_approx_taylor_c{c_vec[i]}.rds"
     )
   )
 
   frob_approx <- readr::read_rds(
     glue::glue(
-      "~/Documents/data/passPCA/comp_approx/frob_approx_c{c_vec[i]}.rds"
+      "~/Documents/data/log1pNMF/comp_approx/frob_approx_c{c_vec[i]}.rds"
     )
   )
 

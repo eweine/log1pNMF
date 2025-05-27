@@ -10,7 +10,7 @@ cts <- pbmc_facs$counts[VariableFeatures(seurat_obj), ]
 cts <- Matrix::t(cts)
 
 tic()
-mod1 <- passPCA::fit_factor_model_log1p_exact(
+mod1 <- log1pNMF::fit_factor_model_log1p_exact(
   cts,
   K = 5,
   maxiter = 100,
@@ -24,7 +24,7 @@ H <- tcrossprod(mod1$U, mod1$V)
 Lambda <- as.matrix(s_d %*% (exp(H) - 1))
 
 tic()
-mod2 <- passPCA::fit_factor_model_log1p_quad_approx_sparse(
+mod2 <- log1pNMF::fit_factor_model_log1p_quad_approx_sparse(
   cts,
   K = 5,
   approx_range = c(0, 1.25),
@@ -36,7 +36,7 @@ toc()
 H2 <- tcrossprod(mod2$U, mod2$V)
 Lambda2 <- as.matrix(s_d %*% (exp(H2) - 1))
 
-mod3 <- passPCA::fit_factor_model_log1p_lin_approx_sparse(
+mod3 <- log1pNMF::fit_factor_model_log1p_lin_approx_sparse(
   cts,
   K = 5,
   a = 1,

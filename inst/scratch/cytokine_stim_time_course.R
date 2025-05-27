@@ -10,7 +10,7 @@ rs <- Matrix::rowSums(counts)
 s <- rs / mean(rs)
 
 set.seed(1)
-log1p_k1 <- passPCA::fit_factor_model_log1p_quad_approx_sparse(
+log1p_k1 <- log1pNMF::fit_factor_model_log1p_quad_approx_sparse(
   Y = counts,
   K = 1,
   approx_range = c(0, 1.25),
@@ -44,7 +44,7 @@ init_FF <- log1p_k1$V %>%
     )
   )
 
-log1p_k1 <- passPCA::fit_factor_model_log1p_quad_approx_sparse(
+log1p_k1 <- log1pNMF::fit_factor_model_log1p_quad_approx_sparse(
   Y = counts,
   K = K,
   maxiter = 100,
@@ -61,7 +61,7 @@ normalize_bars <- function(LL) {
 
 }
 
-readr::write_rds(log1p_k1, "~/Documents/data/passPCA/experiment_results/log1p_k11_cytokine_stim_ts.rds")
+readr::write_rds(log1p_k1, "~/Documents/data/log1pNMF/experiment_results/log1p_k11_cytokine_stim_ts.rds")
 
 LL <- log1p_k1$U
 LL <- normalize_bars(LL)

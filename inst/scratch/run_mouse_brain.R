@@ -22,7 +22,7 @@ rs <- Matrix::rowSums(counts)
 s <- rs / mean(rs)
 
 set.seed(1)
-log1p_k1 <- passPCA::fit_factor_model_log1p_quad_approx_sparse(
+log1p_k1 <- log1pNMF::fit_factor_model_log1p_quad_approx_sparse(
   Y = counts,
   K = 1,
   maxiter = 10,
@@ -53,7 +53,7 @@ init_FF <- log1p_k1$V %>%
   )
 
 set.seed(1)
-log1p_k10 <- passPCA::fit_factor_model_log1p_quad_approx_sparse(
+log1p_k10 <- log1pNMF::fit_factor_model_log1p_quad_approx_sparse(
   Y = counts,
   K = K,
   maxiter = 100,
@@ -63,7 +63,7 @@ log1p_k10 <- passPCA::fit_factor_model_log1p_quad_approx_sparse(
   init_V = init_FF
 )
 
-readr::write_rds(log1p_k10, "~/Documents/data/passPCA/experiment_results/mouse_brain_k10.rds")
+readr::write_rds(log1p_k10, "~/Documents/data/log1pNMF/experiment_results/mouse_brain_k10.rds")
 
 cells_sub <- cells %>%
   dplyr::filter(
@@ -89,7 +89,7 @@ ct <- ct[rownames(counts)]
 
 structure_plot(LL, grouping = ct)
 
-flash_mod <- readr::read_rds("~/Documents/data/passPCA/experiment_results/mouse_brain_flash_fit_out.rds")
+flash_mod <- readr::read_rds("~/Documents/data/log1pNMF/experiment_results/mouse_brain_flash_fit_out.rds")
 
 LL2 <- normalize_bars(flash_mod$LL)
 
@@ -102,9 +102,9 @@ structure_plot(LL2, grouping = ct, gap = 25)
 # cells <- cells %>%
 #   dplyr::rename(bc = `...1`)
 #
-# readr::write_csv(cells, "~/Documents/data/passPCA/mouse_brain_cells.csv")
-# readr::write_csv(as.data.frame(colnames(counts)), "~/Documents/data/passPCA/mouse_brain_genes.csv")
-log1p_k15 <- readr::read_rds("~/Documents/data/passPCA/experiment_results/mouse_brain_k15.rds")
+# readr::write_csv(cells, "~/Documents/data/log1pNMF/mouse_brain_cells.csv")
+# readr::write_csv(as.data.frame(colnames(counts)), "~/Documents/data/log1pNMF/mouse_brain_genes.csv")
+log1p_k15 <- readr::read_rds("~/Documents/data/log1pNMF/experiment_results/mouse_brain_k15.rds")
 
 normalize_bars <- function(LL) {
 
@@ -123,11 +123,11 @@ cell_stim <- paste(cells$maintype, cells$stim)
 structure_plot(LL, grouping = cell_stim, gap = 25)
 
 usage_df <- readr::read_csv(
-  "~/Documents/data/passPCA/mouse_brain_cnmf_usage.csv"
+  "~/Documents/data/log1pNMF/mouse_brain_cnmf_usage.csv"
 )
 
 top_genes_df <- readr::read_csv(
-  "~/Documents/data/passPCA/mouse_brain_cnmf_top_usage.csv"
+  "~/Documents/data/log1pNMF/mouse_brain_cnmf_top_usage.csv"
 )
 
 cNMF_LL <- usage_df %>%
@@ -148,7 +148,7 @@ nmf_fit <- nmf(
   A = counts, k = 15
 )
 
-readr::write_rds(nmf_fit, "~/Documents/data/passPCA/experiment_results/rcppML_nmf_k15.rds")
+readr::write_rds(nmf_fit, "~/Documents/data/log1pNMF/experiment_results/rcppML_nmf_k15.rds")
 
 nmf_LL <- nmf_fit$w %*% diag(x = nmf_fit$d)
 nmf_LL <- normalize_bars(nmf_LL)
