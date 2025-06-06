@@ -169,6 +169,9 @@ fit_poisson_log1p_nmf <- function(
   )
 
   fit$cc <- cc
+  
+  # alpha scaling
+  sqrt_alpha <- sqrt(max(1, cc))
 
   # I need to figure out how to use and output OMP threads
   if (openmp_available()) {
@@ -361,8 +364,16 @@ fit_poisson_log1p_nmf <- function(
 
     }
 
+    fit$LL <- init_LL
+    
+    if (sqrt_alpha > 1) {
+      
+      fit$LL <- fit$LL / sqrt_alpha
+      
+    }
+    
     # add small positive constant to prevent initial NA log-likelihood
-    fit$LL <- pmax(init_LL, 1e-16)
+    fit$LL <- pmax(fit$LL, 1e-16) 
 
     if (nrow(init_FF) != ncol(Y)) {
 
@@ -377,9 +388,17 @@ fit_poisson_log1p_nmf <- function(
       stop("init_FF must be a non-negative numeric matrix.")
 
     }
-
+    
+    fit$FF <- init_FF
+    
+    if (sqrt_alpha > 1) {
+      
+      fit$FF <- fit$FF / sqrt_alpha
+      
+    }
+    
     # add small positive constant to prevent initial NA log-likelihood
-    fit$FF <- pmax(init_FF, 1e-16)
+    fit$FF <- pmax(fit$FF, 1e-16) 
 
   } else {
 
@@ -501,8 +520,6 @@ fit_poisson_log1p_nmf <- function(
     maxiter = fit$control$maxiter
   )
 
-  # alpha scaling
-  sqrt_alpha <- sqrt(max(1, cc))
   if (sqrt_alpha > 1) {
     
     fit$LL <- fit$LL * sqrt_alpha

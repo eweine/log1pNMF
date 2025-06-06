@@ -291,3 +291,38 @@ test_that("logLik is correct", {
   
 })
 
+test_that("initializing with previous fit works", {
+  
+  set.seed(1)
+  dat <- generate_log1p_pois_data(n = 500, p = 250, K = 4)
+  
+  set.seed(1)
+  fit0 <- fit_poisson_log1p_nmf(
+    Y = dat$Y,
+    cc = 10,
+    K = 4,
+    init_method = "rank1",
+    control = list(verbose = FALSE, maxiter = 20)
+  )
+  
+  set.seed(1)
+  fit1 <- fit_poisson_log1p_nmf(
+    Y = dat$Y,
+    cc = 10,
+    K = 4,
+    init_method = "rank1",
+    control = list(verbose = FALSE, maxiter = 10)
+  )
+  
+  fit2 <- fit_poisson_log1p_nmf(
+    Y = dat$Y,
+    cc = 10,
+    K = 4,
+    init_LL = fit1$LL,
+    init_FF = fit1$FF,
+    control = list(verbose = FALSE, maxiter = 10)
+  )
+  
+  expect_equal(tail(fit2$objective_trace, 1), tail(fit0$objective_trace, 1))
+  
+})

@@ -105,6 +105,7 @@ nmf_fit <- fit_poisson_nmf(
 fit_list[[as.character(Inf)]] <- nmf_fit
 
 readr::write_rds(fit_list, "~/Documents/data/mcf7_fit_list.rds")
+fit_list <- readr::read_rds("~/Documents/data/mcf7_fit_list.rds")
 
 hoyer_sparsity <- function(x) {
 
@@ -126,10 +127,16 @@ for (cc in cc_vec) {
   fit_list[[as.character(cc)]]$f_cor <- median(
     abs(cor(fit$FF, method = "spearman"))[lower.tri(diag(K))]
   )
+  
+  fit_list[[as.character(cc)]]$ll <- logLik(
+    fit, Y = counts
+  )
 
 }
 
 fit <- fit_list[[as.character(Inf)]]
+
+fit_list[[as.character(Inf)]]$ll <- sum(loglik_poisson_nmf(X = counts, fit))
 
 fit_list[[as.character(Inf)]]$l_sparsity <- median(apply(
   fit$L, 2, hoyer_sparsity
@@ -146,6 +153,7 @@ fit_list[[as.character(Inf)]]$f_cor <- median(
 l_sparsity_vec <- unlist(lapply(fit_list, function(x) {x$l_sparsity}))
 f_sparsity_vec <- unlist(lapply(fit_list, function(x) {x$f_sparsity}))
 f_cor_vec <- unlist(lapply(fit_list, function(x) {x$f_cor}))
+ll_vec <- unlist(lapply(fit_list, function(x) {x$ll}))
 
 library(dplyr)
 df_sparsity_l <- data.frame(
@@ -153,10 +161,29 @@ df_sparsity_l <- data.frame(
   sparsity = l_sparsity_vec
 ) %>% filter(is.finite(cc))
 
+
+df_ll <- data.frame(
+  cc = as.numeric(names(ll_vec)),
+  ll = ll_vec
+) %>% filter(is.finite(cc))
+
 df_sparsity_f <- data.frame(
   cc = as.numeric(names(f_sparsity_vec)),
   sparsity = f_sparsity_vec
 ) %>% filter(is.finite(cc))
+
+ggplot(data = df_ll, aes(x = cc, y = ll)) +
+  geom_point() +
+  geom_line() +
+  cowplot::theme_cowplot() +
+  scale_x_continuous(breaks = c(1e-4, 1e-2, 1, 1e2, 1e4), transform = "log10") +
+  xlab("c (log10 scale)") +
+  ylab("loglik") +
+  geom_hline(yintercept = ll_vec["Inf"], color = "red", linetype = "dashed") +
+  ggplot2::annotate(
+    geom="text", x=0.004, y=ll_vec["Inf"] + 10000, label="ID Link", color="red"
+  )
+
 
 ggplot(data = df_sparsity_l, aes(x = cc, y = sparsity)) +
   geom_point() +
@@ -202,9 +229,9 @@ ggplot(data = df_cor, aes(x = cc, y = correlation)) +
     geom="text", x=0.004, y=f_cor_vec["Inf"] + 0.05, label="ID Link", color="red"
   )
 
-
+library(log1pNMF)
 topic_colors <- c("olivedrab","dodgerblue","darkblue","tomato")
-normalized_structure_plot(fit_list$`1`,grouping = samples$label,topics = 4:1,
+normalized_structure_plot(fit_list$`1e-04`,grouping = samples$label,topics = 4:1,
                colors = topic_colors)$plot +
   labs(y = "membership")
 
