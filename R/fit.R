@@ -21,7 +21,7 @@
 #' is likely to be small for indices \eqn{(i, j)} where \eqn{y_{ij} = 0}. Thus,
 #' we provide an approximate log-likelihood technique which approximates only
 #' terms in the log-likelihood corresponding to indices \eqn{(i, j)} where
-#' \eqn{y_{ij} = 0}. This approximation involves assumes
+#' \eqn{y_{ij} = 0}. This approximation assumes
 #' \eqn{\exp(x) \approx a_{0} + a_{1}x + a_{2}x^{2}} for some constants
 #' \eqn{a_{0}}, \eqn{a_{1}}, and \eqn{a_{2}}. Selection of these constants can
 #' be done either by a second order Taylor expansion about \eqn{x = 0} or by
