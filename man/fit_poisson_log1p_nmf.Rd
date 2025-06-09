@@ -127,7 +127,7 @@ terms in the log-likelihood corresponding to indices \eqn{(i, j)} where
 be done either by a second order Taylor expansion about \eqn{x = 0} or by
 optimizing a Chebyshev polynomial in a specified interval. Use of the
 approximate technique can substantially increase the speed of computation,
-but due to loss of accuracy we do not encourage it's use for values of
+but due to loss of accuracy we do not encourage its use for values of
 \eqn{c} smaller than \eqn{1}.
 
 The \code{control} argument is a list in which any of the following
