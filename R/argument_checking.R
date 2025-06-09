@@ -65,7 +65,7 @@ is.nonneg.numeric <- function(x) {
 
 is.positive.scalar <- function(x) {
 
-  is.numeric(x) && (length(x) == 1)
+  is.positive.numeric(x) && (length(x) == 1)
 
 }
 
