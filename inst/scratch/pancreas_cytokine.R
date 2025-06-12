@@ -51,14 +51,18 @@ counts <- counts[,j]
 #   
 # }
 
+md <- readr::read_rds("~/Downloads/panc_ctyo_S1_celltypes.rds")
+
 fit1 <- readr::read_rds("~/Downloads/pancreas_cytokine/pancreas_cytokine_log1p_c1_rank1_init_K7.rds")
+md <- md %>%
+  dplyr::filter(barcode %in% rownames(fit1$LL))
+fit1$LL <- fit1$LL[md$barcode, ]
 
-normalized_structure_plot(fit1, grouping = samples$cluster, gap = 10)
+normalized_structure_plot(fit1, grouping = md$celltype_final, gap = 10)
 
-rownames(fit1$FF) <- genes$symbol
 
 fit2 <- readr::read_rds("~/Downloads/pancreas_cytokine/pancreas_cytokine_log1p_c1_random_init_K7.rds")
-
-normalized_structure_plot(fit2, grouping = samples$cluster, gap = 10)
+fit2$LL <- fit2$LL[md$barcode, ]
+normalized_structure_plot(fit2, grouping = md$celltype_final, gap = 10)
 
 

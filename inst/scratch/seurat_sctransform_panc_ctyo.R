@@ -219,3 +219,9 @@ library(ggplot2)
 
 ggplot(data = md) +
   geom_point(aes(x = umap1, y = umap2, colour = celltype_final))
+
+md <- md %>%
+  dplyr::select(barcode, mouse, celltype_final)
+
+readr::write_rds(md, "~/Downloads/panc_ctyo_S1_celltypes.rds")
+
