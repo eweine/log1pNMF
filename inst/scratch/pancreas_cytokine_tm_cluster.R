@@ -1,4 +1,5 @@
 library(Matrix)
+library(dplyr)
 load("~/Downloads/pancreas_cytokine.RData")
 
 i       <- which(samples$mouse == "S1")
@@ -16,9 +17,14 @@ counts <- counts[,j]
 
 library(fastTopics)
 set.seed(1)
-tm <- fit_poisson_nmf(counts,k = 12, control = list(numiter = 100,nc = 7))
+#tm <- fit_poisson_nmf(counts,k = 12, control = list(numiter = 100,nc = 7))
 
-structure_plot(tm)
+tm <- readr::read_rds("~/Downloads/pancreas_cytokine_tm_k12.rds")
+
+structure_plot(tm, grouping = celltypes$celltype, gap 
+               = 20, n = Inf)
+
+#readr::write_rds(tm, "~/Downloads/pancreas_cytokine_tm_k12.rds")
 
 scale_rows <- function (A)
   A / apply(A,1,max)
@@ -66,3 +72,10 @@ L_df <- L_df %>%
   )
 
 structure_plot(tm, grouping = L_df$cluster, gap = 20)
+
+celltype_df <- data.frame(
+  barcode = rownames(L_df),
+  celltype = L_df$cluster
+)
+
+readr::write_csv(celltype_df, "~/Downloads/pancreas_cytokine_S1_celltypes.csv")
