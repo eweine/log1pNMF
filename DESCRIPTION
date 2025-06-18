@@ -2,8 +2,8 @@ Package: log1pNMF
 Type: Package
 Title: Maximum Likelihood Estimation of Poisson Non-Negative Matrix 
     Factorization Models
-Date: 2025-06-06
-Version: 0.1-5
+Date: 2025-06-14
+Version: 0.1-6
 Authors@R: c(person("Eric","Weine",role=c("aut","cre"),
                     email="ericweine15@gmail.com"),
              person("Peter","Carbonetto",role="aut"),
