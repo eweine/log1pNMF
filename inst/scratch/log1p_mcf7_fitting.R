@@ -215,9 +215,9 @@ normalized_structure_plot(
 
 ########### Additional Plots #########
 
-# first, compare the two relevant factors for log1p K = 3
-FF_log1p <- log1p_fit3$FF
-col_maxima <- apply(log1p_fit3$LL, 2, max)
+# first, compare the two relevant factors for log1p K = 4
+FF_log1p <- log1p_fit4$FF
+col_maxima <- apply(log1p_fit4$LL, 2, max)
 FF_log1p <- sweep(FF_log1p, 2, col_maxima, FUN = "*")
 
 log1p_df <- data.frame(
@@ -231,19 +231,45 @@ g1 <- ggplot(data = log1p_df, aes(x = k2, y = k3)) +
   xlab("log1p Model k2") +
   ylab("log1p Model k3")
 
-FF_tm <- tm3_r1_init$F
-col_maxima <- apply(tm3_r1_init$L, 2, max)
+FF_tm <- tm4_r1_init$F
+col_maxima <- apply(tm4_r1_init$L, 2, max)
 FF_tm <- sweep(FF_tm, 2, col_maxima, FUN = "*")
 
 tm_df <- data.frame(
-  k2 = log1p(FF_tm[,2]),
+  k4 = log1p(FF_tm[,4]),
   k3 = log1p(FF_tm[,3])
 )
 
-g2 <- ggplot(data = tm_df, aes(x = k2, y = k3)) +
+g2 <- ggplot(data = tm_df, aes(x = k4, y = k3)) +
   geom_point(size = 0.5, alpha = 0.25) +
-  xlab("log1p(Topic Model k2)") +
+  xlab("log1p(Topic Model k4)") +
   ylab("log1p(Topic Model k3)")
 
 library(ggpubr)
 ggarrange(g1, g2, nrow = 1, ncol = 2)
+
+
+inter_RA_df <- data.frame(
+  log1p_k2 = FF_log1p[,"k_3"],
+  tm_k4 = log1p(FF_tm[,3])
+)
+
+ggplot(data = inter_RA_df, aes(x = log1p_k2, y = tm_k4)) +
+  geom_point(size = 0.5, alpha = 0.25) +
+  xlab("log1p(Topic Model k4)") +
+  ylab("log1p(Topic Model k3)")
+
+
+tm_df2 <- data.frame(
+  ra_tgfb = log1p(FF_tm[,2]),
+  tgfb = log1p(FF_tm[,3]),
+  ra = log1p(FF_tm[,4]),
+  ra_tgfb_avg = log1p(0.5 * FF_tm[,3] + 0.5 * FF_tm[,4])
+)
+
+ggplot(data = tm_df2, aes(x = ra_tgfb_avg, y = ra_tgfb)) +
+  geom_point(size = 0.5, alpha = 0.25) +
+  xlab("log1p(Topic Model TGFB)") +
+  ylab("log1p(Topic Model RA+TGFB)")
+
+
