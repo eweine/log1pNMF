@@ -200,12 +200,13 @@ sp <- normalized_structure_plot(
   topics = topic_order
 )
 plot_list[[glue::glue("c = 0.001")]] <- sp$plot + 
-  ggtitle(glue::glue("Loadings of log1p Link Poisson NMF With c = 0.001")) +
+  ggtitle(glue::glue("log1p Model With c = 0.001")) +
   theme(
     plot.title = element_text(size = 12),
     axis.title.y = element_text(size = 12),
     axis.text.x = element_text(size = 12)
-  )
+  ) + ylab("Membership") +
+  guides(fill=guide_legend(title="Factor"))
 
 tm_sp <- structure_plot(
   fit_list[["Inf"]],
@@ -214,12 +215,13 @@ tm_sp <- structure_plot(
 )
 
 plot_list[["Topic Model"]] <- tm_sp$plot + 
-  ggtitle("Loadings of Identity Link Poisson NMF / Topic Model") +
+  ggtitle("Topic Model") +
   theme(
     plot.title = element_text(size = 12),
     axis.title.y = element_text(size = 12),
     axis.text.x = element_text(size = 12)
-  )
+  )  + ylab("Membership") +
+  guides(fill=guide_legend(title="Factor"))
 
 
 g <- ggarrange(

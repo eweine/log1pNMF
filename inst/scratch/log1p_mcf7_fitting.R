@@ -120,7 +120,7 @@ init_FF <- cbind(
 rownames(init_FF) <- colnames(counts)
 
 tm3_fit0 <- init_poisson_nmf(X = counts, F = init_FF, L = init_LL)
-tm3_r1_init <- fit_poisson_nmf(X = counts, fit0 = tm3_fit0, control = list(nc = 7, numiter = 250))
+tm3_r1_init <- fit_poisson_nmf(X = counts, fit0 = tm3_fit0, control = list(nc = 7, numiter = 1000))
 
 
 topic_colors <- c("tomato","darkblue","dodgerblue")

@@ -38,20 +38,20 @@ res_list$bbc <- bbc_fit_list
 
 pancreas_fit_list <- list()
 cc_vec <- c(1e-3, 1e-2, 1e-1, 1, 1e1, 1e2, 1e3)
-K <- 9
+K <- 13
 
 for (cc in cc_vec) {
   
   pancreas_fit_list[[as.character(cc)]] <- readr::read_rds(
     glue::glue(
-      "~/Documents/data/pancreas_cellseq2_log1p_c{cc}_k{K}_exact_250_iter.rds"
+      "~/Documents/data/passPCA/log1p_k13_c_{cc}_lsa.rds"
     )
   )
 
 }
 
 pancreas_fit_list[["Inf"]] <- readr::read_rds(
-  glue::glue("~/Documents/data/passPCA/pancreas/pancreas_pois_nmf_k{K}_exact_250_iter.rds")
+  glue::glue("~/Documents/single-cell-jamboree/output/panc_cyto_lsa_res/stancill_lsa_k13_r1_init_250_iter.rds")
 )
 
 res_list$pancreas <- pancreas_fit_list
