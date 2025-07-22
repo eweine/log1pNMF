@@ -50,20 +50,20 @@ i <- which(x > 3 &
 genes  <- genes[i,]
 counts <- counts[,i]
 
-K <- 4
+K <- 3
 cc_vec <- c(1e-4, 1e-3, 1e-2, 1e-1, 1, 10, 100, 1000, 10000)
 
 fit_list <- list()
 
 for (cc in cc_vec) {
 
-  set.seed(1)
+  set.seed(10)
   fit <- fit_poisson_log1p_nmf(
     Y = counts,
     K = K,
     cc = cc,
     loglik = "exact",
-    control = list(maxiter = 2500)
+    control = list(maxiter = 1000)
   )
 
   fit_list[[as.character(cc)]] <- fit
@@ -98,7 +98,7 @@ fit0 <- init_poisson_nmf(X = counts, L = init_LL, F = init_FF)
 nmf_fit <- fit_poisson_nmf(
   X = counts,
   fit0 = fit0,
-  numiter = 2500,
+  numiter = 1000,
   control = list(nc = 7)
 )
 
