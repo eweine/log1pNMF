@@ -85,7 +85,8 @@ g1 <- normalized_structure_plot(
   theme(axis.text.x = element_text(angle = 0,hjust = 0.5)) + 
   ggtitle("log1p Model With c = 1") +
   ylab("Membership") +
-  guides(fill=guide_legend(title="Factor"))
+  guides(fill=guide_legend(title="Factor")) +
+  guides(colour = "none")
 
 
 L0 <- poisson2multinom(tm3_r1_init)$L
@@ -97,7 +98,8 @@ g2 <- structure_plot(L0,grouping = samples$label,topics = rev(1:3),
   theme(axis.text.x = element_text(angle = 0,hjust = 0.5)) + 
   ggtitle("Topic Model") +
   ylab("Membership") +
-  guides(fill=guide_legend(title="Factor"))
+  guides(fill=guide_legend(title="Factor")) +
+  guides(colour = "none")
 
 FF_log1p <- log1p_fit3$FF
 col_maxima <- apply(log1p_fit3$LL, 2, max)

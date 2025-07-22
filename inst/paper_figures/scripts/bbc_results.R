@@ -163,16 +163,6 @@ g <- annotate_figure(g,
 
 readr::write_rds(g, "../data/bbc_sparsity_ggplot.rds")
 
-g <- ggarrange(g1,g3,g2, nrow = 1, labels = c("A", "B", "C"))
-
-ggplot2::ggsave(
-  "../pdfs/bbc_sparsity.pdf",
-  g,
-  device = "pdf",
-  width = 11.5,
-  height = 4
-)
-
 plot_list <- list()
 cc_vec <- c(1e-3)
 
@@ -199,39 +189,43 @@ sp <- normalized_structure_plot(
   grouping = dat$labels,gap = 25,perplexity = 70,n = Inf, font.size = 14,
   topics = topic_order
 )
-plot_list[[glue::glue("c = 0.001")]] <- sp$plot + 
+plot_list[[glue::glue("c = 0.001")]] <- sp + 
   ggtitle(glue::glue("log1p Model With c = 0.001")) +
   theme(
     plot.title = element_text(size = 12),
     axis.title.y = element_text(size = 12),
     axis.text.x = element_text(size = 12)
   ) + ylab("Membership") +
-  guides(fill=guide_legend(title="Factor"))
+  guides(fill=guide_legend(title="Factor")) +
+  guides(colour = "none")
 
 tm_sp <- structure_plot(
   fit_list[["Inf"]],
   grouping = dat$labels,gap = 25,perplexity = 70,font.size = 14,
-  topics = topic_order, loadings_order = sp$loadings_order
+  topics = topic_order
 )
 
-plot_list[["Topic Model"]] <- tm_sp$plot + 
+plot_list[["Topic Model"]] <- tm_sp + 
   ggtitle("Topic Model") +
   theme(
     plot.title = element_text(size = 12),
     axis.title.y = element_text(size = 12),
     axis.text.x = element_text(size = 12)
   )  + ylab("Membership") +
-  guides(fill=guide_legend(title="Factor"))
+  guides(fill=guide_legend(title="Factor")) +
+  guides(colour = "none")
 
 
 g <- ggarrange(
   plotlist = plot_list,
   ncol = 1,
-  labels = "AUTO"
+  labels = "AUTO",
+  common.legend = TRUE,
+  legend = "right"
 )
 
 ggsave(
-  "../pdfs/bbc_structure.png",
+  "../images/bbc_structure.png",
   g,
   device = "png",
   width = 11,
