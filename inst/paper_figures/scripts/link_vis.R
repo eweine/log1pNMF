@@ -38,9 +38,9 @@ g <- ggplot(data = out_df, aes(x = lambda, y = b)) +
   ylab(bquote(g[c](lambda)))
 
 ggsave(
-  "/Users/eweine/Documents/log1pNMF/inst/paper_figures/pdfs/link_vis.pdf",
+  "../images/link.png",
   g,
-  device = "pdf",
+  device = "png",
   width = 5,
   height = 5
 )
