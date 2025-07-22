@@ -61,3 +61,4 @@ vignettes/*.log
 
 inst/experiments/results/*
 inst/paper_figures/data/raw_data/*
+inst/paper_figures/images/*

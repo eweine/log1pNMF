@@ -8,7 +8,8 @@ library(readr)
 
 set.seed(1)
 
-load("../data/pancreas_cytokine_lsa.Rdata")
+load("../data/raw_data/pancreas_cytokine_lsa.Rdata")
+load("../data/experiment_results.Rdata")
 barcodes   <- as.data.frame(barcodes)
 clusters   <- factor(barcodes$celltype,
                      c("Acinar","Ductal","Endothelial/Mesnchymal","Macrophage",
@@ -26,8 +27,7 @@ barcodes <- barcodes %>%
 conditions <- factor(barcodes$condition,
                      c("Untreated","IL-1B","IFNg","IL-1B + IFNg"))
 
-log1p_k13 <- read_rds(file.path("../output/panc_cyto_lsa_res",
-                                "log1p_k13_lsa.rds"))
+log1p_k13 <- res_list$pancreas$`1`
 
 i <- c(sample(which(clusters == "Beta"),900),
        which(clusters != "Beta"))
@@ -48,34 +48,32 @@ L[,"k1"] <- l11
 
 other_colors <- c("#df8461", "#6f340d", "#463397")
 
-sp1 <- structure_plot(L[i,paste0("k", celltype_topics)],grouping = clusters[i],gap = 15,n = Inf)
-p1 <- sp1$plot +
+sp1 <- structure_plot(
+  L[i,paste0("k", celltype_topics)],grouping = clusters[i],gap = 15,n = Inf
+  )
+p1 <- sp1 +
   labs(y = "Membership",fill = "") +
   guides(fill=guide_legend(title="Factor")) +
   ggtitle("Celltype Associated Factors from log1p Model With c = 1")
 
-sp2 <- structure_plot(L[i,paste0("k", other_topics)],grouping = clusters[i],gap = 15,n = Inf,
-                      colors = other_colors)
-p2 <- sp2$plot +
+sp2 <- structure_plot(
+  L[i,paste0("k", other_topics)],
+  grouping = clusters[i],gap = 15,n = Inf, 
+  colors = other_colors)
+p2 <- sp2 +
   labs(y = "Membership",fill = "") +
   guides(fill=guide_legend(title="Factor")) +
   ggtitle("Treatment Associated Factors from log1p Model With c = 1")
 
 sp3 <- structure_plot(L[i,paste0("k", other_topics)],grouping = conditions[i],gap = 30,n = Inf,
                       colors = other_colors)
-p3 <- sp3$plot +
+p3 <- sp3 +
   labs(y = "Membership",fill = "") +
   guides(fill=guide_legend(title="Factor")) +
   ggtitle("Treatment Associated Factors from log1p Model With c = 1")
 
 
-# topic model
-# it may be helpful to lineup topics between the two models so
-# that it is easier to understand the contrasts between the models
-
-tm_k13 <- read_rds(
-  "../output/panc_cyto_lsa_res/stancill_lsa_k13_r1_init_250_iter.rds"
-)
+tm_k13 <- res_list$pancreas$`Inf`
 
 L <- poisson2multinom(tm_k13)$L
 colnames(L) <- paste0(
@@ -85,20 +83,22 @@ colnames(L) <- paste0(
 L <- L[,paste0("k", 1:13)]
 
 
+sp34_loadings_order_call <- structure_plot(
+  L[i,paste0("k", celltype_topics)],grouping = clusters[i])
+
 p4 <- structure_plot(
-  L[i,paste0("k", celltype_topics)],grouping = clusters[i],gap = 15,
-  loadings_order = sp1$loadings_order
-  )$plot +
+  L[i,paste0("k", celltype_topics)],grouping = clusters[i],gap = 15
+  ) +
   labs(y = "Membership",fill = "") +
   guides(fill=guide_legend(title="Factor"))	+
   ggtitle("Celltype Associated Factors from Topic Model")				 
 p5 <- structure_plot(L[i,paste0("k", other_topics)],grouping = clusters[i],gap = 15,
-                     colors = other_colors, loadings_order = sp2$loadings_order)$plot +
+                     colors = other_colors) +
   labs(y = "Membership",fill = "") +
   guides(fill=guide_legend(title="Factor")) +
   ggtitle("Treatment Associated Factors from Topic Model")
 p6 <- structure_plot(L[i,paste0("k", other_topics)],grouping = conditions[i],gap = 30,
-                     colors = other_colors, loadings_order = sp3$loadings_order)$plot +
+                     colors = other_colors) +
   labs(y = "Membership",fill = "") +
   guides(fill=guide_legend(title="Factor")) +
   ggtitle("Treatment Associated Factors from Topic Model")
@@ -122,7 +122,7 @@ g <- ggarrange(g1, g2, heights = c(0.5, 1), nrow = 2, ncol = 1)
 
 
 ggsave(
-  "~/Documents/log1pNMF/inst/paper_figures/lsa_structure.png",
+  "../images/lsa_structure.png",
   g,
   device = "png",
   width = 11,
