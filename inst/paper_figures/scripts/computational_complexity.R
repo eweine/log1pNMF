@@ -197,9 +197,9 @@ f1 <- ggarrange(
 )
 
 ggsave(
-  "/Users/eweine/Documents/log1pNMF/inst/paper_figures/pdfs/computational_scaling.pdf",
+  "../images/computational_complexity.png",
   f1,
-  device = "pdf",
+  device = "png",
   width = 8.25,
   height = 8
 )
