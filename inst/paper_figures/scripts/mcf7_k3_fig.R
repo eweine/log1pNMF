@@ -9,8 +9,9 @@ library(cowplot)
 library(log1pNMF)
 library(ggpubr)
 
+load("../data/experiment_results.Rdata")
 set.seed(10)
-counts <- fread("../data/GSE152749_raw_counts_GRCh38.p13_NCBI.tsv.gz",
+counts <- fread("../data/raw_data/GSE152749_raw_counts_GRCh38.p13_NCBI.tsv.gz",
                 sep = "\t",header = TRUE,stringsAsFactors = FALSE)
 class(counts) <- "data.frame"
 rownames(counts) <- counts$GeneID
@@ -20,7 +21,7 @@ storage.mode(counts) <- "double"
 counts <- t(counts)
 ids <- rownames(counts)
 
-genes <- fread("../data/Human.GRCh38.p13.annot.tsv.gz",sep = "\t",
+genes <- fread("../data/raw_data/Human.GRCh38.p13.annot.tsv.gz",sep = "\t",
                header = TRUE,stringsAsFactors = FALSE)
 class(genes) <- "data.frame"
 genes <- genes[1:10]
@@ -28,7 +29,7 @@ genes <- transform(genes,
                    GeneType = factor(GeneType),
                    Status   = factor(Status))
 
-geo <- getGEO(filename = "../data/GSE152749_family.soft.gz")
+geo <- getGEO(filename = "../data/raw_data/GSE152749_family.soft.gz")
 samples <- data.frame(id = names(GSMList(geo)),
                       treatment = sapply(GSMList(geo),
                                          function (x) Meta(x)$title))
@@ -54,11 +55,7 @@ genes  <- genes[i,]
 counts <- counts[,i]
 
 set.seed(1)
-fgpca_fit <- fit_glmpca_pois(
-  Y = t(counts),
-  K = 2,
-  control = list(maxiter = 1000)
-)
+fgpca_fit <- res_list$mcf7$glmpca
 
 pdat <- data.frame(samples,fgpca_fit$V)
 pdat$Group <- pdat$label
@@ -70,41 +67,9 @@ g0 <- ggplot(pdat,aes(x = k_1,y = k_2,color = Group)) +
   xlab("PC1") +
   ylab("PC2") 
 
-set.seed(10)
-log1p_fit3 <- fit_poisson_log1p_nmf(
-  Y = counts,
-  K = 3,
-  loglik = "exact",
-  control = list(maxiter = 1000)
-)
+log1p_fit3 <- res_list$mcf7$`1`
 
-tm0 <- fastTopics:::fit_pnmf_rank1(counts)
-
-init_LL <- cbind(
-  tm0$L,
-  matrix(data = 1e-8,
-         nrow = nrow(counts),
-         ncol = 2)
-)
-
-rownames(init_LL) <- rownames(counts)
-
-init_FF <- cbind(
-  tm0$F,
-  matrix(data = 1e-8,
-         nrow = ncol(counts),
-         ncol = 2)
-)
-
-rownames(init_FF) <- colnames(counts)
-
-tm3_fit0 <- init_poisson_nmf(X = counts, F = init_FF, L = init_LL)
-tm3_r1_init <- fit_poisson_nmf(
-  X = counts, 
-  fit0 = tm3_fit0, 
-  numiter = 1000,
-  control = list(nc = 7)
-)
+tm3_r1_init <- res_list$mcf7$`Inf`
 
 n <- nrow(counts)
 colnames(log1p_fit3$FF) <- paste0("k", 1:3)
@@ -116,7 +81,7 @@ g1 <- normalized_structure_plot(
   loadings_order = 1:n,
   colors = topic_colors,
   topics = rev(1:3)
-)$plot + 
+) + 
   theme(axis.text.x = element_text(angle = 0,hjust = 0.5)) + 
   ggtitle("log1p Model With c = 1") +
   ylab("Membership") +
@@ -128,7 +93,7 @@ L <- L0
 L0[,2] <- L[,3]
 L0[,3] <- L[,2]
 g2 <- structure_plot(L0,grouping = samples$label,topics = rev(1:3),
-                     loadings_order = 1:n,colors = topic_colors)$plot +
+                     loadings_order = 1:n,colors = topic_colors) +
   theme(axis.text.x = element_text(angle = 0,hjust = 0.5)) + 
   ggtitle("Topic Model") +
   ylab("Membership") +
@@ -212,7 +177,7 @@ g_final <- ggarrange(
 ggsave(
   plot = g_final,
   device = "png",
-  filename = "~/Documents/log1pNMF/inst/paper_figures/pdfs/mcf7_k3.png",
+  filename = "../images/mcf7.png",
   width = 7,
   height = 8
 )

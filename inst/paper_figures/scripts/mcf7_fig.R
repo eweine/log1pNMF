@@ -9,8 +9,9 @@ library(cowplot)
 library(log1pNMF)
 library(ggpubr)
 
+load("../data/experiment_results.Rdata")
 set.seed(10)
-counts <- fread("../data/GSE152749_raw_counts_GRCh38.p13_NCBI.tsv.gz",
+counts <- fread("../data/raw_data/GSE152749_raw_counts_GRCh38.p13_NCBI.tsv.gz",
                 sep = "\t",header = TRUE,stringsAsFactors = FALSE)
 class(counts) <- "data.frame"
 rownames(counts) <- counts$GeneID
@@ -20,7 +21,7 @@ storage.mode(counts) <- "double"
 counts <- t(counts)
 ids <- rownames(counts)
 
-genes <- fread("../data/Human.GRCh38.p13.annot.tsv.gz",sep = "\t",
+genes <- fread("../data/raw_data/Human.GRCh38.p13.annot.tsv.gz",sep = "\t",
                header = TRUE,stringsAsFactors = FALSE)
 class(genes) <- "data.frame"
 genes <- genes[1:10]
@@ -28,7 +29,7 @@ genes <- transform(genes,
                    GeneType = factor(GeneType),
                    Status   = factor(Status))
 
-geo <- getGEO(filename = "../data/GSE152749_family.soft.gz")
+geo <- getGEO(filename = "../data/raw_data/GSE152749_family.soft.gz")
 samples <- data.frame(id = names(GSMList(geo)),
                       treatment = sapply(GSMList(geo),
                                          function (x) Meta(x)$title))
