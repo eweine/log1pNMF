@@ -96,9 +96,9 @@ library(ggpubr)
 g <- ggarrange(g1, g2, g3, nrow = 1, labels = "AUTO")
 
 ggsave(
-  "../pdfs/approx_quality.pdf",
+  "../images/approx_quality.png",
   g,
-  device = "pdf",
+  device = "png",
   width = 11.2,
   height = 3.5
 )
