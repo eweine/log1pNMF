@@ -52,8 +52,9 @@ sp1 <- structure_plot(
   L[i,paste0("k", celltype_topics)],grouping = clusters[i],gap = 15,n = Inf
   )
 p1 <- sp1 +
-  labs(y = "Membership",fill = "") +
+  labs(y = "Membership") +
   guides(fill=guide_legend(title="Factor")) +
+  guides(colour = "none") +
   ggtitle("Celltype Associated Factors from log1p Model With c = 1")
 
 sp2 <- structure_plot(
@@ -61,8 +62,9 @@ sp2 <- structure_plot(
   grouping = clusters[i],gap = 15,n = Inf, 
   colors = other_colors)
 p2 <- sp2 +
-  labs(y = "Membership",fill = "") +
+  labs(y = "Membership") +
   guides(fill=guide_legend(title="Factor")) +
+  guides(colour = "none") +
   ggtitle("Treatment Associated Factors from log1p Model With c = 1")
 
 sp3 <- structure_plot(L[i,paste0("k", other_topics)],grouping = conditions[i],gap = 30,n = Inf,
@@ -70,6 +72,7 @@ sp3 <- structure_plot(L[i,paste0("k", other_topics)],grouping = conditions[i],ga
 p3 <- sp3 +
   labs(y = "Membership",fill = "") +
   guides(fill=guide_legend(title="Factor")) +
+  guides(colour = "none") +
   ggtitle("Treatment Associated Factors from log1p Model With c = 1")
 
 
@@ -91,16 +94,19 @@ p4 <- structure_plot(
   ) +
   labs(y = "Membership",fill = "") +
   guides(fill=guide_legend(title="Factor"))	+
+  guides(colour = "none") +
   ggtitle("Celltype Associated Factors from Topic Model")				 
 p5 <- structure_plot(L[i,paste0("k", other_topics)],grouping = clusters[i],gap = 15,
                      colors = other_colors) +
   labs(y = "Membership",fill = "") +
   guides(fill=guide_legend(title="Factor")) +
+  guides(colour = "none") +
   ggtitle("Treatment Associated Factors from Topic Model")
 p6 <- structure_plot(L[i,paste0("k", other_topics)],grouping = conditions[i],gap = 30,
                      colors = other_colors) +
   labs(y = "Membership",fill = "") +
   guides(fill=guide_legend(title="Factor")) +
+  guides(colour = "none") +
   ggtitle("Treatment Associated Factors from Topic Model")
 
 library(ggpubr)
