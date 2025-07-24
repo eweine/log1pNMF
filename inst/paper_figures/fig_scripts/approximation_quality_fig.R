@@ -44,12 +44,13 @@ g1 <- ggplot(data = ll_diff_df, aes(x = cc, y = ll_ratio)) +
   geom_point() +
   geom_line() +
   cowplot::theme_cowplot() +
-  xlab("c (log10 scale)") +
+  xlab("c") +
   ylab("Likelihood Ratio (approx / exact)") +
-  ggtitle("log1p Link With c = 1e-3") +
+  ggtitle("Data from log1p Model with c = 1e-3") +
   theme(
     axis.title.y = element_text(size = 12),
-    axis.title.x = element_text(size = 12)
+    axis.title.x = element_text(size = 12),
+    plot.title = element_text(size = 12)
     ) +
   ylim(0, 1.05) +
   scale_x_continuous(breaks = c(1e-4, 1e-2, 1, 1e2, 1e4), transform = "log10")
@@ -63,12 +64,13 @@ g2 <- ggplot(data = ll_diff_df, aes(x = cc, y = ll_ratio)) +
   geom_point() +
   geom_line() +
   cowplot::theme_cowplot() +
-  xlab("c (log10 scale)") +
+  xlab("c") +
   ylab("Likelihood Ratio (approx / exact)") +
-  ggtitle("log1p Link With c = 1") +
+  ggtitle("Data from log1p Model with c = 1") +
   theme(
     axis.title.y = element_text(size = 12),
-    axis.title.x = element_text(size = 12)
+    axis.title.x = element_text(size = 12),
+    plot.title = element_text(size = 12)
     ) +
   ylim(0, 1.05) +
   scale_x_continuous(breaks = c(1e-4, 1e-2, 1, 1e2, 1e4), transform = "log10")
@@ -82,12 +84,13 @@ g3 <- ggplot(data = ll_diff_df, aes(x = cc, y = ll_ratio)) +
   geom_point() +
   geom_line() +
   cowplot::theme_cowplot() +
-  xlab("c (log10 scale)") +
+  xlab("c") +
   ylab("Likelihood Ratio (approx / exact)") +
-  ggtitle("Identity Link") +
+  ggtitle("Data from Topic Model") +
   theme(
     axis.title.y = element_text(size = 12),
-    axis.title.x = element_text(size = 12)
+    axis.title.x = element_text(size = 12),
+    plot.title = element_text(size = 12)
     ) +
   ylim(0, 1.05) +
   scale_x_continuous(breaks = c(1e-4, 1e-2, 1, 1e2, 1e4), transform = "log10")
