@@ -56,15 +56,15 @@ for (cc in cc_vec) {
     K = K,
     s = s,
     cc = cc,
-    loglik = "exact",
+    loglik = ifelse(cc >= 100, "approx", "exact"),
     init_method = "rank1",
     control = list(
-      maxiter = 1000
+      maxiter = 250
     )
   )
   
   readr::write_rds(
-    fit, glue::glue("bbc_log1p_c{cc}_k{K}_exact_1000_iter.rds")
+    fit, glue::glue("bbc_log1p_c{cc}_k{K}_250_iter.rds")
   )
   
 }
@@ -97,6 +97,6 @@ fit0 <- init_poisson_nmf(X = dtm2, L = init_LL, F = init_FF)
 nmf_fit <- fit_poisson_nmf(
   X = dtm2,
   fit0 = fit0,
-  numiter = 1000,
+  numiter = 250,
   control = list(nc = 7)
 )

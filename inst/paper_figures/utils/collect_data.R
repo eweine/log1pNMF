@@ -15,26 +15,7 @@ sim_quality_res_list[["tm"]]$fit_list_exact <- fit_list_exact
 res_list <- list()
 res_list$sim_quality <- sim_quality_res_list
 
-bbc_fit_list <- list()
-
-cc_vec <- c(1e-3, 1e-2, 1e-1, 1, 1e1, 1e2, 1e3)
-K <- 10
-
-for (cc in cc_vec) {
-  
-  bbc_fit_list[[as.character(cc)]] <- readr::read_rds(
-    glue::glue(
-      "~/Documents/data/bbc_log1p_c{cc}_k{K}_exact_1000_iter.rds"
-    )
-  )
-  
-}
-
-bbc_fit_list[["Inf"]] <- readr::read_rds(
-  glue::glue("~/Documents/data/bbc_nmf_k{K}_exact_1000_iter.rds")
-)
-
-res_list$bbc <- bbc_fit_list
+res_list$bbc <- readr::read_rds("~/Documents/data/bbc_fit_list.rds")
 
 pancreas_fit_list <- list()
 cc_vec <- c(1e-3, 1e-2, 1e-1, 1, 1e1, 1e2, 1e3)

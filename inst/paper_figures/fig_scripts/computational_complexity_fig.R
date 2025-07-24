@@ -64,8 +64,8 @@ ga <- ggplot(data = o_df, aes(x = n, y = o, color = Calculation)) +
     breaks = c(1, 5, 10, 20),
     trans = "log10"  # Ensure 1 is included
   ) +
-  ylab("Complexity Relative to Topic Model (log10 scale)") +
-  xlab("n (log10 scale)") +
+  ylab("Complexity Relative to Topic Model") +
+  xlab("n") +
   cowplot::theme_cowplot() +
   ggtitle("m = 10,000, K = 25, Sparsity = 95%") +
   geom_hline(yintercept = 1, linetype = "dashed") +
@@ -73,8 +73,8 @@ ga <- ggplot(data = o_df, aes(x = n, y = o, color = Calculation)) +
   theme(
     plot.title = element_text(size = 14, face = "bold"),
     axis.title.x = element_text(size = 12),
-    axis.title.y = element_text(size = 10),
-    axis.text = element_text(size = 10)
+    axis.title.y = element_text(size = 12),
+    axis.text = element_text(size = 12)
   )
 
 
@@ -117,7 +117,7 @@ gb <- ggplot(data = o_df, aes(x = K, y = o, color = Calculation)) +
     transform = "log10", # Ensure 1 is included
     breaks = c(1, 5, 10, 20)
   ) +
-  ylab("Complexity Relative to Topic Model (log10 scale)") +
+  ylab("Complexity Relative to Topic Model") +
   cowplot::theme_cowplot() +
   ggtitle("n = 10,000, m = 10,000, Sparsity = 95%") +
   geom_hline(yintercept = 1, linetype = "dashed") +
@@ -125,8 +125,8 @@ gb <- ggplot(data = o_df, aes(x = K, y = o, color = Calculation)) +
   theme(
     plot.title = element_text(size = 14, face = "bold"),
     axis.title.x = element_text(size = 12),
-    axis.title.y = element_text(size = 10),
-    axis.text = element_text(size = 10)
+    axis.title.y = element_text(size = 12),
+    axis.text = element_text(size = 12)
   )
 
 # finally, I think it would be useful to look at this
@@ -172,7 +172,7 @@ gc <- ggplot(data = o_df, aes(x = pct_0, y = o, color = Calculation)) +
     labels = scales::percent,      # Format x-axis labels as percentages
     breaks = scales::pretty_breaks(n = 5) # Optional: Adjust the number of breaks
   ) +
-  ylab("Complexity Relative to Topic Model (log10 scale)") +
+  ylab("Complexity Relative to Topic Model") +
   xlab("Sparsity") +
   cowplot::theme_cowplot() +
   ggtitle("n = 10,000, m = 10,000, K = 25") +
@@ -181,8 +181,8 @@ gc <- ggplot(data = o_df, aes(x = pct_0, y = o, color = Calculation)) +
   theme(
     plot.title = element_text(size = 14, face = "bold"),
     axis.title.x = element_text(size = 12),
-    axis.title.y = element_text(size = 10),
-    axis.text = element_text(size = 10)
+    axis.title.y = element_text(size = 12),
+    axis.text = element_text(size = 12)
   )
 
 library(ggpubr)
