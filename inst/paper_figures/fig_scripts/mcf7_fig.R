@@ -65,7 +65,11 @@ g0 <- ggplot(pdat,aes(x = k_1,y = k_2,color = Group)) +
                                 "olivedrab")) + 
   theme_cowplot(font_size = 10) +
   xlab("PC1") +
-  ylab("PC2") 
+  ylab("PC2") +
+  ggtitle("GLM-PCA Loadings") +
+  theme(
+    plot.title = element_text(hjust = 0.5)
+    )
 
 log1p_fit3 <- res_list$mcf7$`1`
 
@@ -82,8 +86,10 @@ g1 <- normalized_structure_plot(
   colors = topic_colors,
   topics = rev(1:3)
 ) + 
-  theme(axis.text.x = element_text(angle = 0,hjust = 0.5)) + 
-  ggtitle("log1p Model With c = 1") +
+  theme(
+    axis.text.x = element_text(angle = 0,hjust = 0.5, size = 9),
+    plot.title = element_text(size = 11)) + 
+  ggtitle("log1p Model Loadings (c = 1)") +
   ylab("Membership") +
   guides(fill=guide_legend(title="Factor")) +
   guides(colour = "none")
@@ -95,8 +101,10 @@ L0[,2] <- L[,3]
 L0[,3] <- L[,2]
 g2 <- structure_plot(L0,grouping = samples$label,topics = rev(1:3),
                      loadings_order = 1:n,colors = topic_colors) +
-  theme(axis.text.x = element_text(angle = 0,hjust = 0.5)) + 
-  ggtitle("Topic Model") +
+  theme(
+    axis.text.x = element_text(angle = 0,hjust = 0.5, size = 9),
+    plot.title = element_text(size = 11)) + 
+  ggtitle("Topic Model Loadings") +
   ylab("Membership") +
   guides(fill=guide_legend(title="Factor")) +
   guides(colour = "none")
@@ -115,7 +123,7 @@ g3 <- ggplot(data = log1p_df, aes(x = k2, y = k3)) +
   xlab("log1p Model k2") +
   ylab("log1p Model k3") +
   theme_cowplot(font_size = 10) +
-  ggtitle("log1p Model Factor Correlation") +
+  ggtitle("log1p Model Factors") +
   theme(plot.title = element_text(hjust = 0.5))
 
 
@@ -142,7 +150,7 @@ g4 <- ggplot(data = tm_df, aes(x = k2, y = k3)) +
   xlab("log(1 + Topic Model k2)") +
   ylab("log(1 + Topic Model k3)") +
   theme_cowplot(font_size = 10) +
-  ggtitle("Topic Model Factor Correlation") +
+  ggtitle("Topic Model Factors") +
   theme(plot.title = element_text(hjust = 0.5))
 
 g_a <- ggarrange(
