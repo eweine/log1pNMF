@@ -132,11 +132,11 @@ g1 <- ggplot(data = df_cor, aes(x = cc, y = correlation)) +
   cowplot::theme_cowplot() +
   scale_y_continuous(limits = c(0, 1), expand = c(0, 0)) +
   scale_x_continuous(breaks = c(1e-3, 1, 1e3), transform = "log10") +
-  xlab("c (log10 scale)") +
+  xlab("c") +
   ylab("Median Abs. Factor Correlation") +
   geom_hline(yintercept = cor_vec["Inf"], color = "red", linetype = "dashed") +
   ggplot2::annotate(
-    geom="text", x=0.004, y=cor_vec["Inf"] + 0.05, label="ID Link", color="red"
+    geom="text", x=0.006, y=cor_vec["Inf"] + 0.05, label="Topic Model", color="red"
   )
 
 g2 <- ggplot(data = df_sparsity_l, aes(x = cc, y = sparsity)) +
@@ -145,11 +145,11 @@ g2 <- ggplot(data = df_sparsity_l, aes(x = cc, y = sparsity)) +
   cowplot::theme_cowplot() +
   scale_y_continuous(limits = c(0, 1), expand = c(0, 0)) +
   scale_x_continuous(breaks = c(1e-3, 1, 1e3), transform = "log10") +
-  xlab("c (log10 scale)") +
+  xlab("c") +
   ylab("Median Loading Sparsity") +
   geom_hline(yintercept = l_sparsity_vec["Inf"], color = "red", linetype = "dashed") +
   ggplot2::annotate(
-    geom="text", x=0.004, y=l_sparsity_vec["Inf"] + 0.05, label="ID Link", color="red"
+    geom="text", x=0.006, y=l_sparsity_vec["Inf"] + 0.05, label="Topic Model", color="red"
   )
 
 g3 <- ggplot(data = df_sparsity_f, aes(x = cc, y = sparsity)) +
@@ -158,11 +158,11 @@ g3 <- ggplot(data = df_sparsity_f, aes(x = cc, y = sparsity)) +
   cowplot::theme_cowplot() +
   scale_y_continuous(limits = c(0, 1), expand = c(0, 0)) +
   scale_x_continuous(breaks = c(1e-3, 1, 1e3), transform = "log10") +
-  xlab("c (log10 scale)") +
+  xlab("c") +
   ylab("Median Factor Sparsity") +
   geom_hline(yintercept = f_sparsity_vec["Inf"], color = "red", linetype = "dashed") +
   ggplot2::annotate(
-    geom="text", x=0.004, y=f_sparsity_vec["Inf"] + 0.05, label="ID Link", color="red"
+    geom="text", x=0.006, y=f_sparsity_vec["Inf"] + 0.05, label="Topic Model", color="red"
   )
 
 rm(list = setdiff(ls(), c("g1", "g2", "g3", "hoyer_sparsity", "res_list")))
@@ -298,11 +298,11 @@ g4 <- ggplot(data = df_cor, aes(x = cc, y = correlation)) +
   cowplot::theme_cowplot() +
   scale_y_continuous(limits = c(0, 1), expand = c(0, 0)) +
   scale_x_continuous(breaks = c(1e-4, 1e-2, 1, 1e2, 1e4), transform = "log10") +
-  xlab("c (log10 scale)") +
+  xlab("c") +
   ylab("Median Abs. Factor Correlation") +
   geom_hline(yintercept = cor_vec["Inf"], color = "red", linetype = "dashed") +
   ggplot2::annotate(
-    geom="text", x=0.004, y=cor_vec["Inf"] + 0.05, label="ID Link", color="red"
+    geom="text", x=0.003, y=cor_vec["Inf"] + 0.05, label="Topic Model", color="red"
   )
 
 g5 <- ggplot(data = df_sparsity_l, aes(x = cc, y = sparsity)) +
@@ -311,11 +311,11 @@ g5 <- ggplot(data = df_sparsity_l, aes(x = cc, y = sparsity)) +
   cowplot::theme_cowplot() +
   scale_y_continuous(limits = c(0, 1), expand = c(0, 0)) +
   scale_x_continuous(breaks = c(1e-4, 1e-2, 1, 1e2, 1e4), transform = "log10") +
-  xlab("c (log10 scale)") +
+  xlab("c") +
   ylab("Median Loading Sparsity") +
   geom_hline(yintercept = l_sparsity_vec["Inf"], color = "red", linetype = "dashed") +
   ggplot2::annotate(
-    geom="text", x=0.004, y=l_sparsity_vec["Inf"] + 0.05, label="ID Link", color="red"
+    geom="text", x=0.003, y=l_sparsity_vec["Inf"] + 0.05, label="Topic Model", color="red"
   )
 
 g6 <- ggplot(data = df_sparsity_f, aes(x = cc, y = sparsity)) +
@@ -324,11 +324,11 @@ g6 <- ggplot(data = df_sparsity_f, aes(x = cc, y = sparsity)) +
   cowplot::theme_cowplot() +
   scale_y_continuous(limits = c(0, 1), expand = c(0, 0)) +
   scale_x_continuous(breaks = c(1e-4, 1e-2, 1, 1e2, 1e4), transform = "log10") +
-  xlab("c (log10 scale)") +
+  xlab("c") +
   ylab("Median Factor Sparsity") +
   geom_hline(yintercept = f_sparsity_vec["Inf"], color = "red", linetype = "dashed") +
   ggplot2::annotate(
-    geom="text", x=0.004, y=f_sparsity_vec["Inf"] + 0.05, label="ID Link", color="red"
+    geom="text", x=0.003, y=f_sparsity_vec["Inf"] + 0.05, label="Topic Model", color="red"
   )
 
 rm(list = setdiff(ls(), c(
@@ -427,11 +427,11 @@ g7 <- ggplot(data = df_cor, aes(x = cc, y = correlation)) +
   cowplot::theme_cowplot() +
   scale_y_continuous(limits = c(0, 1), expand = c(0, 0)) +
   scale_x_continuous(breaks = c(1e-3, 1, 1e3), transform = "log10") +
-  xlab("c (log10 scale)") +
+  xlab("c") +
   ylab("Median Abs. Factor Correlation") +
   geom_hline(yintercept = cor_vec["Inf"], color = "red", linetype = "dashed") +
   ggplot2::annotate(
-    geom="text", x=0.004, y=cor_vec["Inf"] + 0.05, label="ID Link", color="red"
+    geom="text", x=0.006, y=cor_vec["Inf"] + 0.05, label="Topic Model", color="red"
   )
 
 g8 <- ggplot(data = df_sparsity_l, aes(x = cc, y = sparsity)) +
@@ -440,11 +440,11 @@ g8 <- ggplot(data = df_sparsity_l, aes(x = cc, y = sparsity)) +
   cowplot::theme_cowplot() +
   scale_y_continuous(limits = c(0, 1), expand = c(0, 0)) +
   scale_x_continuous(breaks = c(1e-3, 1, 1e3), transform = "log10") +
-  xlab("c (log10 scale)") +
+  xlab("c") +
   ylab("Median Loading Sparsity") +
   geom_hline(yintercept = l_sparsity_vec["Inf"], color = "red", linetype = "dashed") +
   ggplot2::annotate(
-    geom="text", x=0.004, y=l_sparsity_vec["Inf"] + 0.05, label="ID Link", color="red"
+    geom="text", x=0.006, y=l_sparsity_vec["Inf"] + 0.05, label="Topic Model", color="red"
   )
 
 g9 <- ggplot(data = df_sparsity_f, aes(x = cc, y = sparsity)) +
@@ -453,9 +453,32 @@ g9 <- ggplot(data = df_sparsity_f, aes(x = cc, y = sparsity)) +
   cowplot::theme_cowplot() +
   scale_y_continuous(limits = c(0, 1), expand = c(0, 0)) +
   scale_x_continuous(breaks = c(1e-3, 1, 1e3), transform = "log10") +
-  xlab("c (log10 scale)") +
+  xlab("c") +
   ylab("Median Factor Sparsity") +
   geom_hline(yintercept = f_sparsity_vec["Inf"], color = "red", linetype = "dashed") +
   ggplot2::annotate(
-    geom="text", x=0.004, y=f_sparsity_vec["Inf"] + 0.05, label="ID Link", color="red"
+    geom="text", x=0.006, y=f_sparsity_vec["Inf"] - 0.05, label="Topic Model", color="red"
   )
+
+mcf7_sum_fig <- ggarrange(g4,g5,g6, nrow = 1, labels = c("A", "B", "C"))
+mcf7_sum_fig <- annotate_figure(mcf7_sum_fig,
+                     top = text_grob("MCF-7 K = 3", size = 25, face = "bold"))
+
+bbc_sum_fig <- ggarrange(g1,g2,g3, nrow = 1, labels = c("D", "E", "F"))
+bbc_sum_fig <- annotate_figure(bbc_sum_fig,
+                                top = text_grob("BBC K = 10", size = 25, face = "bold"))
+
+
+lsa_sum_fig <- ggarrange(g7,g8,g9, nrow = 1, labels = c("G", "H", "I"))
+lsa_sum_fig <- annotate_figure(lsa_sum_fig,
+                               top = text_grob("Pancreas K = 13", size = 25, face = "bold"))
+
+all_dataset_sum_fig <- ggarrange(mcf7_sum_fig, bbc_sum_fig, lsa_sum_fig, nrow = 3, ncol = 1)
+
+ggsave(
+  "../images/fit_summary.png",
+  all_dataset_sum_fig,
+  device = "png",
+  width = 12.66,
+  height = 12.66
+)
