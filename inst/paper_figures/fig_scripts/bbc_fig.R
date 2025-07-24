@@ -74,11 +74,16 @@ for (cc in cc_vec) {
     fit_list[[as.character(cc)]]$FF, 2, hoyer_sparsity
   )
   
+  fit_list[[as.character(cc)]]$final_loglik <- logLik(
+    object = fit_list[[as.character(cc)]], Y = dtm2
+  )
+  
   fit_list[[as.character(cc)]]$cor_mat <- cor(fit_list[[as.character(cc)]]$FF, method = "spearman")
   
 }
 
 fit_list[["Inf"]] <- res_list$bbc$`Inf`
+fit_list[["Inf"]]$final_loglik <- NA
 
 fit_list[["Inf"]]$Ls <- Matrix::Diagonal(x = 1/s) %*% fit_list[["Inf"]]$L
 
@@ -97,6 +102,8 @@ f_sparsity_vec <- unlist(lapply(fit_list, function(x) {median(x$f_sparsity)}))
 cor_vec <- unlist(
   lapply(fit_list, function(x) {median(abs(x$cor_mat[lower.tri(x$cor_mat)]))})
 )
+
+loglik_vec <- unlist(lapply(fit_list, function(x) {x$final_loglik}))
 
 df_sparsity_l <- data.frame(
   cc = as.numeric(names(l_sparsity_vec)),
