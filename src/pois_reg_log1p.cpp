@@ -15,6 +15,7 @@ arma::vec solve_pois_reg_log1p (
     const arma::vec y,
     const arma::uvec y_nz_idx,
     const arma::vec& s,
+    const double cc_alpha,
     arma::vec b,
     const std::vector<int>& update_indices,
     int num_iter,
@@ -26,7 +27,7 @@ arma::vec solve_pois_reg_log1p (
   double second_deriv;
   double newton_dir;
   double newton_dec;
-  vec eta = X * b;
+  vec eta = X * b * (1 / cc_alpha);
   vec exp_eta = exp(eta);
   vec exp_eta_nz_m1 = exp_eta.elem(y_nz_idx) - s;
   vec exp_eta_nz_m1_proposed;
@@ -53,16 +54,18 @@ arma::vec solve_pois_reg_log1p (
 
       exp_deriv_term = exp_eta % X.col(j);
 
-      first_deriv    = sum(exp_deriv_term) - dot(
+      // pick up here to re-define derivatives using chain rule
+      first_deriv    = (1 / cc_alpha) * (sum(exp_deriv_term) - dot(
         y,
         exp_deriv_term.elem(y_nz_idx) / exp_eta_nz_m1
-      );
+      ));
 
-      second_deriv   = dot(exp_deriv_term, X.col(j)) + dot(
+      second_deriv   = (1 / (cc_alpha * cc_alpha)) * (
+        dot(exp_deriv_term, X.col(j)) + dot(
         y,
         (exp_deriv_term.elem(y_nz_idx) % exp_deriv_term.elem(y_nz_idx)) /
           square(exp_eta_nz_m1)
-      );
+        ));
 
       newton_dir     = first_deriv / second_deriv;
 
@@ -94,7 +97,7 @@ arma::vec solve_pois_reg_log1p (
       while (true) {
         
         b[j]             = std::max(b_j_og - t * newton_dir, 1e-12);
-        eta_proposed     = eta + (b[j] - b_j_og) * X.col(j);
+        eta_proposed     = eta + (b[j] - b_j_og) * X.col(j) * (1 / cc_alpha);
         exp_eta_proposed = exp(eta_proposed);
         exp_eta_nz_m1_proposed = exp_eta_proposed.elem(y_nz_idx) - s;
         f_proposed = sum(exp_eta_proposed) - dot(
@@ -132,6 +135,7 @@ arma::mat regress_cols_of_Y_on_X_log1p_pois_exact(
     const std::vector<arma::vec>& Y,
     const std::vector<arma::uvec>& Y_nz_idx,
     const arma::vec& s,
+    const double cc_alpha,
     const bool common_size_factor,
     arma::mat& B,
     const std::vector<int>& update_indices,
@@ -153,6 +157,7 @@ arma::mat regress_cols_of_Y_on_X_log1p_pois_exact(
         Y[j],
         Y_nz_idx[j],
         s_j,
+        cc_alpha,
         B.col(j),
         update_indices,
         num_iter,
@@ -172,6 +177,7 @@ arma::mat regress_cols_of_Y_on_X_log1p_pois_exact(
         Y[j],
         Y_nz_idx[j],
         s.elem(Y_nz_idx[j]),
+        cc_alpha,
         B.col(j),
         update_indices,
         num_iter,
@@ -196,6 +202,7 @@ List fit_factor_model_log1p_exact_cpp_src(
     const std::vector<int>& sc_T_i,
     const std::vector<int>& sc_T_j,
     const arma::vec& s,
+    const double cc_alpha,
     arma::mat& U_T,
     arma::mat& V_T,
     const int n,
@@ -254,6 +261,7 @@ List fit_factor_model_log1p_exact_cpp_src(
     sc_i,
     sc_j,
     s,
+    cc_alpha,
     n,
     p
   );
@@ -307,6 +315,7 @@ List fit_factor_model_log1p_exact_cpp_src(
       y_rows_data,
       y_rows_idx,
       s,
+      cc_alpha,
       true,
       U_T,
       update_indices,
@@ -320,6 +329,7 @@ List fit_factor_model_log1p_exact_cpp_src(
       y_cols_data,
       y_cols_idx,
       s,
+      cc_alpha,
       false,
       V_T,
       update_indices,
@@ -341,6 +351,7 @@ List fit_factor_model_log1p_exact_cpp_src(
       sc_i,
       sc_j,
       s,
+      cc_alpha,
       n,
       p
     );

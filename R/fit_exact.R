@@ -3,6 +3,7 @@
 #' @param sc summary of sparse matrix to fit model on
 #' @param sc_t summary of transpose of sparse matrix to fit model on
 #' @param s size factor
+#' @param cc_alpha normalizing constant
 #' @param n number of rows of data matrix
 #' @param p number of columns of data matrix
 #' @param fit object with model parameters
@@ -17,6 +18,7 @@ fit_factor_model_log1p_exact <- function(
     sc,
     sc_t,
     s,
+    cc_alpha,
     n,
     p,
     fit,
@@ -36,6 +38,7 @@ fit_factor_model_log1p_exact <- function(
     sc_t$i - 1,
     sc_t$j - 1,
     s,
+    cc_alpha,
     t(U),
     t(V),
     n,

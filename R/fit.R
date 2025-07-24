@@ -366,11 +366,11 @@ fit_poisson_log1p_nmf <- function(
 
     fit$LL <- init_LL
     
-    if (sqrt_alpha > 1) {
-      
-      fit$LL <- fit$LL / sqrt_alpha
-      
-    }
+    # if (sqrt_alpha > 1) {
+    #   
+    #   fit$LL <- fit$LL / sqrt_alpha
+    #   
+    # }
     
     # add small positive constant to prevent initial NA log-likelihood
     fit$LL <- pmax(fit$LL, 1e-16) 
@@ -391,11 +391,11 @@ fit_poisson_log1p_nmf <- function(
     
     fit$FF <- init_FF
     
-    if (sqrt_alpha > 1) {
-      
-      fit$FF <- fit$FF / sqrt_alpha
-      
-    }
+    # if (sqrt_alpha > 1) {
+    #   
+    #   fit$FF <- fit$FF / sqrt_alpha
+    #   
+    # }
     
     # add small positive constant to prevent initial NA log-likelihood
     fit$FF <- pmax(fit$FF, 1e-16) 
@@ -474,6 +474,7 @@ fit_poisson_log1p_nmf <- function(
       fit <- fit_fn(
         sc = sc,
         sc_t = sc_t,
+        cc_alpha = max(1, cc),
         s = fit$s * fit$cc,
         n = nrow(Y),
         p = ncol(Y),
@@ -513,6 +514,7 @@ fit_poisson_log1p_nmf <- function(
   fit <- fit_fn(
     sc = sc,
     sc_t = sc_t,
+    cc_alpha = max(1, cc),
     s = fit$s * fit$cc,
     n = nrow(Y),
     p = ncol(Y),
@@ -520,12 +522,12 @@ fit_poisson_log1p_nmf <- function(
     maxiter = fit$control$maxiter
   )
 
-  if (sqrt_alpha > 1) {
-    
-    fit$LL <- fit$LL * sqrt_alpha
-    fit$FF <- fit$FF * sqrt_alpha
-    
-  }
+  # if (sqrt_alpha > 1) {
+  #   
+  #   fit$LL <- fit$LL * sqrt_alpha
+  #   fit$FF <- fit$FF * sqrt_alpha
+  #   
+  # }
   
   fit$alpha <- sqrt_alpha ^ 2
   

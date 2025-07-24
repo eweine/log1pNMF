@@ -4,7 +4,7 @@
 \alias{fit_factor_model_log1p_exact}
 \title{Fit log1p Poisson Factor Model with Exact Log Likelihood}
 \usage{
-fit_factor_model_log1p_exact(sc, sc_t, s, n, p, fit, maxiter)
+fit_factor_model_log1p_exact(sc, sc_t, s, cc_alpha, n, p, fit, maxiter)
 }
 \arguments{
 \item{sc}{summary of sparse matrix to fit model on}
@@ -12,6 +12,8 @@ fit_factor_model_log1p_exact(sc, sc_t, s, n, p, fit, maxiter)
 \item{sc_t}{summary of transpose of sparse matrix to fit model on}
 
 \item{s}{size factor}
+
+\item{cc_alpha}{normalizing constant}
 
 \item{n}{number of rows of data matrix}
 

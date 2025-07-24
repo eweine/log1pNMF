@@ -14,6 +14,7 @@ double get_sparse_term_loglik_exact(
     const std::vector<int>& nonzero_y,
     const std::vector<int>& nonzero_y_i_idx,
     const std::vector<int>& nonzero_y_j_idx,
+    const double cc_alpha,
     const arma::vec& s,
     const int num_nonzero_y
 ) {
@@ -27,7 +28,7 @@ double get_sparse_term_loglik_exact(
       exp(
         dot(
           U_T.col(nonzero_y_i_idx[r]), V_T.col(nonzero_y_j_idx[r])
-        )
+        ) / cc_alpha
       ) - s[nonzero_y_i_idx[r]]
     );
   }
@@ -38,6 +39,7 @@ double get_sparse_term_loglik_exact(
 double get_dense_term_loglik_exact(
     const arma::mat& U_T,
     const arma::mat& V_T,
+    const double cc_alpha,
     const int n,
     const int p
 ) {
@@ -49,7 +51,7 @@ double get_dense_term_loglik_exact(
 
     for (int j = 0; j < p; j++) {
 
-      sum -= exp(dot(U_T.col(i), V_T.col(j)));
+      sum -= exp(dot(U_T.col(i), V_T.col(j)) / cc_alpha);
 
     }
   }
@@ -129,6 +131,7 @@ double get_loglik_exact(
     const std::vector<int>& y_nz_rows_idx,
     const std::vector<int>& y_nz_cols_idx,
     const arma::vec& s,
+    const double cc_alpha,
     const int n,
     const int p
 ) {
@@ -139,6 +142,7 @@ double get_loglik_exact(
     y_nz_vals,
     y_nz_rows_idx,
     y_nz_cols_idx,
+    cc_alpha,
     s,
     y_nz_vals.size()
   );
@@ -146,6 +150,7 @@ double get_loglik_exact(
   double loglik_dense_term = get_dense_term_loglik_exact(
     U_T,
     V_T,
+    cc_alpha,
     n,
     p
   );
