@@ -34,6 +34,7 @@ i <- c(sample(which(clusters == "Beta"),900),
 scale_cols <- function (A, b)
   t(t(A) * b)
 celltype_topics <- c(1, 2, 3, 5, 6, 8, 9, 11, 12, 13)
+celltype_topics_tm <- c(celltype_topics, 10)
 other_topics <- c(4, 7, 10)
 L <- log1p_k13$LL
 d <- apply(L,2,max)
@@ -46,7 +47,7 @@ l1 <- L[,"k1"]
 L[,"k11"] <- l1
 L[,"k1"] <- l11
 
-other_colors <- c("#df8461", "#6f340d", "#463397")
+other_colors <- c("#df8461", "#6f340d", "#00538A")
 
 sp1 <- structure_plot(
   L[i,paste0("k", celltype_topics)],grouping = clusters[i],gap = 15,n = Inf
@@ -86,11 +87,11 @@ colnames(L) <- paste0(
 L <- L[,paste0("k", 1:13)]
 
 
-sp34_loadings_order_call <- structure_plot(
-  L[i,paste0("k", celltype_topics)],grouping = clusters[i])
+#sp34_loadings_order_call <- structure_plot(
+#  L[i,paste0("k", celltype_topics)],grouping = clusters[i])
 
 p4 <- structure_plot(
-  L[i,paste0("k", celltype_topics)],grouping = clusters[i],gap = 15
+  L[i,paste0("k", celltype_topics_tm)],grouping = clusters[i],gap = 15
   ) +
   labs(y = "Membership",fill = "") +
   guides(fill=guide_legend(title="Factor"))	+
@@ -111,8 +112,11 @@ p6 <- structure_plot(L[i,paste0("k", other_topics)],grouping = conditions[i],gap
 
 library(ggpubr)
 
+my_legend <- ggpubr::get_legend(p4)
+
 g1 <- ggarrange(
   p1, p4, common.legend = TRUE, legend = "right",
+  legend.grob = my_legend,
   nrow = 2, ncol = 1,
   labels = c("A", "B")
   )
