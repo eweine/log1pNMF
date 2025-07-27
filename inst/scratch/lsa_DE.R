@@ -95,7 +95,7 @@ tpm_df <- tpm_df %>%
   dplyr::inner_join(lfc_df) %>%
   dplyr::inner_join(k10_df)
 
-plot(tpm_df$lfc, log1p(tpm_df$f))
+plot(tpm_df$lfc, log1p(tpm_df$f), xlab = "IL-1B LFC", ylab = "log1p(k10)")
 plot(tpm_df$avg_expr, log1p(tpm_df$f))
 
 log1p_mod <- res_list$pancreas$`1`
@@ -127,4 +127,21 @@ gp_full_mod <- glm_gp(
   subsample = TRUE
 )
 
+
+de_out <- test_de(
+  fit = gp_full_mod,
+  contrast = "conditionIL_1B",
+  verbose = TRUE
+)
+
+lfc_df2 <- de_out %>%
+  dplyr::select(
+    name, lfc
+  ) %>%
+  dplyr::rename(gene = name)
+
+lfc_df2 <- lfc_df2 %>%
+  dplyr::inner_join(log1p_k10_df)
+
+plot(lfc_df2$lfc, lfc_df2$f_log1p, xlab = "IL-1B LFC", ylab = "log1p model k10")
 
