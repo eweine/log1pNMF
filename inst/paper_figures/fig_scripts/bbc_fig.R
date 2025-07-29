@@ -105,23 +105,25 @@ fit_list[[as.character(Inf)]]$F <- fit_list[[as.character(Inf)]]$F[,paste0("k", 
 
 
 
+set.seed(1)
 sp <- normalized_structure_plot(
   fit_list[[as.character(1e-3)]],
-  grouping = dat$labels,gap = 25,perplexity = 70,n = Inf, font.size = 14
+  grouping = dat$labels,gap = 25,perplexity = 70,n = Inf, font.size = 12
 )
 plot_list[[glue::glue("c = 0.001")]] <- sp + 
   ggtitle("log1p Model Loadings (c = 0.001)") +
   theme(
     plot.title = element_text(size = 12),
     axis.title.y = element_text(size = 12),
-    axis.text.x = element_text(size = 12)
+    axis.text.x = element_text(angle = 0,hjust = 0.5, size = 12)
   ) + ylab("Membership") +
   guides(fill=guide_legend(title="Factor")) +
   guides(colour = "none")
 
+set.seed(1)
 tm_sp <- structure_plot(
   fit_list[["Inf"]],
-  grouping = dat$labels,gap = 25,perplexity = 70,font.size = 14
+  grouping = dat$labels,gap = 25,perplexity = 70,font.size = 12
 )
 
 plot_list[["Topic Model"]] <- tm_sp + 
@@ -129,7 +131,7 @@ plot_list[["Topic Model"]] <- tm_sp +
   theme(
     plot.title = element_text(size = 12),
     axis.title.y = element_text(size = 12),
-    axis.text.x = element_text(size = 12)
+    axis.text.x = element_text(angle = 0,hjust = 0.5, size = 12)
   )  + ylab("Membership") +
   guides(fill=guide_legend(title="Factor")) +
   guides(colour = "none")
@@ -148,7 +150,7 @@ ggsave(
   g,
   device = "png",
   width = 11,
-  height = 6
+  height = 5
 )
 
 # now, I want to look for top and distinctive words for each factor

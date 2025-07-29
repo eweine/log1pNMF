@@ -10,29 +10,41 @@ ar1_cov <- function(n, rho, sigma2 = 1) {
 }
 
 # Example usage
-n <- 400
-m <- 400
-k     <- 4      # dimension
-rho   <- 0.5    # AR(1) correlation
-sigma2 <- (0.75)^2     # variance
+n <- 500
+m <- 500
+k     <- 10      # dimension
+rho   <- 2/3    # AR(1) correlation
+sigma2 <- (8)^2     # variance
 
 Sigma <- ar1_cov(k, rho, sigma2)
 FF <- MASS::mvrnorm(
   n = m,
-  mu = rep(0, k),
+  mu = rep(-5, k),
   Sigma = Sigma
 )
 FF <- matrix(data = pmax(
-  1e-2,
+  1e-5,
   FF
 ), nrow = nrow(FF), ncol = ncol(FF))
 
-LL <- matrix(
-  data = pmax(rnorm(n * k, sd = 0.75), 1e-2),
-  nrow = n, ncol = k
-)
-B <- tcrossprod(LL,FF)
-Lambda <- exp(B) - 1
+generate_binary_matrix <- function(n, k) {
+  # initialize all zeros
+  m <- matrix(0L, nrow = n, ncol = k)
+  
+  # for each row, decide whether it gets 1 or 2 ones
+  ones_per_row <- sample(1:2, size = n, replace = TRUE)
+  
+  # fill in the ones
+  for (i in seq_len(n)) {
+    # pick 'ones_per_row[i]' distinct columns out of k
+    cols <- sample.int(k, size = ones_per_row[i])
+    m[i, cols] <- 1L
+  }
+  
+  m
+}
+LL <- generate_binary_matrix(n, k)
+Lambda <- tcrossprod(LL,FF)
 
 Y <- matrix(
   data = rpois(n * m, as.vector(Lambda)),
@@ -41,7 +53,17 @@ Y <- matrix(
 )
 
 Y <- as(Y, "CsparseMatrix")
+rownames(Y) <- paste0("c", 1:n)
+colnames(Y) <- paste0("g", 1:m)
+
+rownames(LL) <- paste0("c", 1:n)
+rownames(FF) <- paste0("g", 1:m)
+
+Y <- Y[,Matrix::colSums(Y) > 0]
+Y <- Y[Matrix::rowSums(Y) > 0, ]
 library(log1pNMF)
+LL <- LL[rownames(Y),]
+FF <- FF[colnames(Y), ]
 
 compute_condition_number <- function (x) {
   e <- eigen(cor(x))$values
