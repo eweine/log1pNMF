@@ -104,7 +104,7 @@ g_tm <- ggarrange(
   ncol = 1, 
   common.legend = TRUE,
   legend = "right",
-  labels = names(log1p_plot_list)
+  labels = names(tm_plot_list)
 )
 
 ggsave(
@@ -116,7 +116,7 @@ ggsave(
 )
 
 ggsave(
-  "~/Downloads/lsa_log1p_by_group.png",
+  "~/Downloads/lsa_tm_by_group.png",
   g_tm,
   device = "png",
   width = 11,

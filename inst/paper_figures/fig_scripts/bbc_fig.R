@@ -68,41 +68,49 @@ for (cc in cc_vec) {
   
 }
 
-g <- ggarrange(g1,g3,g2, nrow = 1, labels = "AUTO")
-
-g <- annotate_figure(g,
-                top = text_grob("BBC K = 10", size = 20, face = "bold"))
-
-readr::write_rds(g, "../data/bbc_sparsity_ggplot.rds")
+fit_list[["Inf"]] <- res_list$bbc$`Inf`
 
 plot_list <- list()
 cc_vec <- c(1e-3)
 
+log1p_loadings_order <- c(1, 2, 5, 4, 3, 8, 7, 6, 9, 10)
+tm_loadings_order <- c(1, 8, 3, 9, 5, 10, 7, 2, 4, 6)
+
+
 colnames(fit_list[[as.character(1e-3)]]$LL) <- paste0(
-  "k", c(1, 2, 4, 6, 9, 5, 3, 8, 7, 10)
+  "k", log1p_loadings_order
 )
 
 fit_list[[as.character(1e-3)]]$LL <- fit_list[[as.character(1e-3)]]$LL[,paste0("k", 1:10)]
 
 colnames(fit_list[[as.character(1e-3)]]$FF) <- paste0(
-  "k", c(1, 2, 4, 6, 9, 5, 3, 8, 7, 10)
+  "k", log1p_loadings_order
 )
 
 fit_list[[as.character(1e-3)]]$FF <- fit_list[[as.character(1e-3)]]$FF[,paste0("k", 1:10)]
 
-topic_order <- rev(paste0(
-  "k",
-  c(9, 1, 2, 8, 5, 10, 3, 4, 7, 6)
-  ))
+
+
+colnames(fit_list[[as.character(Inf)]]$L) <- paste0(
+  "k", tm_loadings_order
+)
+
+fit_list[[as.character(Inf)]]$L <- fit_list[[as.character(Inf)]]$L[,paste0("k", 1:10)]
+
+colnames(fit_list[[as.character(Inf)]]$F) <- paste0(
+  "k", tm_loadings_order
+)
+
+fit_list[[as.character(Inf)]]$F <- fit_list[[as.character(Inf)]]$F[,paste0("k", 1:10)]
+
 
 
 sp <- normalized_structure_plot(
   fit_list[[as.character(1e-3)]],
-  grouping = dat$labels,gap = 25,perplexity = 70,n = Inf, font.size = 14,
-  topics = topic_order
+  grouping = dat$labels,gap = 25,perplexity = 70,n = Inf, font.size = 14
 )
 plot_list[[glue::glue("c = 0.001")]] <- sp + 
-  ggtitle(glue::glue("log1p Model With c = 0.001")) +
+  ggtitle("log1p Model Loadings (c = 0.001)") +
   theme(
     plot.title = element_text(size = 12),
     axis.title.y = element_text(size = 12),
@@ -113,12 +121,11 @@ plot_list[[glue::glue("c = 0.001")]] <- sp +
 
 tm_sp <- structure_plot(
   fit_list[["Inf"]],
-  grouping = dat$labels,gap = 25,perplexity = 70,font.size = 14,
-  topics = topic_order
+  grouping = dat$labels,gap = 25,perplexity = 70,font.size = 14
 )
 
 plot_list[["Topic Model"]] <- tm_sp + 
-  ggtitle("Topic Model") +
+  ggtitle("Topic Model Loadings") +
   theme(
     plot.title = element_text(size = 12),
     axis.title.y = element_text(size = 12),

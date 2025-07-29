@@ -1,4 +1,4 @@
-dat <- readr::read_csv("../data/bbc_news_text_complexity_summarization.csv")
+dat <- readr::read_csv("../data/raw_data/bbc_news_text_complexity_summarization.csv")
 
 library(tm)
 library(SnowballC)
@@ -72,6 +72,7 @@ for (cc in cc_vec) {
 # finally, fit a topic model with a rank 1 initialization here
 r1_fit <- fastTopics:::fit_pnmf_rank1(dtm2)
 
+set.seed(1)
 init_LL <- cbind(
   r1_fit$L,
   matrix(
@@ -82,6 +83,7 @@ init_LL <- cbind(
 )
 rownames(init_LL) <- rownames(dtm2)
 
+set.seed(1)
 init_FF <- cbind(
   r1_fit$F,
   matrix(
