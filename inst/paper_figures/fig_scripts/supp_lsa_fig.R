@@ -52,13 +52,13 @@ colnames(fit_list[[as.character(1)]]$LL) <- paste0(
   "k", log1p_loadings_order
 )
 
-fit_list[[as.character(1)]]$LL <- fit_list[[as.character(1)]]$LL[,paste0("k", 1:10)]
+fit_list[[as.character(1)]]$LL <- fit_list[[as.character(1)]]$LL[,paste0("k", 1:13)]
 
 colnames(fit_list[[as.character(1)]]$FF) <- paste0(
   "k", log1p_loadings_order
 )
 
-fit_list[[as.character(1)]]$FF <- fit_list[[as.character(1)]]$FF[,paste0("k", 1:10)]
+fit_list[[as.character(1)]]$FF <- fit_list[[as.character(1)]]$FF[,paste0("k", 1:13)]
 
 
 
@@ -66,13 +66,13 @@ colnames(fit_list[[as.character(Inf)]]$L) <- paste0(
   "k", tm_loadings_order
 )
 
-fit_list[[as.character(Inf)]]$L <- fit_list[[as.character(Inf)]]$L[,paste0("k", 1:10)]
+fit_list[[as.character(Inf)]]$L <- fit_list[[as.character(Inf)]]$L[,paste0("k", 1:13)]
 
 colnames(fit_list[[as.character(Inf)]]$F) <- paste0(
   "k", tm_loadings_order
 )
 
-fit_list[[as.character(Inf)]]$F <- fit_list[[as.character(Inf)]]$F[,paste0("k", 1:10)]
+fit_list[[as.character(Inf)]]$F <- fit_list[[as.character(Inf)]]$F[,paste0("k", 1:13)]
 
 plot_list <- list()
 
