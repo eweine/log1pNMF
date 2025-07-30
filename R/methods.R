@@ -43,6 +43,9 @@ fitted.log1p_nmf_fit <- function (object, ...) {
 #'
 #' @param Y data matrix. Must be convertible to an object of
 #' type \code{dgCMatrix}.
+#' 
+#' @param s custom size factor. Should be provided if calculating the
+#' log-likelihood on data that the model was not trained on.
 #'
 #' @return A double indicating the log-likelihood of the fitted model.
 #'
@@ -50,7 +53,7 @@ fitted.log1p_nmf_fit <- function (object, ...) {
 #'
 #' @export
 #'
-logLik.log1p_nmf_fit <- function (object, Y, ...) {
+logLik.log1p_nmf_fit <- function (object, Y, s = NULL, ...) {
   if (!inherits(object, "log1p_nmf_fit")) {
     
     stop("object must be of class log1p_nmf_fit")
@@ -66,7 +69,22 @@ logLik.log1p_nmf_fit <- function (object, Y, ...) {
   n <- nrow(Y)
   p <- ncol(Y)
   sqrt_alpha <- sqrt(max(1, object$cc))
-  s <- object$s * object$cc
+  
+  if (!is.null(s)) {
+    
+    if (!is.positive.numeric(s) || length(s) != nrow(Y)) {
+      
+      stop("s must be a positive vector of length nrow(Y)")
+      
+    }
+    
+  } else {
+    
+    s <- object$s
+    
+  }
+  
+  s <- s * object$cc
   
   U <- cbind(log(s), (1 / sqrt_alpha) * object$LL)
   V <- cbind(rep(1, p), (1 / sqrt_alpha) * object$FF)

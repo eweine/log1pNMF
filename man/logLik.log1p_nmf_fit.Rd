@@ -4,7 +4,7 @@
 \alias{logLik.log1p_nmf_fit}
 \title{Get log likelihood of data Y for fitted log1p NMF Model}
 \usage{
-\method{logLik}{log1p_nmf_fit}(object, Y, ...)
+\method{logLik}{log1p_nmf_fit}(object, Y, s = NULL, ...)
 }
 \arguments{
 \item{object}{An object of class \dQuote{log1p_nmf_fit},
@@ -12,6 +12,9 @@ typically the result of calling \code{\link{fit_poisson_log1p_nmf}}.}
 
 \item{Y}{data matrix. Must be convertible to an object of
 type \code{dgCMatrix}.}
+
+\item{s}{custom size factor. Should be provided if calculating the
+log-likelihood on data that the model was not trained on.}
 }
 \value{
 A double indicating the log-likelihood of the fitted model.
