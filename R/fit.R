@@ -298,7 +298,7 @@ fit_poisson_log1p_nmf <- function(
       } else {
 
         if (
-          !is.positive.numeric(chebyshev_interval) ||
+          !is.nonneg.numeric(chebyshev_interval) ||
           is.unsorted(chebyshev_interval) ||
           length(chebyshev_interval) != 2
         ) {
@@ -416,10 +416,8 @@ fit_poisson_log1p_nmf <- function(
       K <- as.integer(K)
 
     }
-
-    b_hat <- Matrix::mean(
-      MatrixExtra::mapSparse(Y, function(x){log1p(x/cc)})
-    )
+    
+    b_hat <- (1 / prod(dim(Y))) * sum(log1p(Y@x / cc))
 
     if (init_method == "random") {
 

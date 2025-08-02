@@ -17,7 +17,6 @@ RoxygenNote: 7.3.1
 Imports:
     Rcpp,
     Matrix,
-    MatrixExtra,
     pracma,
     methods,
     distr,
