@@ -156,7 +156,7 @@ fit_poisson_log1p_nmf <- function(
   init_FF = NULL,
   loglik = c("default", "approx", "exact"),
   init_method = c("rank1", "random"),
-  approx_technique = c("taylor", "chebyshev"),
+  approx_technique = c("chebyshev", "taylor"),
   chebyshev_interval = NULL,
   control = list()
 ) {
@@ -529,8 +529,8 @@ fit_poisson_log1p_nmf <- function(
   
   rownames(fit$LL) <- rownames(Y)
   rownames(fit$FF) <- colnames(Y)
-  colnames(fit$LL) <- paste0("k_", 1:ncol(fit$LL))
-  colnames(fit$FF) <- paste0("k_", 1:ncol(fit$FF))
+  colnames(fit$LL) <- paste0("k", 1:ncol(fit$LL))
+  colnames(fit$FF) <- paste0("k", 1:ncol(fit$FF))
 
   class(fit) <- "log1p_nmf_fit"
   return(fit)

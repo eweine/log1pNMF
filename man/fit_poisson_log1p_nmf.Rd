@@ -14,7 +14,7 @@ fit_poisson_log1p_nmf(
   init_FF = NULL,
   loglik = c("default", "approx", "exact"),
   init_method = c("rank1", "random"),
-  approx_technique = c("taylor", "chebyshev"),
+  approx_technique = c("chebyshev", "taylor"),
   chebyshev_interval = NULL,
   control = list()
 )
