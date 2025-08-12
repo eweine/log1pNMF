@@ -3,7 +3,7 @@
     packageStartupMessage(
       "Note: This package was compiled without OpenMP support.
       For faster performance, please download OpenMP and reinstall the package.
-      If using a mac, follow the instructions here: https://mac.r-project.org/openmp/"
+      For installation instructions, see the README of our github repo: https://github.com/eweine/log1pNMF"
       )
   }
 }
