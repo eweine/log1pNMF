@@ -95,12 +95,15 @@ g1 <- normalized_structure_plot(
   guides(colour = "none")
 
 
-L0 <- poisson2multinom(tm3_r1_init)$L
+L0 <- tm3_r1_init$L
 L <- L0
 L0[,2] <- L[,3]
 L0[,3] <- L[,2]
-g2 <- structure_plot(L0,grouping = samples$label,topics = rev(1:3),
-                     loadings_order = 1:n,colors = topic_colors) +
+g2 <- structure_plot(
+  log1pNMF:::normalize_bars(diag(1 / log1p_fit3$s) %*% L0),
+  grouping = samples$label,topics = rev(1:3),
+  loadings_order = 1:n,colors = topic_colors
+  ) +
   theme(
     axis.text.x = element_text(angle = 0,hjust = 0.5, size = 9),
     plot.title = element_text(size = 11)) + 
@@ -136,22 +139,25 @@ L0 <- tm3_r1_init$L
 LL <- L0
 L0[,2] <- LL[,3]
 L0[,3] <- LL[,2]
+L0_norm <- diag(1 / log1p_fit3$s) %*% L0
 
 col_maxima <- apply(L0, 2, max)
 F0 <- sweep(F0, 2, col_maxima, FUN = "*")
 
 tm_df <- data.frame(
-  k2 = log1p(F0[,2]),
-  k3 = log1p(F0[,3])
+  k2 = F0[,2],
+  k3 = F0[,3]
 )
 
 g4 <- ggplot(data = tm_df, aes(x = k2, y = k3)) +
   geom_point(size = 0.5, alpha = 0.25) +
-  xlab("log(1 + Topic Model k2)") +
-  ylab("log(1 + Topic Model k3)") +
+  xlab("Topic Model k2") +
+  ylab("Topic Model k3") +
   theme_cowplot(font_size = 10) +
   ggtitle("Topic Model Factors") +
-  theme(plot.title = element_text(hjust = 0.5))
+  scale_x_continuous(trans = "log1p", breaks = c(0, 100, 1000, 10000)) +
+  scale_y_continuous(trans = "log1p", breaks = c(0, 100, 1000, 10000)) +
+  theme(plot.title = element_text(hjust = 0.5)) 
 
 g_a <- ggarrange(
   NULL, g0, NULL,

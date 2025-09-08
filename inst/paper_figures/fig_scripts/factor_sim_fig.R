@@ -114,21 +114,21 @@ ft_mod <- fit_poisson_nmf(X = Y, fit0 = ft_init, verbose = "none")
 group <- c(rep("A", 333), rep("B", 333), rep("C", 334))
 
 
-g_tm_sp <- structure_plot(log1pNMF:::normalize_bars(ft_mod$L), grouping = group, gap = 10, loadings_order = 1:n, topics = rev(1:3)) + 
-  theme(
-    axis.text.x = element_text(angle = 0,hjust = 0.5, size = 12),
-    axis.title.y = element_text(size = 12),
-    plot.title = element_text(size = 13)
-    ) + 
-  ylab("Membership") +
-  ggtitle("Topic Model Loadings") +
-  guides(fill=guide_legend(title="Factor"))
-
 set.seed(1)
 log1p_mod <- fit_poisson_log1p_nmf(
   Y = Y, K = 3, loglik = "exact",
   control = list(maxiter = 250, verbose = FALSE)
 )
+
+g_tm_sp <- structure_plot(log1pNMF:::normalize_bars( diag(1 / log1p_mod$s) %*% ft_mod$L), grouping = group, gap = 10, loadings_order = 1:n, topics = rev(1:3)) + 
+  theme(
+    axis.text.x = element_text(angle = 0,hjust = 0.5, size = 12),
+    axis.title.y = element_text(size = 12),
+    plot.title = element_text(size = 13)
+  ) + 
+  ylab("Membership") +
+  ggtitle("Topic Model Loadings") +
+  guides(fill=guide_legend(title="Factor"))
 
 colnames(log1p_mod$LL) <- paste0("k", 1:3)
 colnames(log1p_mod$FF) <- paste0("k", 1:3)

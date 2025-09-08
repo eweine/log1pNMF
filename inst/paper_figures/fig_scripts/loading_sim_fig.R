@@ -141,7 +141,9 @@ ft_r1_init$L <- ft_r1_init$L[,paste0("k", 1:6)]
 ft_r1_init$F <- ft_r1_init$F[,paste0("k", 1:6)]
 
 sp1 <- structure_plot(
-  ft_r1_init, 
+  log1pNMF:::normalize_bars(
+    diag(1 / log1p_fit_list[[as.character(1)]]$s) %*% ft_r1_init$L
+  ), 
   loadings_order = 1:n_cells, 
   grouping = grouping, 
   gap = 10
@@ -193,7 +195,7 @@ g_sp <- ggarrange(
   sp1, sp2, sp3, 
   nrow = 3, ncol = 1, 
   common.legend = TRUE, legend = "right",
-  labels = c("A", "B", "C")
+  labels = c("B", "C", "D")
   )
 
 hoyer_sparsity <- function(x) {
@@ -296,16 +298,24 @@ expr_df <- data.frame(
 ) %>%
   dplyr::inner_join(gene_order_df)
 
-g_expr <- ggplot(expr_df, aes(x = gene_order, y = expr)) +
+g_expr <- ggplot(
+  expr_df %>% dplyr::filter(
+    group %in% c("A1", "A2", "B1", "B2")
+    ), 
+    aes(x = gene_order, y = expr)
+  ) +
   geom_col(width = 1, colour = NA, linewidth = 0) +  # Use bars to represent lambda values
-  facet_wrap(~ group) +          # Create a panel for each group
+  facet_manual(
+    ~group, #scales = "free", 
+    design = c("ABCD"),
+    labeller = labeller(group = function(x) paste("Group", x))) +
   labs(x = "Gene Index", y = "True Expression") +
-  scale_y_continuous(trans = "log1p") + 
+  scale_y_continuous(trans = "log1p", breaks = c(0, 10, 100, 2000)) + 
   cowplot::theme_cowplot() + # Use a minimal theme for a clean look
   theme(
     strip.background = element_blank(),
     strip.text = element_text(face = "bold", hjust = 0.5, size = 13)
-  )
+  ) 
 
 set.seed(1)
 fgpca_fit <- fit_glmpca_pois(Y = Matrix::t(Y), K = 2, control = list(maxiter = 350))
@@ -330,12 +340,14 @@ g_gpca <- ggarrange(
 )
 
 g <- ggarrange(
+  g_expr,
   g_sp,
   g_sparsity,
   g_gpca,
-  nrow = 3,
+  nrow = 4,
   ncol = 1,
-  heights = c(1, 0.7, 0.7)
+  heights = c(0.5, 1, 0.7, 0.7),
+  labels = c("A", "", "", "")
 )
 
 ggsave(
@@ -343,6 +355,6 @@ ggsave(
   device = "png",
   filename = "../images/loading_sim_fig.png",
   width = 8,
-  height = 12
+  height = 14
 )
 
