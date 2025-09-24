@@ -198,3 +198,28 @@ ggsave(
   height = 8
 )
 
+# additional exploration regarding factors here
+
+log1p_df$gene <- genes$Symbol
+tm_df$gene <- genes$Symbol
+
+# top 4 genes in log1p k2 are known to interact / metabolize with retinoic acid
+tm_df$diff <- tm_df$k2 - tm_df$k3
+tm_df$rel_diff <- log1p(tm_df$k2) - log1p(tm_df$k3)
+
+etoh_i <- which(samples$EtOH)
+counts_etoh <- counts[etoh_i,]
+tpm <- log2(1 + 1e6 * Matrix::colSums(counts_etoh) / sum(counts_etoh))
+tm_df$expr <- tpm
+
+tm_df <- tm_df %>%
+  dplyr::arrange(desc(expr)) %>%
+  dplyr::mutate(expr_rank = 1:nrow(tm_df))
+
+log1p_df$expr <- tpm
+
+log1p_df <- log1p_df %>%
+  dplyr::arrange(desc(expr)) %>%
+  dplyr::mutate(expr_rank = 1:nrow(log1p_df))
+
+

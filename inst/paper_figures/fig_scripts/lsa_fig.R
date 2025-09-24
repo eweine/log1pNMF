@@ -37,15 +37,22 @@ celltype_topics <- c(1, 2, 3, 5, 6, 8, 9, 11, 12, 13)
 celltype_topics_tm <- c(celltype_topics, 10)
 other_topics <- c(4, 7, 10)
 L <- log1p_k13$LL
+FF <- log1p_k13$FF
 d <- apply(L,2,max)
 L <- scale_cols(L,1/d)
 
 colnames(L) <- paste0("k", 1:13)
+colnames(FF) <- paste0("k", 1:13)
 # swap these two topics for better visibility
 l11 <- L[,"k11"]
 l1 <- L[,"k1"]
 L[,"k11"] <- l1
 L[,"k1"] <- l11
+
+f11 <- FF[,"k11"]
+f1 <- FF[,"k1"]
+FF[,"k11"] <- f1
+FF[,"k1"] <- f11
 
 other_colors <- c("#df8461", "#6f340d", "#00538A")
 
@@ -80,11 +87,18 @@ p3 <- sp3 +
 tm_k13 <- res_list$pancreas$`Inf`
 
 L <- poisson2multinom(tm_k13)$L
+F <- poisson2multinom(tm_k13)$F
 colnames(L) <- paste0(
   "k", 
   c(11,12, 7, 6, 5, 1, 9, 4, 3, 2, 10, 13, 8)
 )
 L <- L[,paste0("k", 1:13)]
+
+colnames(F) <- paste0(
+  "k", 
+  c(11,12, 7, 6, 5, 1, 9, 4, 3, 2, 10, 13, 8)
+)
+F <- F[,paste0("k", 1:13)]
 
 
 #sp34_loadings_order_call <- structure_plot(
