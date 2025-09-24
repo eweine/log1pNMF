@@ -117,6 +117,7 @@ col_maxima <- apply(log1p_fit3$LL, 2, max)
 FF_log1p <- sweep(FF_log1p, 2, col_maxima, FUN = "*")
 
 log1p_df <- data.frame(
+  k1 = FF_log1p[,"k1"],
   k2 = FF_log1p[,"k2"],
   k3 = FF_log1p[,"k3"]
 )
@@ -145,9 +146,13 @@ col_maxima <- apply(L0, 2, max)
 F0 <- sweep(F0, 2, col_maxima, FUN = "*")
 
 tm_df <- data.frame(
+  k1 = F0[,1],
   k2 = F0[,2],
   k3 = F0[,3]
 )
+
+rownames(F0) <- genes$Symbol
+rownames(FF_log1p) <- genes$Symbol
 
 g4 <- ggplot(data = tm_df, aes(x = k2, y = k3)) +
   geom_point(size = 0.5, alpha = 0.25) +
@@ -159,35 +164,27 @@ g4 <- ggplot(data = tm_df, aes(x = k2, y = k3)) +
   scale_y_continuous(trans = "log1p", breaks = c(0, 100, 1000, 10000)) +
   theme(plot.title = element_text(hjust = 0.5)) 
 
-g_a <- ggarrange(
-  NULL, g0, NULL,
-  nrow = 1,
-  ncol = 3,
-  widths = c(0.5, 1, 0.5),
-  labels = c("", "A", "")
-)
-
 g_bc <- ggarrange(
-  g1, g2,
+  g2, g1,
   nrow = 1,
   ncol = 2,
   common.legend = TRUE,
   legend = "right",
-  labels = c("B", "C")
+  labels = c("A", "B")
 )
 
 g_de <- ggarrange(
-  g3, g4,
+  g4, g3,
   nrow = 1,
   ncol = 2,
-  labels = c("D", "E")
+  labels = c("C", "D")
 )
 
 g_final <- ggarrange(
-  g_a, g_bc, g_de,
-  nrow = 3,
+  g_bc, g_de,
+  nrow = 2,
   ncol = 1,
-  heights = c(0.8, 0.8, 1)
+  heights = c(0.8, 1)
 )
 
 ggsave(
@@ -195,7 +192,7 @@ ggsave(
   device = "png",
   filename = "../images/mcf7.png",
   width = 7,
-  height = 8
+  height = 6
 )
 
 # additional exploration regarding factors here
@@ -204,22 +201,90 @@ log1p_df$gene <- genes$Symbol
 tm_df$gene <- genes$Symbol
 
 # top 4 genes in log1p k2 are known to interact / metabolize with retinoic acid
-tm_df$diff <- tm_df$k2 - tm_df$k3
-tm_df$rel_diff <- log1p(tm_df$k2) - log1p(tm_df$k3)
+#tm_df$diff <- tm_df$k2 - tm_df$k3
+#tm_df$rel_diff <- log1p(tm_df$k2) - log1p(tm_df$k3)
 
-etoh_i <- which(samples$EtOH)
-counts_etoh <- counts[etoh_i,]
-tpm <- log2(1 + 1e6 * Matrix::colSums(counts_etoh) / sum(counts_etoh))
-tm_df$expr <- tpm
+top_genes <- data.frame(
+  factor = c("k1", "k2", "k3"),
+  top_genes = c(
+    paste(
+      log1p_df %>% dplyr::arrange(desc(k1)) %>% dplyr::slice_head(n = 10) %>% dplyr::pull(gene),
+      collapse = ", "
+    ),
+    paste(
+      log1p_df %>% dplyr::arrange(desc(k2)) %>% dplyr::slice_head(n = 10) %>% dplyr::pull(gene),
+      collapse = ", "
+    ),
+    paste(
+      log1p_df %>% dplyr::arrange(desc(k3)) %>% dplyr::slice_head(n = 10) %>% dplyr::pull(gene),
+      collapse = ", "
+    )
+  )
+)
 
-tm_df <- tm_df %>%
-  dplyr::arrange(desc(expr)) %>%
-  dplyr::mutate(expr_rank = 1:nrow(tm_df))
+top_genes_tm <- data.frame(
+  factor = c("k1", "k2", "k3"),
+  top_genes = c(
+    paste(
+      tm_df %>% dplyr::arrange(desc(k1)) %>% dplyr::slice_head(n = 10) %>% dplyr::pull(gene),
+      collapse = ", "
+    ),
+    paste(
+      tm_df %>% dplyr::arrange(desc(k2)) %>% dplyr::slice_head(n = 10) %>% dplyr::pull(gene),
+      collapse = ", "
+    ),
+    paste(
+      tm_df %>% dplyr::arrange(desc(k3)) %>% dplyr::slice_head(n = 10) %>% dplyr::pull(gene),
+      collapse = ", "
+    )
+  )
+)
 
-log1p_df$expr <- tpm
+colnames(top_genes_tm) <- c("Factor", "Top Genes - Topic Model")
+colnames(top_genes) <- c("Factor", "Top Genes - log1p Model c = 1")
 
-log1p_df <- log1p_df %>%
-  dplyr::arrange(desc(expr)) %>%
-  dplyr::mutate(expr_rank = 1:nrow(log1p_df))
+top_genes <- top_genes_tm %>%
+  dplyr::inner_join(top_genes)
 
+
+
+library(kableExtra)
+
+library(readr)
+library(dplyr)
+library(stringr)
+library(knitr)
+library(kableExtra)
+
+top_genes <- top_genes %>%
+  mutate(
+    `Top Genes - Topic Model` = str_wrap(`Top Genes - Topic Model`, width = 40),
+    `Top Genes - log1p Model c = 1` = str_wrap(`Top Genes - log1p Model c = 1`, width = 40)
+  )
+
+df_checker <- top_genes %>%
+  mutate(
+    Factor = Factor,
+    # For odd rows, shade only TopWords1
+    `Top Genes - Topic Model` = if_else(row_number() %% 2 == 1,
+                                        cell_spec(`Top Genes - Topic Model`, "latex", background = "gray!10"),
+                                        `Top Genes - Topic Model`
+    ),
+    # For even rows, shade only TopWords2
+    `Top Genes - log1p Model c = 1` = if_else(row_number() %% 2 == 0,
+                                                  cell_spec(`Top Genes - log1p Model c = 1`, "latex", background = "gray!10"),
+                                                  `Top Genes - log1p Model c = 1`
+    )
+  )
+
+# 3. Make the LaTeX table
+# - 'booktabs = TRUE' for better looking horizontal rules
+# - 'escape = FALSE' avoids escaping characters like underscores
+# - column_spec can set the width for each column to force wrapping
+kable(df_checker, format = "latex", booktabs = TRUE, escape = FALSE) %>%
+  kable_styling(
+    position = "center"
+  ) %>%
+  column_spec(2, width = "5cm") %>%
+  column_spec(3, width = "5cm")
 

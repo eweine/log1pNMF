@@ -87,18 +87,18 @@ p3 <- sp3 +
 tm_k13 <- res_list$pancreas$`Inf`
 
 L <- poisson2multinom(tm_k13)$L
-F <- poisson2multinom(tm_k13)$F
+FF_tm <- poisson2multinom(tm_k13)$F
 colnames(L) <- paste0(
   "k", 
   c(11,12, 7, 6, 5, 1, 9, 4, 3, 2, 10, 13, 8)
 )
 L <- L[,paste0("k", 1:13)]
 
-colnames(F) <- paste0(
+colnames(FF_tm) <- paste0(
   "k", 
   c(11,12, 7, 6, 5, 1, 9, 4, 3, 2, 10, 13, 8)
 )
-F <- F[,paste0("k", 1:13)]
+FF_tm <- FF_tm[,paste0("k", 1:13)]
 
 
 #sp34_loadings_order_call <- structure_plot(
@@ -139,19 +139,125 @@ g2 <- ggarrange(
   p2, p5, p3, p6,
   nrow = 4, ncol = 1,
   common.legend = TRUE, legend = "right",
-  labels = c("C", "D", "E", "F")
+  labels = c("A", "B", "C", "D")
 )
 
-g <- ggarrange(g1, g2, heights = c(0.5, 1), nrow = 2, ncol = 1)
+#g <- ggarrange(g1, g2, heights = c(0.5, 1), nrow = 2, ncol = 1)
 
 
 ggsave(
-  "../images/lsa_structure.png",
-  g,
+  "../images/lsa_structure_celltype.png",
+  g1,
   device = "png",
   width = 11,
-  height = 15
+  height = 5
 )
 
+ggsave(
+  "../images/lsa_structure_treatment.png",
+  g2,
+  device = "png",
+  width = 11,
+  height = 10
+)
 
+# here, want to get top genes
+
+get_top_genes <- function(f, n_top = 10) {
+  
+  genes <- names(sort(f, decreasing = TRUE))[1:n_top]
+  pasted_genes <- paste(genes, collapse = ", ")
+  return(pasted_genes)
+  
+}
+
+top_genes_log1p <- apply(FF, 2, get_top_genes)
+top_genes_log1p <- as.data.frame(top_genes_log1p)
+colnames(top_genes_log1p) <- c("top_genes_log1p")
+top_genes_log1p$factor <- rownames(top_genes_log1p)
+rownames(top_genes_log1p) <- NULL
+top_genes_log1p <- top_genes_log1p %>% dplyr::select(c("factor", "top_genes_log1p"))
+
+top_genes_tm <- apply(FF_tm, 2, get_top_genes)
+top_genes_tm <- as.data.frame(top_genes_tm)
+colnames(top_genes_tm) <- c("top_genes_tm")
+top_genes_tm$factor <- rownames(top_genes_tm)
+rownames(top_genes_tm) <- NULL
+top_genes_tm <- top_genes_tm %>% dplyr::select(c("factor", "top_genes_tm"))
+
+colnames(top_genes_tm) <- c("Factor", "Top Genes - Topic Model")
+colnames(top_genes_log1p) <- c("Factor", "Top Genes - log1p Model c = 1")
+
+top_genes <- top_genes_tm %>%
+  dplyr::inner_join(top_genes_log1p)
+
+top_genes <- top_genes %>%
+  mutate(
+    `Top Genes - Topic Model` = str_wrap(`Top Genes - Topic Model`, width = 40),
+    `Top Genes - log1p Model c = 1` = str_wrap(`Top Genes - log1p Model c = 1`, width = 40)
+  )
+
+top_genes_celltype <- top_genes %>%
+  dplyr::filter(
+    !(Factor %in% c("k4", "k7", "k10"))
+  )
+
+top_genes_treatment <- top_genes %>%
+  dplyr::filter(
+    Factor %in% c("k4", "k7", "k10")
+  )
+
+library(readr)
+library(dplyr)
+library(stringr)
+library(knitr)
+library(kableExtra)
+
+df_checker_celltype <- top_genes_celltype %>%
+  mutate(
+    Factor = Factor,
+    # For odd rows, shade only TopWords1
+    `Top Genes - Topic Model` = if_else(row_number() %% 2 == 1,
+                                        cell_spec(`Top Genes - Topic Model`, "latex", background = "gray!10"),
+                                        `Top Genes - Topic Model`
+    ),
+    # For even rows, shade only TopWords2
+    `Top Genes - log1p Model c = 1` = if_else(row_number() %% 2 == 0,
+                                                  cell_spec(`Top Genes - log1p Model c = 1`, "latex", background = "gray!10"),
+                                                  `Top Genes - log1p Model c = 1`
+    )
+  )
+
+df_checker_treatment <- top_genes_treatment %>%
+  mutate(
+    Factor = Factor,
+    # For odd rows, shade only TopWords1
+    `Top Genes - Topic Model` = if_else(row_number() %% 2 == 1,
+                                        cell_spec(`Top Genes - Topic Model`, "latex", background = "gray!10"),
+                                        `Top Genes - Topic Model`
+    ),
+    # For even rows, shade only TopWords2
+    `Top Genes - log1p Model c = 1` = if_else(row_number() %% 2 == 0,
+                                              cell_spec(`Top Genes - log1p Model c = 1`, "latex", background = "gray!10"),
+                                              `Top Genes - log1p Model c = 1`
+    )
+  )
+
+# 3. Make the LaTeX table
+# - 'booktabs = TRUE' for better looking horizontal rules
+# - 'escape = FALSE' avoids escaping characters like underscores
+# - column_spec can set the width for each column to force wrapping
+kable(df_checker_celltype, format = "latex", booktabs = TRUE, escape = FALSE) %>%
+  kable_styling(
+    position = "center"
+  ) %>%
+  column_spec(2, width = "5cm") %>%
+  column_spec(3, width = "5cm")
+
+kable(df_checker_treatment, format = "latex", booktabs = TRUE, escape = FALSE) %>%
+  kable_styling(
+    position = "center"
+  ) %>%
+  column_spec(2, width = "5cm") %>%
+  column_spec(3, width = "5cm")
 

@@ -4,7 +4,6 @@ library(log1pNMF)
 library(ggh4x)
 library(ggpubr)
 library(dplyr)
-library(fastglmpca)
 
 n_cells <- 1000
 
@@ -309,7 +308,7 @@ g_expr <- ggplot(
     ~group, #scales = "free", 
     design = c("ABCD"),
     labeller = labeller(group = function(x) paste("Group", x))) +
-  labs(x = "Gene Index", y = "True Expression") +
+  labs(x = "Gene Index", y = "True Rate") +
   scale_y_continuous(trans = "log1p", breaks = c(0, 10, 100, 2000)) + 
   cowplot::theme_cowplot() + # Use a minimal theme for a clean look
   theme(
@@ -317,37 +316,14 @@ g_expr <- ggplot(
     strip.text = element_text(face = "bold", hjust = 0.5, size = 13)
   ) 
 
-set.seed(1)
-fgpca_fit <- fit_glmpca_pois(Y = Matrix::t(Y), K = 2, control = list(maxiter = 350))
-gpca_df <- as.data.frame(fgpca_fit$V)
-gpca_df$Group <- grouping
-gpca <- ggplot(data = gpca_df, aes(x = k_1, y = k_2)) +
-  geom_point(aes(color = Group)) +
-  cowplot::theme_cowplot() +
-  scale_color_manual(values = fastTopics:::kelly()[2:11]) +
-  xlab("PC1") +
-  ylab("PC2") +
-  ggtitle("GLM-PCA Loadings") +
-  theme(
-    plot.title = element_text(hjust = 0.5)
-  )
-
-g_gpca <- ggarrange(
-  NULL, gpca, NULL,
-  nrow = 1, ncol = 3,
-  widths = c(0.33, 1, 0.33),
-  labels = c("", "G", "")
-)
-
 g <- ggarrange(
   g_expr,
   g_sp,
   g_sparsity,
-  g_gpca,
-  nrow = 4,
+  nrow = 3,
   ncol = 1,
-  heights = c(0.5, 1, 0.7, 0.7),
-  labels = c("A", "", "", "")
+  heights = c(0.5, 1.2, 0.8),
+  labels = c("A", "", "")
 )
 
 ggsave(
@@ -355,6 +331,6 @@ ggsave(
   device = "png",
   filename = "../images/loading_sim_fig.png",
   width = 8,
-  height = 14
+  height = 11.25
 )
 

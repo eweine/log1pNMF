@@ -184,8 +184,6 @@ colnames(top_words) <- c("Factor", "Top Words - log1p Model c = 0.001")
 top_words <- top_words_tm %>%
   dplyr::inner_join(top_words)
 
-library(kableExtra)
-
 library(readr)
 library(dplyr)
 library(stringr)
