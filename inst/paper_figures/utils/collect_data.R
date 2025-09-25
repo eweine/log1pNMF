@@ -2,14 +2,17 @@ sim_quality_res_list <- list()
 
 load("~/Documents/data/fit_list_sim_c1e-3.Rdata")
 sim_quality_res_list[["c = 1e-3"]]$fit_list_approx <- fit_list_approx
+sim_quality_res_list[["c = 1e-3"]]$fit_list_approx_cheb <- fit_list_approx_cheb
 sim_quality_res_list[["c = 1e-3"]]$fit_list_exact <- fit_list_exact
 
 load("~/Documents/data/fit_list_sim_c1.Rdata")
 sim_quality_res_list[["c = 1"]]$fit_list_approx <- fit_list_approx
+sim_quality_res_list[["c = 1"]]$fit_list_approx_cheb <- fit_list_approx_cheb
 sim_quality_res_list[["c = 1"]]$fit_list_exact <- fit_list_exact
 
 load("~/Documents/data/fit_list_sim_tm.Rdata")
 sim_quality_res_list[["tm"]]$fit_list_approx <- fit_list_approx
+sim_quality_res_list[["tm"]]$fit_list_approx_cheb <- fit_list_approx_cheb
 sim_quality_res_list[["tm"]]$fit_list_exact <- fit_list_exact
 
 res_list <- list()
