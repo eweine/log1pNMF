@@ -47,6 +47,7 @@ cc_vec <- c(1e-4, 1e-3, 1e-2, 1e-1, 1, 1e1, 1e2, 1e3, 1e4)
 
 fit_list_exact <- list()
 fit_list_approx <- list()
+fit_list_approx_cheb <- list()
 
 for (cc in cc_vec) {
   
@@ -72,6 +73,7 @@ for (cc in cc_vec) {
     cc = cc,
     s = FALSE,
     loglik = "approx",
+    approx_technique = "taylor",
     init_method = "random",
     control = list(
       maxiter = 1e5,
@@ -80,22 +82,26 @@ for (cc in cc_vec) {
     )
   )
   
-  Y_tilde <- MatrixExtra::mapSparse(Y, function(x){log1p(x/cc)})
-  frob_fit <- NNLM::nnmf(A = as.matrix(Y_tilde), k = K)
+  set.seed(1)
+  fit_approx_cheb <- fit_poisson_log1p_nmf(
+    Y = Y,
+    K = K,
+    cc = cc,
+    s = FALSE,
+    loglik = "approx",
+    approx_technique = "chebyshev",
+    init_method = "random",
+    control = list(
+      maxiter = 1e5,
+      threads = 7,
+      tol = 1e-6
+    )
+  )
   
   fit_list_exact[[as.character(cc)]] <- fit_exact
   fit_list_approx[[as.character(cc)]] <- fit_approx
+  fit_list_approx_cheb[[as.character(cc)]] <- fit_approx_cheb
   
-}
-
-relative_rmse <- function(A, B) {
-  # Ensure matrices have the same dimensions
-  if (!all(dim(A) == dim(B))) {
-    stop("Matrices A and B must have the same dimensions.")
-  }
-  
-  # Compute relative RMSE
-  sqrt(mean((A - B)^2)) / sqrt(mean(B^2))
 }
 
 for (cc in cc_vec) {
@@ -114,21 +120,18 @@ for (cc in cc_vec) {
       log = TRUE
     )
   ) / (n * p)
-  fit_list_frob[[as.character(cc)]]$ll <- sum(
+  
+  fit_list_approx_cheb[[as.character(cc)]]$ll <- sum(
     dpois(
       as.vector(as.matrix(Y)),
-      cc * (exp(fit_list_frob[[as.character(cc)]]$W %*% fit_list_frob[[as.character(cc)]]$H) - 1),
+      as.vector(fitted(fit_list_approx_cheb[[as.character(cc)]])),
       log = TRUE
     )
   ) / (n * p)
   
-  fit_list_exact[[as.character(cc)]]$rrmse <- relative_rmse(fitted(fit_list_exact[[as.character(cc)]]), Lambda)
-  fit_list_approx[[as.character(cc)]]$rrmse <- relative_rmse(fitted(fit_list_approx[[as.character(cc)]]), Lambda)
-  fit_list_frob[[as.character(cc)]]$rrmse <- relative_rmse(cc * (exp(fit_list_frob[[as.character(cc)]]$W %*% fit_list_frob[[as.character(cc)]]$H) - 1), Lambda)
-  
 }
 
-save(fit_list_exact, fit_list_approx, file = "~/Documents/data/fit_list_sim_tm.Rdata")
+save(fit_list_exact, fit_list_approx, fit_approx_cheb, file = "~/Documents/data/fit_list_sim_tm.Rdata")
 
 n <- 500
 p <- 500
@@ -179,6 +182,7 @@ cc_vec <- c(1e-4, 1e-3, 1e-2, 1e-1, 1, 1e1, 1e2, 1e3, 1e4)
 
 fit_list_exact <- list()
 fit_list_approx <- list()
+fit_list_approx_cheb <- list()
 
 for (cc in cc_vec) {
   
@@ -204,6 +208,23 @@ for (cc in cc_vec) {
     cc = cc,
     s = FALSE,
     loglik = "approx",
+    approx_technique = "taylor",
+    init_method = "random",
+    control = list(
+      maxiter = 1e5,
+      threads = 7,
+      tol = 1e-6
+    )
+  )
+  
+  set.seed(1)
+  fit_approx_cheb <- fit_poisson_log1p_nmf(
+    Y = Y,
+    K = K,
+    cc = cc,
+    s = FALSE,
+    loglik = "approx",
+    approx_technique = "chebyshev",
     init_method = "random",
     control = list(
       maxiter = 1e5,
@@ -214,9 +235,9 @@ for (cc in cc_vec) {
   
   fit_list_exact[[as.character(cc)]] <- fit_exact
   fit_list_approx[[as.character(cc)]] <- fit_approx
+  fit_list_approx_cheb[[as.character(cc)]] <- fit_approx_cheb
   
 }
-
 
 for (cc in cc_vec) {
   
@@ -235,9 +256,17 @@ for (cc in cc_vec) {
     )
   ) / (n * p)
   
+  fit_list_approx_cheb[[as.character(cc)]]$ll <- sum(
+    dpois(
+      as.vector(as.matrix(Y)),
+      as.vector(fitted(fit_list_approx_cheb[[as.character(cc)]])),
+      log = TRUE
+    )
+  ) / (n * p)
+  
 }
 
-save(fit_list_exact, fit_list_approx, file = "~/Documents/data/fit_list_sim_c1.Rdata")
+save(fit_list_exact, fit_list_approx, fit_list_approx_cheb, file = "~/Documents/data/fit_list_sim_c1.Rdata")
 
 n <- 500
 p <- 500
@@ -289,6 +318,7 @@ cc_vec <- c(1e-4, 1e-3, 1e-2, 1e-1, 1, 1e1, 1e2, 1e3, 1e4)
 
 fit_list_exact <- list()
 fit_list_approx <- list()
+fit_list_approx_cheb <- list()
 
 for (cc in cc_vec) {
   
@@ -314,6 +344,23 @@ for (cc in cc_vec) {
     cc = cc,
     s = FALSE,
     loglik = "approx",
+    approx_technique = "taylor",
+    init_method = "random",
+    control = list(
+      maxiter = 1e5,
+      threads = 7,
+      tol = 1e-6
+    )
+  )
+  
+  set.seed(1)
+  fit_approx_cheb <- fit_poisson_log1p_nmf(
+    Y = Y,
+    K = K,
+    cc = cc,
+    s = FALSE,
+    loglik = "approx",
+    approx_technique = "chebyshev",
     init_method = "random",
     control = list(
       maxiter = 1e5,
@@ -324,9 +371,9 @@ for (cc in cc_vec) {
   
   fit_list_exact[[as.character(cc)]] <- fit_exact
   fit_list_approx[[as.character(cc)]] <- fit_approx
+  fit_list_approx_cheb[[as.character(cc)]] <- fit_approx_cheb
   
 }
-
 
 for (cc in cc_vec) {
   
@@ -345,7 +392,15 @@ for (cc in cc_vec) {
     )
   ) / (n * p)
   
+  fit_list_approx_cheb[[as.character(cc)]]$ll <- sum(
+    dpois(
+      as.vector(as.matrix(Y)),
+      as.vector(fitted(fit_list_approx_cheb[[as.character(cc)]])),
+      log = TRUE
+    )
+  ) / (n * p)
+  
 }
 
-save(fit_list_exact, fit_list_approx, file = "~/Documents/data/fit_list_sim_c1e-3.Rdata")
+save(fit_list_exact, fit_list_approx, fit_list_approx_cheb, file = "~/Documents/data/fit_list_sim_c1e-3.Rdata")
 
