@@ -10,6 +10,10 @@ set.seed(1)
 
 load("../data/raw_data/pancreas_cytokine_lsa.Rdata")
 load("../data/experiment_results.Rdata")
+
+s <- Matrix::rowSums(counts)
+s <- s / mean(s)
+
 barcodes   <- as.data.frame(barcodes)
 clusters   <- factor(barcodes$celltype,
                      c("Acinar","Ductal","Endothelial/Mesnchymal","Macrophage",
@@ -63,7 +67,15 @@ p1 <- sp1 +
   labs(y = "Membership") +
   guides(fill=guide_legend(title="Factor")) +
   guides(colour = "none") +
-  ggtitle("Celltype Associated Factors from log1p Model With c = 1")
+  ggtitle("Celltype Associated Factors from log1p Model (c = 1)") +
+  theme(
+    plot.title = element_text(size = 13),
+    axis.text.x = element_text(size = 13),
+    axis.title.y = element_text(size = 13),
+    legend.key.size = unit(0.7, "cm"),   # make color boxes bigger
+    legend.text = element_text(size = 13),
+    legend.title = element_text(size = 13)
+  )
 
 sp2 <- structure_plot(
   L[i,paste0("k", other_topics)],
@@ -73,7 +85,15 @@ p2 <- sp2 +
   labs(y = "Membership") +
   guides(fill=guide_legend(title="Factor")) +
   guides(colour = "none") +
-  ggtitle("Treatment Associated Factors from log1p Model With c = 1")
+  ggtitle("Treatment Associated Factors from log1p Model (c = 1)") +
+  theme(
+    plot.title = element_text(size = 13),
+    axis.text.x = element_text(size = 13),
+    axis.title.y = element_text(size = 13),
+    legend.key.size = unit(1, "cm"),   # make color boxes bigger
+    legend.text = element_text(size = 13),
+    legend.title = element_text(size = 13)
+  )
 
 sp3 <- structure_plot(L[i,paste0("k", other_topics)],grouping = conditions[i],gap = 30,n = Inf,
                       colors = other_colors)
@@ -81,12 +101,20 @@ p3 <- sp3 +
   labs(y = "Membership",fill = "") +
   guides(fill=guide_legend(title="Factor")) +
   guides(colour = "none") +
-  ggtitle("Treatment Associated Factors from log1p Model With c = 1")
+  ggtitle("Treatment Associated Factors from log1p Model (c = 1)") +
+  theme(
+    plot.title = element_text(size = 13),
+    axis.text.x = element_text(size = 13),
+    axis.title.y = element_text(size = 13),
+    legend.key.size = unit(1, "cm"),   # make color boxes bigger
+    legend.text = element_text(size = 13),
+    legend.title = element_text(size = 13)
+  )
 
 
 tm_k13 <- res_list$pancreas$`Inf`
 
-L <- poisson2multinom(tm_k13)$L
+L <- tm_k13$L
 FF_tm <- poisson2multinom(tm_k13)$F
 colnames(L) <- paste0(
   "k", 
@@ -105,24 +133,55 @@ FF_tm <- FF_tm[,paste0("k", 1:13)]
 #  L[i,paste0("k", celltype_topics)],grouping = clusters[i])
 
 p4 <- structure_plot(
-  L[i,paste0("k", celltype_topics_tm)],grouping = clusters[i],gap = 15
+  log1pNMF:::normalize_bars(diag(1/s[i]) %*% L[i,paste0("k", celltype_topics_tm)]),
+  grouping = clusters[i],gap = 15
   ) +
   labs(y = "Membership",fill = "") +
   guides(fill=guide_legend(title="Factor"))	+
   guides(colour = "none") +
-  ggtitle("Celltype Associated Factors from Topic Model")				 
-p5 <- structure_plot(L[i,paste0("k", other_topics)],grouping = clusters[i],gap = 15,
-                     colors = other_colors) +
+  ggtitle("Celltype Associated Factors from Topic Model")	+
+  theme(
+    plot.title = element_text(size = 13),
+    axis.text.x = element_text(size = 13),
+    axis.title.y = element_text(size = 13),
+    legend.key.size = unit(0.7, "cm"),   # make color boxes bigger
+    legend.text = element_text(size = 13),
+    legend.title = element_text(size = 13)
+  )			 
+p5 <- structure_plot(
+  log1pNMF:::normalize_bars(diag(1/s[i]) %*% L[i,paste0("k", other_topics)]),
+  grouping = clusters[i],gap = 15,
+  colors = other_colors
+  ) +
   labs(y = "Membership",fill = "") +
   guides(fill=guide_legend(title="Factor")) +
   guides(colour = "none") +
-  ggtitle("Treatment Associated Factors from Topic Model")
-p6 <- structure_plot(L[i,paste0("k", other_topics)],grouping = conditions[i],gap = 30,
-                     colors = other_colors) +
+  ggtitle("Treatment Associated Factors from Topic Model") +
+  theme(
+    plot.title = element_text(size = 13),
+    axis.text.x = element_text(size = 13),
+    axis.title.y = element_text(size = 13),
+    legend.key.size = unit(1, "cm"),   # make color boxes bigger
+    legend.text = element_text(size = 13),
+    legend.title = element_text(size = 13)
+  )
+p6 <- structure_plot(
+  log1pNMF:::normalize_bars(diag(1/s[i]) %*% L[i,paste0("k", other_topics)]),
+  grouping = conditions[i],gap = 30,
+  colors = other_colors
+  ) +
   labs(y = "Membership",fill = "") +
   guides(fill=guide_legend(title="Factor")) +
   guides(colour = "none") +
-  ggtitle("Treatment Associated Factors from Topic Model")
+  ggtitle("Treatment Associated Factors from Topic Model") +
+  theme(
+    plot.title = element_text(size = 13),
+    axis.text.x = element_text(size = 13),
+    axis.title.y = element_text(size = 13),
+    legend.key.size = unit(1, "cm"),   # make color boxes bigger
+    legend.text = element_text(size = 13),
+    legend.title = element_text(size = 13)
+  )
 
 library(ggpubr)
 
@@ -150,7 +209,7 @@ ggsave(
   g1,
   device = "png",
   width = 11,
-  height = 5
+  height = 7
 )
 
 ggsave(
@@ -158,7 +217,7 @@ ggsave(
   g2,
   device = "png",
   width = 11,
-  height = 10
+  height = 14
 )
 
 # here, want to get top genes

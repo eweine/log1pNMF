@@ -100,10 +100,10 @@ fit_list[["Inf"]]$f_sparsity <- apply(
 
 fit_list[["Inf"]]$cor_mat <- cor(fit_list[["Inf"]]$F, method = "spearman")
 
-l_sparsity_vec <- unlist(lapply(fit_list, function(x) {median(x$l_sparsity)}))
-f_sparsity_vec <- unlist(lapply(fit_list, function(x) {median(x$f_sparsity)}))
+l_sparsity_vec <- unlist(lapply(fit_list, function(x) {mean(x$l_sparsity)}))
+f_sparsity_vec <- unlist(lapply(fit_list, function(x) {mean(x$f_sparsity)}))
 cor_vec <- unlist(
-  lapply(fit_list, function(x) {median(abs(x$cor_mat[lower.tri(x$cor_mat)]))})
+  lapply(fit_list, function(x) {mean(abs(x$cor_mat[lower.tri(x$cor_mat)]))})
 )
 
 loglik_vec <- unlist(lapply(fit_list, function(x) {x$final_loglik}))
@@ -133,10 +133,15 @@ g1 <- ggplot(data = df_cor, aes(x = cc, y = correlation)) +
   scale_y_continuous(limits = c(0, 1), expand = c(0, 0)) +
   scale_x_continuous(breaks = c(1e-3, 1, 1e3), transform = "log10") +
   xlab("c") +
-  ylab("Median Abs. Factor Correlation") +
+  ylab("Mean Abs. Factor Correlation") +
   geom_hline(yintercept = cor_vec["Inf"], color = "red", linetype = "dashed") +
   ggplot2::annotate(
-    geom="text", x=0.006, y=cor_vec["Inf"] + 0.05, label="Topic Model", color="red"
+    geom="text", x=0.008, y=cor_vec["Inf"] + 0.05, label="Topic Model", color="red",
+    size = 5
+  ) +
+  theme(
+    axis.title.x = element_text(size = 14.5),
+    axis.title.y = element_text(size = 14.5)
   )
 
 g2 <- ggplot(data = df_sparsity_l, aes(x = cc, y = sparsity)) +
@@ -146,10 +151,15 @@ g2 <- ggplot(data = df_sparsity_l, aes(x = cc, y = sparsity)) +
   scale_y_continuous(limits = c(0, 1), expand = c(0, 0)) +
   scale_x_continuous(breaks = c(1e-3, 1, 1e3), transform = "log10") +
   xlab("c") +
-  ylab("Median Loading Sparsity") +
+  ylab("Mean Loading Sparsity") +
   geom_hline(yintercept = l_sparsity_vec["Inf"], color = "red", linetype = "dashed") +
   ggplot2::annotate(
-    geom="text", x=0.006, y=l_sparsity_vec["Inf"] + 0.05, label="Topic Model", color="red"
+    geom="text", x=0.008, y=l_sparsity_vec["Inf"] + 0.05, label="Topic Model", color="red",
+    size = 5
+  ) +
+  theme(
+    axis.title.x = element_text(size = 14.5),
+    axis.title.y = element_text(size = 14.5)
   )
 
 g3 <- ggplot(data = df_sparsity_f, aes(x = cc, y = sparsity)) +
@@ -159,10 +169,15 @@ g3 <- ggplot(data = df_sparsity_f, aes(x = cc, y = sparsity)) +
   scale_y_continuous(limits = c(0, 1), expand = c(0, 0)) +
   scale_x_continuous(breaks = c(1e-3, 1, 1e3), transform = "log10") +
   xlab("c") +
-  ylab("Median Factor Sparsity") +
+  ylab("Mean Factor Sparsity") +
   geom_hline(yintercept = f_sparsity_vec["Inf"], color = "red", linetype = "dashed") +
   ggplot2::annotate(
-    geom="text", x=0.006, y=f_sparsity_vec["Inf"] + 0.05, label="Topic Model", color="red"
+    geom="text", x=0.008, y=f_sparsity_vec["Inf"] + 0.05, label="Topic Model", color="red",
+    size = 5
+  ) +
+  theme(
+    axis.title.x = element_text(size = 14.5),
+    axis.title.y = element_text(size = 14.5)
   )
 
 rm(list = setdiff(ls(), c("g1", "g2", "g3", "hoyer_sparsity", "res_list")))
@@ -266,10 +281,10 @@ fit_list[["Inf"]]$f_sparsity <- apply(
 
 fit_list[["Inf"]]$cor_mat <- cor(fit_list[["Inf"]]$F, method = "spearman")
 
-l_sparsity_vec <- unlist(lapply(fit_list, function(x) {median(x$l_sparsity)}))
-f_sparsity_vec <- unlist(lapply(fit_list, function(x) {median(x$f_sparsity)}))
+l_sparsity_vec <- unlist(lapply(fit_list, function(x) {mean(x$l_sparsity)}))
+f_sparsity_vec <- unlist(lapply(fit_list, function(x) {mean(x$f_sparsity)}))
 cor_vec <- unlist(
-  lapply(fit_list, function(x) {median(abs(x$cor_mat[lower.tri(x$cor_mat)]))})
+  lapply(fit_list, function(x) {mean(abs(x$cor_mat[lower.tri(x$cor_mat)]))})
 )
 
 loglik_vec <- unlist(lapply(fit_list, function(x) {x$final_loglik}))
@@ -299,10 +314,15 @@ g4 <- ggplot(data = df_cor, aes(x = cc, y = correlation)) +
   scale_y_continuous(limits = c(0, 1), expand = c(0, 0)) +
   scale_x_continuous(breaks = c(1e-4, 1e-2, 1, 1e2, 1e4), transform = "log10") +
   xlab("c") +
-  ylab("Median Abs. Factor Correlation") +
+  ylab("Mean Abs. Factor Correlation") +
   geom_hline(yintercept = cor_vec["Inf"], color = "red", linetype = "dashed") +
   ggplot2::annotate(
-    geom="text", x=0.003, y=cor_vec["Inf"] + 0.05, label="Topic Model", color="red"
+    geom="text", x=0.003, y=cor_vec["Inf"] + 0.05, label="Topic Model", color="red",
+    size = 5
+  ) +
+  theme(
+    axis.title.x = element_text(size = 14.5),
+    axis.title.y = element_text(size = 14.5)
   )
 
 g5 <- ggplot(data = df_sparsity_l, aes(x = cc, y = sparsity)) +
@@ -312,10 +332,15 @@ g5 <- ggplot(data = df_sparsity_l, aes(x = cc, y = sparsity)) +
   scale_y_continuous(limits = c(0, 1), expand = c(0, 0)) +
   scale_x_continuous(breaks = c(1e-4, 1e-2, 1, 1e2, 1e4), transform = "log10") +
   xlab("c") +
-  ylab("Median Loading Sparsity") +
+  ylab("Mean Loading Sparsity") +
   geom_hline(yintercept = l_sparsity_vec["Inf"], color = "red", linetype = "dashed") +
   ggplot2::annotate(
-    geom="text", x=0.003, y=l_sparsity_vec["Inf"] + 0.05, label="Topic Model", color="red"
+    geom="text", x=0.003, y=l_sparsity_vec["Inf"] + 0.05, label="Topic Model", color="red",
+    size = 5
+  ) +
+  theme(
+    axis.title.x = element_text(size = 14.5),
+    axis.title.y = element_text(size = 14.5)
   )
 
 g6 <- ggplot(data = df_sparsity_f, aes(x = cc, y = sparsity)) +
@@ -325,10 +350,15 @@ g6 <- ggplot(data = df_sparsity_f, aes(x = cc, y = sparsity)) +
   scale_y_continuous(limits = c(0, 1), expand = c(0, 0)) +
   scale_x_continuous(breaks = c(1e-4, 1e-2, 1, 1e2, 1e4), transform = "log10") +
   xlab("c") +
-  ylab("Median Factor Sparsity") +
+  ylab("Mean Factor Sparsity") +
   geom_hline(yintercept = f_sparsity_vec["Inf"], color = "red", linetype = "dashed") +
   ggplot2::annotate(
-    geom="text", x=0.003, y=f_sparsity_vec["Inf"] + 0.05, label="Topic Model", color="red"
+    geom="text", x=0.003, y=f_sparsity_vec["Inf"] + 0.05, label="Topic Model", color="red",
+    size = 5
+  ) +
+  theme(
+    axis.title.x = element_text(size = 14.5),
+    axis.title.y = element_text(size = 14.5)
   )
 
 rm(list = setdiff(ls(), c(
@@ -398,10 +428,10 @@ fit_list[["Inf"]]$f_sparsity <- apply(
 
 fit_list[["Inf"]]$cor_mat <- cor(fit_list[["Inf"]]$F, method = "spearman")
 
-l_sparsity_vec <- unlist(lapply(fit_list, function(x) {median(x$l_sparsity)}))
-f_sparsity_vec <- unlist(lapply(fit_list, function(x) {median(x$f_sparsity)}))
+l_sparsity_vec <- unlist(lapply(fit_list, function(x) {mean(x$l_sparsity)}))
+f_sparsity_vec <- unlist(lapply(fit_list, function(x) {mean(x$f_sparsity)}))
 cor_vec <- unlist(
-  lapply(fit_list, function(x) {median(abs(x$cor_mat[lower.tri(x$cor_mat)]))})
+  lapply(fit_list, function(x) {mean(abs(x$cor_mat[lower.tri(x$cor_mat)]))})
 )
 
 loglik_vec <- unlist(lapply(fit_list, function(x) {x$final_loglik}))
@@ -428,10 +458,15 @@ g7 <- ggplot(data = df_cor, aes(x = cc, y = correlation)) +
   scale_y_continuous(limits = c(0, 1), expand = c(0, 0)) +
   scale_x_continuous(breaks = c(1e-3, 1, 1e3), transform = "log10") +
   xlab("c") +
-  ylab("Median Abs. Factor Correlation") +
+  ylab("Mean Abs. Factor Correlation") +
   geom_hline(yintercept = cor_vec["Inf"], color = "red", linetype = "dashed") +
   ggplot2::annotate(
-    geom="text", x=0.006, y=cor_vec["Inf"] + 0.05, label="Topic Model", color="red"
+    geom="text", x=0.008, y=cor_vec["Inf"] + 0.05, label="Topic Model", color="red",
+    size = 5
+  ) +
+  theme(
+    axis.title.x = element_text(size = 14.5),
+    axis.title.y = element_text(size = 14.5)
   )
 
 g8 <- ggplot(data = df_sparsity_l, aes(x = cc, y = sparsity)) +
@@ -441,10 +476,15 @@ g8 <- ggplot(data = df_sparsity_l, aes(x = cc, y = sparsity)) +
   scale_y_continuous(limits = c(0, 1), expand = c(0, 0)) +
   scale_x_continuous(breaks = c(1e-3, 1, 1e3), transform = "log10") +
   xlab("c") +
-  ylab("Median Loading Sparsity") +
+  ylab("Mean Loading Sparsity") +
   geom_hline(yintercept = l_sparsity_vec["Inf"], color = "red", linetype = "dashed") +
   ggplot2::annotate(
-    geom="text", x=0.006, y=l_sparsity_vec["Inf"] + 0.05, label="Topic Model", color="red"
+    geom="text", x=0.008, y=l_sparsity_vec["Inf"] + 0.05, label="Topic Model", color="red",
+    size = 5
+  ) +
+  theme(
+    axis.title.x = element_text(size = 14.5),
+    axis.title.y = element_text(size = 14.5)
   )
 
 g9 <- ggplot(data = df_sparsity_f, aes(x = cc, y = sparsity)) +
@@ -454,26 +494,31 @@ g9 <- ggplot(data = df_sparsity_f, aes(x = cc, y = sparsity)) +
   scale_y_continuous(limits = c(0, 1), expand = c(0, 0)) +
   scale_x_continuous(breaks = c(1e-3, 1, 1e3), transform = "log10") +
   xlab("c") +
-  ylab("Median Factor Sparsity") +
+  ylab("Mean Factor Sparsity") +
   geom_hline(yintercept = f_sparsity_vec["Inf"], color = "red", linetype = "dashed") +
   ggplot2::annotate(
-    geom="text", x=0.006, y=f_sparsity_vec["Inf"] - 0.05, label="Topic Model", color="red"
+    geom="text", x=0.008, y=f_sparsity_vec["Inf"] - 0.05, label="Topic Model", color="red",
+    size = 5
+  ) +
+  theme(
+    axis.title.x = element_text(size = 14.5),
+    axis.title.y = element_text(size = 14.5)
   )
 
 mcf7_sum_fig <- ggarrange(g4,g5,g6, nrow = 1, labels = c("A", "B", "C"))
 mcf7_sum_fig <- annotate_figure(mcf7_sum_fig,
                      top = text_grob("MCF-7 K = 3", size = 25, face = "bold"))
 
-bbc_sum_fig <- ggarrange(g1,g2,g3, nrow = 1, labels = c("D", "E", "F"))
+bbc_sum_fig <- ggarrange(g1,g2,g3, nrow = 1, labels = c("G", "H", "I"))
 bbc_sum_fig <- annotate_figure(bbc_sum_fig,
                                 top = text_grob("BBC K = 10", size = 25, face = "bold"))
 
 
-lsa_sum_fig <- ggarrange(g7,g8,g9, nrow = 1, labels = c("G", "H", "I"))
+lsa_sum_fig <- ggarrange(g7,g8,g9, nrow = 1, labels = c("D", "E", "F"))
 lsa_sum_fig <- annotate_figure(lsa_sum_fig,
                                top = text_grob("Pancreas K = 13", size = 25, face = "bold"))
 
-all_dataset_sum_fig <- ggarrange(mcf7_sum_fig, bbc_sum_fig, lsa_sum_fig, nrow = 3, ncol = 1)
+all_dataset_sum_fig <- ggarrange(mcf7_sum_fig, lsa_sum_fig, bbc_sum_fig, nrow = 3, ncol = 1)
 
 ggsave(
   "../images/fit_summary.png",

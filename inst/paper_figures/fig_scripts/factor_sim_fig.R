@@ -77,7 +77,7 @@ expr_df <- data.frame(
 g_expr <- ggplot(expr_df, aes(x = gene_id, y = expr)) +
   geom_col(width = 1, colour = NA, linewidth = 0) +  # Use bars to represent lambda values
   facet_wrap(~ group) +          # Create a panel for each group
-  labs(x = "Gene Index", y = "True Expression") +
+  labs(x = "Feature Index", y = "True Rate") +
   scale_y_continuous(trans = "log1p", breaks = c(0, 3, 100, 1000)) + 
   cowplot::theme_cowplot() + # Use a minimal theme for a clean look
   theme(
@@ -235,7 +235,7 @@ g_k_a <- ggplot(
   scale_x_continuous(trans = "log1p") +
   labs(x = "Factor Value",
        y = "Count",
-       fill = "Gene Type",
+       fill = "Feature Type",
        title = "log1p Model Factor 2"
        ) +
   theme(plot.title = element_text(hjust = 0.5, size = 13))
@@ -252,7 +252,7 @@ g_k_b <- ggplot(
   ) +
   labs(x = "Factor Value",
        y = "Count",
-       fill = "Gene Type",
+       fill = "Feature Type",
        title = "Topic Model Factor 2"
   ) +
   theme(plot.title = element_text(hjust = 0.5, size = 13))
@@ -266,7 +266,7 @@ g_k_c <- ggplot(
   scale_x_continuous(trans = "log1p") +
   labs(x = "Factor Value",
        y = "Count",
-       fill = "Gene Type",
+       fill = "Feature Type",
        title = "log1p Model Factor 3"
   ) +
   theme(plot.title = element_text(hjust = 0.5, size = 13))
@@ -283,7 +283,7 @@ g_k_d <- ggplot(
   ) +
   labs(x = "Factor Value",
        y = "Count",
-       fill = "Gene Type",
+       fill = "Feature Type",
        title = "Topic Model Factor 3"
   ) +
   theme(plot.title = element_text(hjust = 0.5, size = 13))

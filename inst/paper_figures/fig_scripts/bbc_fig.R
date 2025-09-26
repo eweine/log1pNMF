@@ -113,25 +113,31 @@ sp <- normalized_structure_plot(
 plot_list[[glue::glue("c = 0.001")]] <- sp + 
   ggtitle("log1p Model Loadings (c = 0.001)") +
   theme(
-    plot.title = element_text(size = 12),
-    axis.title.y = element_text(size = 12),
-    axis.text.x = element_text(angle = 0,hjust = 0.5, size = 12)
+    plot.title = element_text(size = 13),
+    axis.title.y = element_text(size = 13),
+    axis.text.x = element_text(angle = 0,hjust = 0.5, size = 12.5),
+    legend.key.size = unit(0.6, "cm"),   # make color boxes bigger
+    legend.text = element_text(size = 12.5),
+    legend.title = element_text(size = 12.5)
   ) + ylab("Membership") +
   guides(fill=guide_legend(title="Factor")) +
   guides(colour = "none")
 
 set.seed(1)
 tm_sp <- structure_plot(
-  fit_list[["Inf"]],
+  log1pNMF:::normalize_bars(diag(1 / s) %*% fit_list[["Inf"]]$L),
   grouping = dat$labels,gap = 25,perplexity = 70,font.size = 12
 )
 
 plot_list[["Topic Model"]] <- tm_sp + 
   ggtitle("Topic Model Loadings") +
   theme(
-    plot.title = element_text(size = 12),
-    axis.title.y = element_text(size = 12),
-    axis.text.x = element_text(angle = 0,hjust = 0.5, size = 12)
+    plot.title = element_text(size = 13),
+    axis.title.y = element_text(size = 13),
+    axis.text.x = element_text(angle = 0,hjust = 0.5, size = 12.5),
+    legend.key.size = unit(0.6, "cm"),   # make color boxes bigger
+    legend.text = element_text(size = 12.5),
+    legend.title = element_text(size = 12.5)
   )  + ylab("Membership") +
   guides(fill=guide_legend(title="Factor")) +
   guides(colour = "none")
