@@ -424,7 +424,7 @@ fit_poisson_log1p_nmf <- function(
       fit$LL <- matrix(
         data = stats::runif(
           n = nrow(Y) * K,
-          min = 1e-12,
+          min = 1e-8,
           max = 0.05
         ),
         nrow = nrow(Y),
@@ -434,7 +434,7 @@ fit_poisson_log1p_nmf <- function(
       fit$FF <- matrix(
         data = stats::runif(
           n = ncol(Y) * K,
-          min = 1e-12,
+          min = 1e-8,
           max = 0.05
         ),
         nrow = ncol(Y),
