@@ -469,7 +469,7 @@ fit_poisson_log1p_nmf <- function(
         ncol = 1
       )
 
-      fit <- fit_fn(
+      fit <- fit_factor_model_log1p_exact(
         sc = sc,
         sc_t = sc_t,
         s = fit$s * fit$cc,
