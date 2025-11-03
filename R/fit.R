@@ -523,7 +523,7 @@ fit_poisson_log1p_nmf <- function(
     
   } else {
     
-    if(!is.valid.integer.vector(update_idx_LL)) {
+    if(!is.valid.integer.vector(update_idx_LL, K)) {
       
       stop("update_idx_LL must be an integer vector with unique elements between 1 and K.")
       
@@ -537,7 +537,7 @@ fit_poisson_log1p_nmf <- function(
     
   } else {
     
-    if(!is.valid.integer.vector(update_idx_FF)) {
+    if(!is.valid.integer.vector(update_idx_FF, K)) {
       
       stop("update_idx_FF must be an integer vector with unique elements between 1 and K.")
       

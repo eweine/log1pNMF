@@ -291,6 +291,37 @@ test_that("logLik is correct", {
   
 })
 
+test_that("fixing indices works", {
+  
+  set.seed(1)
+  dat <- generate_log1p_pois_data(n = 500, p = 250, K = 4)
+  
+  LL <- matrix(
+    data = runif(n = 500 * 3, min = 0, max = 0.1),
+    nrow = 500,
+    ncol = 3
+  )
+  LL <- cbind(rep(1, 500), LL)
+  
+  FF <- matrix(
+    data = runif(n = 250 * 4, min = 0, max = 0.5),
+    nrow = 250,
+    ncol = 4
+  )
+  
+  fit <- fit_poisson_log1p_nmf(
+    Y = dat$Y,
+    init_LL = LL,
+    init_FF = FF,
+    control = list(verbose = FALSE),
+    update_idx_LL = 2:4,
+    update_idx_FF = 1:4
+  )
+  
+  expect_all_equal(fit$LL[,1])
+  
+})
+
 test_that("initializing with previous fit works", {
   
   set.seed(1)
