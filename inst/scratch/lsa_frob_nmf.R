@@ -1,5 +1,6 @@
 library(Matrix)
 library(log1pNMF)
+library(dplyr)
 
 load("../data/raw_data/pancreas_cytokine_lsa.Rdata")
 
@@ -27,7 +28,7 @@ conditions <- factor(barcodes$condition,
 i <- c(sample(which(clusters == "Beta"),900),
        which(clusters != "Beta"))
 
-K <- 13
+K <- 12
 
 s <- Matrix::rowSums(counts) 
 s <- s / mean(s)
@@ -35,12 +36,16 @@ Y_tilde <- Matrix::Diagonal(x = 1/s) %*% counts
 Y_tilde <- MatrixExtra::mapSparse(Y_tilde, log1p)
 
 set.seed(1)
-fit0 <- nnmf(
-  A = as.matrix(Y_tilde)
+fit0 <- fit_poisson_log1p_nmf(
+  Y = counts,
+  K = 1,
+  init_method = "random",
+  loglik = "exact",
+  control = list(maxiter = 5)
 )
 
 init_W <- cbind(
-  fit0$W,
+  fit0$LL,
   matrix(
     data = 1e-5,
     nrow = nrow(counts),
@@ -50,7 +55,7 @@ init_W <- cbind(
 
 
 init_H <- rbind(
-  fit0$H,
+  t(fit0$FF),
   matrix(
     data = 1e-5,
     nrow = K - 1,
@@ -61,7 +66,7 @@ init_H <- rbind(
 fit <- nnmf(
   A = as.matrix(Y_tilde),
   init = list(W = init_W, H = init_H),
-  k = 13
+  k = 12
 )
 
 library(fastTopics)
@@ -71,6 +76,7 @@ structure_plot(
   gap = 20
 )
 
+colnames(fit$W) <- NULL
 structure_plot(
   log1pNMF:::normalize_bars(fit$W)[i,],
   grouping = conditions[i],
@@ -78,10 +84,10 @@ structure_plot(
 )
 
 celltype_factors <- c(
-  1, 2, 3, 4, 5, 7, 11, 12, 13
+  1, 2, 3, 4, 5, 7, 8, 10, 11
 )
 other_factors <- c(
-  6, 8, 9, 10
+  6, 9, 12
 )
 
 structure_plot(
