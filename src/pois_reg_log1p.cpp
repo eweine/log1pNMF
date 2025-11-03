@@ -204,7 +204,8 @@ List fit_factor_model_log1p_exact_cpp_src(
     const double alpha,
     const double beta,
     const int num_ccd_iter,
-    const std::vector<int>& update_indices,
+    const std::vector<int>& U_update_indices,
+    const std::vector<int>& V_update_indices,
     const bool verbose,
     const double tol
 ) {
@@ -309,7 +310,7 @@ List fit_factor_model_log1p_exact_cpp_src(
       s,
       true,
       U_T,
-      update_indices,
+      U_update_indices,
       num_ccd_iter,
       alpha,
       beta
@@ -322,7 +323,7 @@ List fit_factor_model_log1p_exact_cpp_src(
       s,
       false,
       V_T,
-      update_indices,
+      V_update_indices,
       num_ccd_iter,
       alpha,
       beta

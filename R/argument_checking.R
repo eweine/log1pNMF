@@ -74,3 +74,11 @@ is.above1.scalar <- function(x) {
   is.numeric(x) && (length(x) == 1) && (x >= 1)
 
 }
+
+is.valid.integer.vector <- function(x, K) {
+  is.numeric(x) &&
+    all(x == as.integer(x)) &&
+    all(x >= 1 & x <= K) &&
+    length(unique(x)) == length(x)
+}
+

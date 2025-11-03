@@ -12,6 +12,8 @@ fit_poisson_log1p_nmf(
   cc = 1,
   init_LL = NULL,
   init_FF = NULL,
+  update_idx_LL = NULL,
+  update_idx_FF = NULL,
   loglik = c("default", "approx", "exact"),
   init_method = c("rank1", "random"),
   approx_technique = c("chebyshev", "taylor"),
@@ -40,6 +42,13 @@ If set to \code{FALSE}, no size factors will be used.}
 \item{init_LL}{initial value of \eqn{L}.}
 
 \item{init_FF}{initial value of \eqn{F}.}
+
+\item{update_idx_LL}{vector of indices indicating which columns of \eqn{L}
+should be fit (as opposed to fixed throughout optimization). Defaults to all
+columns.}
+
+\item{update_idx_FF}{vector of indices indicating which columns of \eqn{F}
+should be fit. Defaults to all columns.}
 
 \item{loglik}{character string specifying the log-likelihood to optimize.
 Setting this to \code{"approx"} will approximate the log-likelihood

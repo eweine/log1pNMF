@@ -23,8 +23,6 @@ fit_factor_model_log1p_quad_approx_sparse <- function(
     maxiter
 ) {
 
-  update_idx <- 0:(ncol(fit$LL) - 1)
-
   new_UV <- fit_factor_model_log1p_quad_approx_sparse_cpp_src(
     sc$x,
     sc$i - 1,
@@ -43,7 +41,8 @@ fit_factor_model_log1p_quad_approx_sparse <- function(
     fit$control$ls_alpha,
     fit$control$ls_beta,
     fit$control$num_ccd_iter,
-    update_idx,
+    fit$update_idx_LL - 1,
+    fit$update_idx_FF - 1,
     fit$control$verbose,
     fit$control$tol
   )

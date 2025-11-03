@@ -26,7 +26,6 @@ fit_factor_model_log1p_exact <- function(
   # add size factor to L and F
   U <- cbind(log(s), fit$LL)
   V <- cbind(rep(1, p), fit$FF)
-  update_idx <- 1:ncol(fit$LL)
 
   new_UV <- fit_factor_model_log1p_exact_cpp_src(
     sc$x,
@@ -44,7 +43,8 @@ fit_factor_model_log1p_exact <- function(
     fit$control$ls_alpha,
     fit$control$ls_beta,
     fit$control$num_ccd_iter,
-    update_idx,
+    fit$update_idx_LL,
+    fit$update_idx_FF,
     fit$control$verbose,
     fit$control$tol
   )

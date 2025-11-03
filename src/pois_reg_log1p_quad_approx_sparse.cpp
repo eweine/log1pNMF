@@ -389,7 +389,8 @@ List fit_factor_model_log1p_quad_approx_sparse_cpp_src(
     const double alpha,
     const double beta,
     const int num_ccd_iter,
-    const std::vector<int>& update_indices,
+    const std::vector<int>& U_update_indices,
+    const std::vector<int>& V_update_indices,
     const bool verbose,
     const double tol
 ) {
@@ -491,6 +492,20 @@ List fit_factor_model_log1p_quad_approx_sparse_cpp_src(
 
     U_T.each_col() %= arma::sqrt(1/d);
     V_T.each_col() %= arma::sqrt(d);
+    
+    U_T = regress_cols_of_Y_on_X_log1p_quad_approx_sparse_scalar_s(
+      V_T,
+      y_rows_data,
+      y_rows_idx,
+      s,
+      U_T,
+      a1,
+      a2,
+      U_update_indices,
+      num_ccd_iter,
+      alpha,
+      beta
+    );
 
     V_T = regress_cols_of_Y_on_X_log1p_quad_approx_sparse_vec_s(
       U_T,
@@ -500,21 +515,7 @@ List fit_factor_model_log1p_quad_approx_sparse_cpp_src(
       V_T,
       a1,
       a2,
-      update_indices,
-      num_ccd_iter,
-      alpha,
-      beta
-    );
-
-    U_T = regress_cols_of_Y_on_X_log1p_quad_approx_sparse_scalar_s(
-      V_T,
-      y_rows_data,
-      y_rows_idx,
-      s,
-      U_T,
-      a1,
-      a2,
-      update_indices,
+      V_update_indices,
       num_ccd_iter,
       alpha,
       beta

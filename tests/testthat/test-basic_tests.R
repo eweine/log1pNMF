@@ -16,7 +16,7 @@ test_that("a basic fit works", {
 })
 
 test_that("big c works", {
-  
+
   set.seed(1)
   dat <- generate_log1p_pois_data(n = 500, p = 250, K = 4)
   fit <- fit_poisson_log1p_nmf(
@@ -26,15 +26,15 @@ test_that("big c works", {
     init_method = "random",
     control = list(verbose = FALSE)
   )
-  
+
   expect_true(all(fit$LL>=0))
   expect_true(all(fit$FF>=0))
   expect_nondecreasing(fit$objective_trace)
-  
+
 })
 
 test_that("small c works", {
-  
+
   set.seed(1)
   dat <- generate_log1p_pois_data(n = 500, p = 250, K = 4)
   fit <- fit_poisson_log1p_nmf(
@@ -44,11 +44,11 @@ test_that("small c works", {
     init_method = "random",
     control = list(verbose = FALSE)
   )
-  
+
   expect_true(all(fit$LL>=0))
   expect_true(all(fit$FF>=0))
   expect_nondecreasing(fit$objective_trace)
-  
+
 })
 
 test_that("rank1 initialization works", {
@@ -202,7 +202,7 @@ test_that("true value of c improves fit", {
 })
 
 test_that("providing custom initializations works", {
-
+  
   set.seed(1)
   dat <- generate_log1p_pois_data(n = 500, p = 250, K = 4)
   fit <- fit_poisson_log1p_nmf(
@@ -212,9 +212,9 @@ test_that("providing custom initializations works", {
     loglik = "exact",
     control = list(verbose = FALSE, maxiter = 5)
   )
-
+  
   Lambda_hat <- fitted(fit)
-
+  
   ll_init <- sum(
     dpois(
       x = as.vector(as.matrix(dat$Y)),
@@ -222,7 +222,7 @@ test_that("providing custom initializations works", {
       log = TRUE
     )
   )
-
+  
   fit2 <- fit_poisson_log1p_nmf(
     Y = dat$Y,
     init_LL = fit$LL,
@@ -230,9 +230,9 @@ test_that("providing custom initializations works", {
     loglik = "exact",
     control = list(verbose = FALSE, maxiter = 5)
   )
-
+  
   Lambda_hat2 <- fitted(fit2)
-
+  
   ll_final <- sum(
     dpois(
       x = as.vector(as.matrix(dat$Y)),
@@ -240,17 +240,17 @@ test_that("providing custom initializations works", {
       log = TRUE
     )
   )
-
+  
   expect_true(all(fit$LL>=0))
   expect_true(all(fit$FF>=0))
   expect_true(all(fit2$LL>=0))
   expect_true(all(fit2$FF>=0))
   testthat::expect_gt(ll_final, ll_init)
-
+  
 })
 
 test_that("providing custom size factors works", {
-
+  
   set.seed(1)
   dat <- generate_log1p_pois_data(n = 500, p = 250, K = 4)
   s <- runif(500, 0.9, 1.1)
@@ -261,12 +261,12 @@ test_that("providing custom size factors works", {
     init_method = "random",
     control = list(verbose = FALSE)
   )
-
+  
   expect_nondecreasing(fit$objective_trace)
   expect_equal(fit$s, s)
   expect_true(all(fit$LL>=0))
   expect_true(all(fit$FF>=0))
-
+  
 })
 
 test_that("logLik is correct", {

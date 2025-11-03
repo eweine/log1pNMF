@@ -80,6 +80,11 @@
 #' @param cc value of \code{c} in the link function. See Details.
 #' @param init_LL initial value of \eqn{L}.
 #' @param init_FF initial value of \eqn{F}.
+#' @param update_idx_LL vector of indices indicating which columns of \eqn{L}
+#' should be fit (as opposed to fixed throughout optimization). Defaults to all
+#' columns.
+#' @param update_idx_FF vector of indices indicating which columns of \eqn{F}
+#' should be fit. Defaults to all columns.
 #' @param loglik character string specifying the log-likelihood to optimize.
 #' Setting this to \code{"approx"} will approximate the log-likelihood
 #' corresponding to the \eqn{0} values of \eqn{Y} with a quadratic.
@@ -154,6 +159,8 @@ fit_poisson_log1p_nmf <- function(
   cc = 1,
   init_LL = NULL,
   init_FF = NULL,
+  update_idx_LL = NULL,
+  update_idx_FF = NULL,
   loglik = c("default", "approx", "exact"),
   init_method = c("rank1", "random"),
   approx_technique = c("chebyshev", "taylor"),
@@ -399,6 +406,7 @@ fit_poisson_log1p_nmf <- function(
     
     # add small positive constant to prevent initial NA log-likelihood
     fit$FF <- pmax(fit$FF, 1e-16) 
+    K <- as.integer(ncol(fit$FF))
 
   } else {
 
@@ -469,6 +477,8 @@ fit_poisson_log1p_nmf <- function(
         ncol = 1
       )
 
+      fit$update_idx_LL <- c(1)
+      fit$update_idx_FF <- c(1)
       fit <- fit_factor_model_log1p_exact(
         sc = sc,
         sc_t = sc_t,
@@ -506,6 +516,37 @@ fit_poisson_log1p_nmf <- function(
     cat("Fitting model...\n")
 
   }
+  
+  if (is.null(update_idx_LL)) {
+    
+    update_idx_LL <- 1:K
+    
+  } else {
+    
+    if(!is.valid.integer.vector(update_idx_LL)) {
+      
+      stop("update_idx_LL must be an integer vector with unique elements between 1 and K.")
+      
+    }
+    
+  }
+  
+  if (is.null(update_idx_FF)) {
+    
+    update_idx_FF <- 1:K
+    
+  } else {
+    
+    if(!is.valid.integer.vector(update_idx_FF)) {
+      
+      stop("update_idx_FF must be an integer vector with unique elements between 1 and K.")
+      
+    }
+    
+  }
+  
+  fit$update_idx_LL <- update_idx_LL
+  fit$update_idx_FF <- update_idx_FF
 
   # main fit
   fit <- fit_fn(
