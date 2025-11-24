@@ -2,6 +2,8 @@ library(ggplot2)
 library(fastTopics)
 library(log1pNMF)
 library(ggpubr)
+library(tidyr)
+library(cowplot)
 
 high_expressed_genes <- 500
 low_expressed_genes <- 500
@@ -32,8 +34,8 @@ FF <- matrix(
     rep(1100, round(high_expressed_genes / 2)),
     rep(0, round(low_expressed_genes / 2)), 
     rep(0, round(low_expressed_genes / 2)),
-    rep(1051.5, round(high_expressed_genes / 2)),
-    rep(1051.5, round(high_expressed_genes / 2))
+    rep(1000, round(high_expressed_genes / 2)),
+    rep(1000, round(high_expressed_genes / 2))
   ),
   nrow = p,
   ncol = 3
@@ -69,22 +71,76 @@ expr_df <- data.frame(
     rep(1100, round(high_expressed_genes / 2)),
     rep(0, round(low_expressed_genes / 2)), 
     rep(0, round(low_expressed_genes / 2)),
-    rep(1051.5, round(high_expressed_genes / 2)),
-    rep(1051.5, round(high_expressed_genes / 2))
+    rep(1000, round(high_expressed_genes / 2)),
+    rep(1000, round(high_expressed_genes / 2))
   )
 )
 
-g_expr <- ggplot(expr_df, aes(x = gene_id, y = expr)) +
-  geom_col(width = 1, colour = NA, linewidth = 0) +  # Use bars to represent lambda values
-  facet_wrap(~ group) +          # Create a panel for each group
+plot_df <- expr_df %>%
+  mutate(
+    # baseline heights
+    baseline = case_when(
+      gene_id <= 500 ~ pmin(expr, 3),
+      gene_id > 500  ~ pmin(expr, 1000)
+    ),
+    excess = pmax(expr - baseline, 0),
+    
+    # log1p-transformed cumulative heights
+    baseline_log = log1p(baseline),
+    excess_log   = log1p(baseline + excess) - log1p(baseline)
+  ) %>%
+  select(group, gene_id, baseline_log, excess_log) %>%
+  pivot_longer(
+    c(baseline_log, excess_log),
+    names_to = "segment",
+    values_to = "height_log"
+  ) %>%
+  filter(height_log > 0) %>%
+  mutate(
+    fill = case_when(
+      segment == "baseline_log" & gene_id <= 250 ~ "low_green",
+      segment == "baseline_log" & gene_id <= 500 ~ "low_blue",
+      segment == "baseline_log" & gene_id >  500 ~ "high_red",
+      
+      segment == "excess_log"   & gene_id <= 750 ~ "excess_green",
+      segment == "excess_log"   & gene_id >  750 ~ "excess_blue"
+    ),
+    fill = factor(
+      fill,
+      levels = c("low_green", "low_blue", "excess_green",
+                 "excess_blue", "high_red")
+    )
+  )
+
+g_expr <- ggplot(plot_df, aes(x = gene_id, y = height_log, fill = fill)) +
+  geom_col(
+    width = 1,
+    colour = NA,
+    linewidth = 0,
+    position = position_stack(reverse = FALSE)
+  ) +
+  facet_wrap(~ group) +
   labs(x = "Feature Index", y = "True Rate") +
-  scale_y_continuous(trans = "log1p", breaks = c(0, 3, 100, 1000)) + 
-  cowplot::theme_cowplot() + # Use a minimal theme for a clean look
+  scale_y_continuous(
+    breaks = log1p(c(0, 3, 100, 1000)),
+    labels = c(0, 3, 100, 1000)
+  ) +
+  scale_fill_manual(
+    values = c(
+      low_green    = "#740001",
+      low_blue     = "#005F73",
+      high_red     = "#D3A625",
+      excess_green = "#740001",
+      excess_blue  = "#005F73"
+    ),
+    guide = "none"
+  ) +
+  theme_cowplot() +
   theme(
     strip.background = element_blank(),
-    strip.text = element_text(face = "bold", hjust = 0.5, size = 13)
-    )
-  
+    strip.text = element_text(face = "bold", size = 13)
+  )
+
 
 ft_r1 <- fastTopics:::fit_pnmf_rank1(Y)
 init_LL <- cbind(
@@ -120,14 +176,14 @@ log1p_mod <- fit_poisson_log1p_nmf(
   control = list(maxiter = 250, verbose = FALSE)
 )
 
-set.seed(1)
-log1p_mod_tinyc <- fit_poisson_log1p_nmf(
-  Y = Y, K = 3, loglik = "exact",
-  control = list(maxiter = 250, verbose = FALSE),
-  cc = 0.001
-)
-
-g_tm_sp <- structure_plot(log1pNMF:::normalize_bars( diag(1 / log1p_mod$s) %*% ft_mod$L), grouping = group, gap = 10, loadings_order = 1:n, topics = rev(1:3)) + 
+g_tm_sp <- structure_plot(
+  log1pNMF:::normalize_bars( diag(1 / log1p_mod$s) %*% ft_mod$L), 
+  grouping = group, 
+  gap = 10, 
+  loadings_order = 1:n, 
+  topics = rev(1:3),
+  colors = c("#D3A625", "#740001", "#005F73")
+  ) + 
   theme(
     axis.text.x = element_text(angle = 0,hjust = 0.5, size = 12),
     axis.title.y = element_text(size = 12),
@@ -154,7 +210,8 @@ g_log1p_sp <- normalized_structure_plot(
   grouping = group, 
   gap = 10,
   loadings_order = 1:n,
-  topics = rev(1:3)
+  topics = rev(1:3),
+  colors = c("#D3A625", "#740001", "#005F73")
 ) + 
   theme(
     axis.text.x = element_text(angle = 0,hjust = 0.5, size = 12),
