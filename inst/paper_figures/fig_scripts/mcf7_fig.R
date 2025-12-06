@@ -8,6 +8,7 @@ library(ggplot2)
 library(cowplot)
 library(log1pNMF)
 library(ggpubr)
+library(DESeq2)
 
 load("../data/experiment_results.Rdata")
 set.seed(10)
@@ -53,6 +54,36 @@ i <- which(x > 3 &
              genes$Status == "active")
 genes  <- genes[i,]
 counts <- counts[,i]
+colnames(counts) <- genes$Symbol
+
+# Run DE-Seq
+# ------------------------------------------------------------
+# 1. Construct DESeq2 dataset
+# ------------------------------------------------------------
+dds <- DESeqDataSetFromMatrix(
+  countData = t(counts),   # DESeq2 expects genes × samples
+  colData   = samples,
+  design    = ~ label
+)
+
+# ------------------------------------------------------------
+# 2. Run DESeq2 pipeline
+# ------------------------------------------------------------
+dds <- DESeq(dds)
+
+# ------------------------------------------------------------
+# 3. Get the contrasts
+# ------------------------------------------------------------
+# Contrast syntax: c("label", "level_of_interest", "reference")
+
+# RA vs EtOH
+res_RA_vs_EtOH <- as.data.frame(results(dds, contrast = c("label", "RA", "EtOH")))
+
+# TGFb vs EtOH
+res_TGFb_vs_EtOH <- as.data.frame(results(dds, contrast = c("label", "TGFb", "EtOH")))
+
+
+
 
 set.seed(1)
 fgpca_fit <- res_list$mcf7$glmpca
@@ -119,11 +150,25 @@ FF_log1p <- sweep(FF_log1p, 2, col_maxima, FUN = "*")
 log1p_df <- data.frame(
   k1 = FF_log1p[,"k1"],
   k2 = FF_log1p[,"k2"],
-  k3 = FF_log1p[,"k3"]
+  k3 = FF_log1p[,"k3"],
+  lfc_ra = res_RA_vs_EtOH$log2FoldChange,
+  padj_ra = res_RA_vs_EtOH$padj,
+  lfc_tgfb = res_TGFb_vs_EtOH$log2FoldChange,
+  padj_tgfb = res_TGFb_vs_EtOH$padj
 )
 
-g3 <- ggplot(data = log1p_df, aes(x = k2, y = k3)) +
-  geom_point(size = 0.5, alpha = 0.25) +
+log1p_df$col <- "darkgrey"   # default
+
+# RA upregulated
+log1p_df$col[log1p_df$padj_ra < 0.01 & log1p_df$lfc_ra > 1] <- "darkblue"
+
+# TGFb upregulated
+log1p_df$col[log1p_df$padj_tgfb < 0.01 & log1p_df$lfc_tgfb > 1] <- "dodgerblue"
+
+#g3 <- 
+ggplot(data = log1p_df, aes(x = k2, y = k3)) +
+  geom_point(aes(color = col), size = 0.5, alpha = 2/3) +
+  scale_color_identity() +
   xlab("log1p Model k2") +
   ylab("log1p Model k3") +
   theme_cowplot(font_size = 10) +
@@ -148,14 +193,29 @@ F0 <- sweep(F0, 2, col_maxima, FUN = "*")
 tm_df <- data.frame(
   k1 = F0[,1],
   k2 = F0[,2],
-  k3 = F0[,3]
+  k3 = F0[,3],
+  lfc_ra = res_RA_vs_EtOH$log2FoldChange,
+  padj_ra = res_RA_vs_EtOH$padj,
+  lfc_tgfb = res_TGFb_vs_EtOH$log2FoldChange,
+  padj_tgfb = res_TGFb_vs_EtOH$padj
 )
 
 rownames(F0) <- genes$Symbol
 rownames(FF_log1p) <- genes$Symbol
 
-g4 <- ggplot(data = tm_df, aes(x = k2, y = k3)) +
-  geom_point(size = 0.5, alpha = 0.25) +
+tm_df$col <- "darkgrey"   # default
+
+# RA upregulated
+tm_df$col[tm_df$padj_ra < 0.01 & tm_df$lfc_ra > 1] <- "darkblue"
+
+# TGFb upregulated
+tm_df$col[tm_df$padj_tgfb < 0.01 & tm_df$lfc_tgfb > 1] <- "dodgerblue"
+
+
+#g4 <- 
+ggplot(data = tm_df, aes(x = k2, y = k3)) +
+  geom_point(aes(color = col), size = 0.5, alpha = 0.5) +
+  scale_color_identity() +
   xlab("Topic Model k2") +
   ylab("Topic Model k3") +
   theme_cowplot(font_size = 10) +
