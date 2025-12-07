@@ -223,7 +223,7 @@ tm_df$col[
 ] <- "forestgreen"
 
 g4 <- ggplot(data = tm_df, aes(x = k2, y = k3)) +
-  geom_point(aes(color = col), size = 0.5, alpha = 0.5) +
+  geom_point(aes(color = col), size = 0.5, alpha = 2/3) +
   scale_color_identity() +
   xlab("Topic Model k2") +
   ylab("Topic Model k3") +
