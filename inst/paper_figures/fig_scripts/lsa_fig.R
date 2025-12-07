@@ -67,7 +67,7 @@ p1 <- sp1 +
   labs(y = "Membership") +
   guides(fill=guide_legend(title="Factor")) +
   guides(colour = "none") +
-  ggtitle("Celltype Associated Factors from log1p Model (c = 1)") +
+  ggtitle("c = 1 Celltype Associated Factors") +
   theme(
     plot.title = element_text(size = 13),
     axis.text.x = element_text(size = 13),
@@ -85,7 +85,7 @@ p2 <- sp2 +
   labs(y = "Membership") +
   guides(fill=guide_legend(title="Factor")) +
   guides(colour = "none") +
-  ggtitle("Treatment Associated Factors from log1p Model (c = 1)") +
+  ggtitle("c = 1 Treatment Associated Factors") +
   theme(
     plot.title = element_text(size = 13),
     axis.text.x = element_text(size = 13),
@@ -101,7 +101,7 @@ p3 <- sp3 +
   labs(y = "Membership",fill = "") +
   guides(fill=guide_legend(title="Factor")) +
   guides(colour = "none") +
-  ggtitle("Treatment Associated Factors from log1p Model (c = 1)") +
+  ggtitle("c = 1 Treatment Associated Factors") +
   theme(
     plot.title = element_text(size = 13),
     axis.text.x = element_text(size = 13),
@@ -139,7 +139,7 @@ p4 <- structure_plot(
   labs(y = "Membership",fill = "") +
   guides(fill=guide_legend(title="Factor"))	+
   guides(colour = "none") +
-  ggtitle("Celltype Associated Factors from Topic Model")	+
+  ggtitle("c = \u221E Celltype Associated Factors")	+
   theme(
     plot.title = element_text(size = 13),
     axis.text.x = element_text(size = 13),
@@ -156,7 +156,7 @@ p5 <- structure_plot(
   labs(y = "Membership",fill = "") +
   guides(fill=guide_legend(title="Factor")) +
   guides(colour = "none") +
-  ggtitle("Treatment Associated Factors from Topic Model") +
+  ggtitle("c = \u221E Treatment Associated Factors") +
   theme(
     plot.title = element_text(size = 13),
     axis.text.x = element_text(size = 13),
@@ -173,7 +173,7 @@ p6 <- structure_plot(
   labs(y = "Membership",fill = "") +
   guides(fill=guide_legend(title="Factor")) +
   guides(colour = "none") +
-  ggtitle("Treatment Associated Factors from Topic Model") +
+  ggtitle("c = \u221E Treatment Associated Factors") +
   theme(
     plot.title = element_text(size = 13),
     axis.text.x = element_text(size = 13),

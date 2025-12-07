@@ -234,7 +234,7 @@ g4 <- ggplot(data = tm_df, aes(x = k2, y = k3)) +
   theme(plot.title = element_text(hjust = 0.5)) 
 
 g_bc <- ggarrange(
-  g2, g1,
+  g1, g2,
   nrow = 1,
   ncol = 2,
   common.legend = TRUE,
@@ -243,7 +243,7 @@ g_bc <- ggarrange(
 )
 
 g_de <- ggarrange(
-  g4, g3,
+  g3, g4,
   nrow = 1,
   ncol = 2,
   labels = c("C", "D")
