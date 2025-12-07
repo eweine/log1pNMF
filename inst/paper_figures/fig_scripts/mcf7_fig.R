@@ -109,7 +109,7 @@ tm3_r1_init <- res_list$mcf7$`Inf`
 n <- nrow(counts)
 colnames(log1p_fit3$FF) <- paste0("k", 1:3)
 colnames(log1p_fit3$LL) <- paste0("k", 1:3)
-topic_colors <- c("tomato","darkblue","dodgerblue")
+topic_colors <- c("black","orange","blue")
 g1 <- normalized_structure_plot(
   log1p_fit3,
   grouping = samples$label,
@@ -157,16 +157,21 @@ log1p_df <- data.frame(
   padj_tgfb = res_TGFb_vs_EtOH$padj
 )
 
-log1p_df$col <- "darkgrey"   # default
+log1p_df$col <- "lightgrey"   # default
 
 # RA upregulated
-log1p_df$col[log1p_df$padj_ra < 0.01 & log1p_df$lfc_ra > 1] <- "darkblue"
+log1p_df$col[log1p_df$padj_ra < 0.01 & log1p_df$lfc_ra > 1] <- "orange"
 
 # TGFb upregulated
-log1p_df$col[log1p_df$padj_tgfb < 0.01 & log1p_df$lfc_tgfb > 1] <- "dodgerblue"
+log1p_df$col[log1p_df$padj_tgfb < 0.01 & log1p_df$lfc_tgfb > 1] <- "blue"
 
-#g3 <- 
-ggplot(data = log1p_df, aes(x = k2, y = k3)) +
+# Both upregulated
+log1p_df$col[
+  log1p_df$padj_tgfb < 0.01 & log1p_df$lfc_tgfb > 1 &
+    log1p_df$padj_ra < 0.01 & log1p_df$lfc_ra > 1
+  ] <- "forestgreen"
+
+g3 <- ggplot(data = log1p_df, aes(x = k2, y = k3)) +
   geom_point(aes(color = col), size = 0.5, alpha = 2/3) +
   scale_color_identity() +
   xlab("log1p Model k2") +
@@ -203,17 +208,21 @@ tm_df <- data.frame(
 rownames(F0) <- genes$Symbol
 rownames(FF_log1p) <- genes$Symbol
 
-tm_df$col <- "darkgrey"   # default
+tm_df$col <- "lightgrey"   # default
 
 # RA upregulated
-tm_df$col[tm_df$padj_ra < 0.01 & tm_df$lfc_ra > 1] <- "darkblue"
+tm_df$col[tm_df$padj_ra < 0.01 & tm_df$lfc_ra > 1] <- "orange"
 
 # TGFb upregulated
-tm_df$col[tm_df$padj_tgfb < 0.01 & tm_df$lfc_tgfb > 1] <- "dodgerblue"
+tm_df$col[tm_df$padj_tgfb < 0.01 & tm_df$lfc_tgfb > 1] <- "blue"
 
+# Both upregulated
+tm_df$col[
+  tm_df$padj_tgfb < 0.01 & tm_df$lfc_tgfb > 1 &
+    tm_df$padj_ra < 0.01 & tm_df$lfc_ra > 1
+] <- "forestgreen"
 
-#g4 <- 
-ggplot(data = tm_df, aes(x = k2, y = k3)) +
+g4 <- ggplot(data = tm_df, aes(x = k2, y = k3)) +
   geom_point(aes(color = col), size = 0.5, alpha = 0.5) +
   scale_color_identity() +
   xlab("Topic Model k2") +
