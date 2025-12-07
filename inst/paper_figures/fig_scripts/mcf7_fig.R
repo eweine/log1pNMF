@@ -120,7 +120,7 @@ g1 <- normalized_structure_plot(
   theme(
     axis.text.x = element_text(angle = 0,hjust = 0.5, size = 9),
     plot.title = element_text(size = 11)) + 
-  ggtitle("log1p Model Loadings (c = 1)") +
+  ggtitle("c = 1 Sample Scores") +
   ylab("Membership") +
   guides(fill=guide_legend(title="Factor")) +
   guides(colour = "none")
@@ -138,7 +138,7 @@ g2 <- structure_plot(
   theme(
     axis.text.x = element_text(angle = 0,hjust = 0.5, size = 9),
     plot.title = element_text(size = 11)) + 
-  ggtitle("Topic Model Loadings") +
+  ggtitle("c = \u221E Sample Scores") +
   ylab("Membership") +
   guides(fill=guide_legend(title="Factor")) +
   guides(colour = "none")
@@ -174,10 +174,10 @@ log1p_df$col[
 g3 <- ggplot(data = log1p_df, aes(x = k2, y = k3)) +
   geom_point(aes(color = col), size = 0.5, alpha = 2/3) +
   scale_color_identity() +
-  xlab("log1p Model k2") +
-  ylab("log1p Model k3") +
+  xlab("k2") +
+  ylab("k3") +
   theme_cowplot(font_size = 10) +
-  ggtitle("log1p Model Factors") +
+  ggtitle("c = 1 Gene Scores") +
   theme(plot.title = element_text(hjust = 0.5))
 
 
@@ -225,10 +225,10 @@ tm_df$col[
 g4 <- ggplot(data = tm_df, aes(x = k2, y = k3)) +
   geom_point(aes(color = col), size = 0.5, alpha = 2/3) +
   scale_color_identity() +
-  xlab("Topic Model k2") +
-  ylab("Topic Model k3") +
+  xlab("k2") +
+  ylab("k3") +
   theme_cowplot(font_size = 10) +
-  ggtitle("Topic Model Factors") +
+  ggtitle("c = \u221E Gene Scores") +
   scale_x_continuous(trans = "log1p", breaks = c(0, 100, 1000, 10000)) +
   scale_y_continuous(trans = "log1p", breaks = c(0, 100, 1000, 10000)) +
   theme(plot.title = element_text(hjust = 0.5)) 
