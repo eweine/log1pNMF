@@ -136,7 +136,7 @@ g1 <- ggplot(data = df_cor, aes(x = cc, y = correlation)) +
   ylab("Mean Abs. Factor Correlation") +
   geom_hline(yintercept = cor_vec["Inf"], color = "red", linetype = "dashed") +
   ggplot2::annotate(
-    geom="text", x=0.008, y=cor_vec["Inf"] + 0.05, label="Topic Model", color="red",
+    geom="text", x=0.008, y=cor_vec["Inf"] + 0.05, label="c = \u221E", color="red",
     size = 5
   ) +
   theme(
@@ -154,7 +154,7 @@ g2 <- ggplot(data = df_sparsity_l, aes(x = cc, y = sparsity)) +
   ylab("Mean Loading Sparsity") +
   geom_hline(yintercept = l_sparsity_vec["Inf"], color = "red", linetype = "dashed") +
   ggplot2::annotate(
-    geom="text", x=0.008, y=l_sparsity_vec["Inf"] + 0.05, label="Topic Model", color="red",
+    geom="text", x=0.008, y=l_sparsity_vec["Inf"] + 0.05, label="c = \u221E", color="red",
     size = 5
   ) +
   theme(
@@ -172,7 +172,7 @@ g3 <- ggplot(data = df_sparsity_f, aes(x = cc, y = sparsity)) +
   ylab("Mean Factor Sparsity") +
   geom_hline(yintercept = f_sparsity_vec["Inf"], color = "red", linetype = "dashed") +
   ggplot2::annotate(
-    geom="text", x=0.008, y=f_sparsity_vec["Inf"] + 0.05, label="Topic Model", color="red",
+    geom="text", x=0.008, y=f_sparsity_vec["Inf"] + 0.05, label="c = \u221E", color="red",
     size = 5
   ) +
   theme(
@@ -317,7 +317,7 @@ g4 <- ggplot(data = df_cor, aes(x = cc, y = correlation)) +
   ylab("Mean Abs. Factor Correlation") +
   geom_hline(yintercept = cor_vec["Inf"], color = "red", linetype = "dashed") +
   ggplot2::annotate(
-    geom="text", x=0.003, y=cor_vec["Inf"] + 0.05, label="Topic Model", color="red",
+    geom="text", x=0.003, y=cor_vec["Inf"] + 0.05, label="c = \u221E", color="red",
     size = 5
   ) +
   theme(
@@ -335,7 +335,7 @@ g5 <- ggplot(data = df_sparsity_l, aes(x = cc, y = sparsity)) +
   ylab("Mean Loading Sparsity") +
   geom_hline(yintercept = l_sparsity_vec["Inf"], color = "red", linetype = "dashed") +
   ggplot2::annotate(
-    geom="text", x=0.003, y=l_sparsity_vec["Inf"] + 0.05, label="Topic Model", color="red",
+    geom="text", x=0.003, y=l_sparsity_vec["Inf"] + 0.05, label="c = \u221E", color="red",
     size = 5
   ) +
   theme(
@@ -353,7 +353,7 @@ g6 <- ggplot(data = df_sparsity_f, aes(x = cc, y = sparsity)) +
   ylab("Mean Factor Sparsity") +
   geom_hline(yintercept = f_sparsity_vec["Inf"], color = "red", linetype = "dashed") +
   ggplot2::annotate(
-    geom="text", x=0.003, y=f_sparsity_vec["Inf"] + 0.05, label="Topic Model", color="red",
+    geom="text", x=0.003, y=f_sparsity_vec["Inf"] + 0.05, label="c = \u221E", color="red",
     size = 5
   ) +
   theme(
@@ -461,7 +461,7 @@ g7 <- ggplot(data = df_cor, aes(x = cc, y = correlation)) +
   ylab("Mean Abs. Factor Correlation") +
   geom_hline(yintercept = cor_vec["Inf"], color = "red", linetype = "dashed") +
   ggplot2::annotate(
-    geom="text", x=0.008, y=cor_vec["Inf"] + 0.05, label="Topic Model", color="red",
+    geom="text", x=0.008, y=cor_vec["Inf"] + 0.05, label="c = \u221E", color="red",
     size = 5
   ) +
   theme(
@@ -479,7 +479,7 @@ g8 <- ggplot(data = df_sparsity_l, aes(x = cc, y = sparsity)) +
   ylab("Mean Loading Sparsity") +
   geom_hline(yintercept = l_sparsity_vec["Inf"], color = "red", linetype = "dashed") +
   ggplot2::annotate(
-    geom="text", x=0.008, y=l_sparsity_vec["Inf"] + 0.05, label="Topic Model", color="red",
+    geom="text", x=0.008, y=l_sparsity_vec["Inf"] + 0.05, label="c = \u221E", color="red",
     size = 5
   ) +
   theme(
@@ -497,7 +497,7 @@ g9 <- ggplot(data = df_sparsity_f, aes(x = cc, y = sparsity)) +
   ylab("Mean Factor Sparsity") +
   geom_hline(yintercept = f_sparsity_vec["Inf"], color = "red", linetype = "dashed") +
   ggplot2::annotate(
-    geom="text", x=0.008, y=f_sparsity_vec["Inf"] - 0.05, label="Topic Model", color="red",
+    geom="text", x=0.008, y=f_sparsity_vec["Inf"] - 0.05, label="c = \u221E", color="red",
     size = 5
   ) +
   theme(

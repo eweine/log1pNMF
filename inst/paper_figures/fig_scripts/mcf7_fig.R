@@ -312,8 +312,8 @@ top_genes_tm <- data.frame(
 colnames(top_genes_tm) <- c("Factor", "Top Genes - Topic Model")
 colnames(top_genes) <- c("Factor", "Top Genes - log1p Model c = 1")
 
-top_genes <- top_genes_tm %>%
-  dplyr::inner_join(top_genes)
+top_genes <- top_genes %>% 
+  dplyr::inner_join(top_genes_tm)
 
 
 

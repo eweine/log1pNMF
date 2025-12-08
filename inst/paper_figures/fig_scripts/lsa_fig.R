@@ -67,7 +67,7 @@ p1 <- sp1 +
   labs(y = "Membership") +
   guides(fill=guide_legend(title="Factor")) +
   guides(colour = "none") +
-  ggtitle("c = 1 Celltype Associated Factors") +
+  ggtitle("c = 1 Cell Scores - Celltype Associated Factors") +
   theme(
     plot.title = element_text(size = 13),
     axis.text.x = element_text(size = 13),
@@ -85,7 +85,7 @@ p2 <- sp2 +
   labs(y = "Membership") +
   guides(fill=guide_legend(title="Factor")) +
   guides(colour = "none") +
-  ggtitle("c = 1 Treatment Associated Factors") +
+  ggtitle("c = 1 Cell Scores - Treatment Associated Factors") +
   theme(
     plot.title = element_text(size = 13),
     axis.text.x = element_text(size = 13),
@@ -101,7 +101,7 @@ p3 <- sp3 +
   labs(y = "Membership",fill = "") +
   guides(fill=guide_legend(title="Factor")) +
   guides(colour = "none") +
-  ggtitle("c = 1 Treatment Associated Factors") +
+  ggtitle("c = 1 Cell Scores - Treatment Associated Factors") +
   theme(
     plot.title = element_text(size = 13),
     axis.text.x = element_text(size = 13),
@@ -139,7 +139,7 @@ p4 <- structure_plot(
   labs(y = "Membership",fill = "") +
   guides(fill=guide_legend(title="Factor"))	+
   guides(colour = "none") +
-  ggtitle("c = \u221E Celltype Associated Factors")	+
+  ggtitle("c = \u221E Cell Scores - CellType Associated Factors")	+
   theme(
     plot.title = element_text(size = 13),
     axis.text.x = element_text(size = 13),
@@ -156,7 +156,7 @@ p5 <- structure_plot(
   labs(y = "Membership",fill = "") +
   guides(fill=guide_legend(title="Factor")) +
   guides(colour = "none") +
-  ggtitle("c = \u221E Treatment Associated Factors") +
+  ggtitle("c = \u221E Cell Scores - Treatment Associated Factors") +
   theme(
     plot.title = element_text(size = 13),
     axis.text.x = element_text(size = 13),
@@ -173,7 +173,7 @@ p6 <- structure_plot(
   labs(y = "Membership",fill = "") +
   guides(fill=guide_legend(title="Factor")) +
   guides(colour = "none") +
-  ggtitle("c = \u221E Treatment Associated Factors") +
+  ggtitle("c = \u221E Cell Scores - Treatment Associated Factors") +
   theme(
     plot.title = element_text(size = 13),
     axis.text.x = element_text(size = 13),
@@ -195,7 +195,7 @@ g1 <- ggarrange(
   )
 
 g2 <- ggarrange(
-  p2, p5, p3, p6,
+  p3, p6, p2, p5,
   nrow = 4, ncol = 1,
   common.legend = TRUE, legend = "right",
   labels = c("A", "B", "C", "D")
@@ -247,8 +247,8 @@ top_genes_tm <- top_genes_tm %>% dplyr::select(c("factor", "top_genes_tm"))
 colnames(top_genes_tm) <- c("Factor", "Top Genes - Topic Model")
 colnames(top_genes_log1p) <- c("Factor", "Top Genes - log1p Model c = 1")
 
-top_genes <- top_genes_tm %>%
-  dplyr::inner_join(top_genes_log1p)
+top_genes <- top_genes_log1p %>%
+  dplyr::inner_join(top_genes_tm)
 
 top_genes <- top_genes %>%
   mutate(

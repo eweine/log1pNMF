@@ -111,7 +111,7 @@ sp <- normalized_structure_plot(
   grouping = dat$labels,gap = 25,perplexity = 70,n = Inf, font.size = 12
 )
 plot_list[[glue::glue("c = 0.001")]] <- sp + 
-  ggtitle("log1p Model Loadings (c = 0.001)") +
+  ggtitle("c = 0.001 Document Scores") +
   theme(
     plot.title = element_text(size = 13),
     axis.title.y = element_text(size = 13),
@@ -130,7 +130,7 @@ tm_sp <- structure_plot(
 )
 
 plot_list[["Topic Model"]] <- tm_sp + 
-  ggtitle("Topic Model Loadings") +
+  ggtitle("c = \u221E Document Scores") +
   theme(
     plot.title = element_text(size = 13),
     axis.title.y = element_text(size = 13),
@@ -187,8 +187,8 @@ top_words_tm <- top_words_tm %>% dplyr::select(c("factor", "top_words"))
 colnames(top_words_tm) <- c("Factor", "Top Words - Topic Model")
 colnames(top_words) <- c("Factor", "Top Words - log1p Model c = 0.001")
 
-top_words <- top_words_tm %>%
-  dplyr::inner_join(top_words)
+top_words <- top_words %>%
+  dplyr::inner_join(top_words_tm)
 
 library(readr)
 library(dplyr)
