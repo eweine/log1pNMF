@@ -5,6 +5,7 @@ library(ggplot2)
 library(cowplot)
 library(Matrix)
 library(readr)
+library(stringr)
 
 set.seed(1)
 
@@ -15,8 +16,14 @@ s <- Matrix::rowSums(counts)
 s <- s / mean(s)
 
 barcodes   <- as.data.frame(barcodes)
+barcodes$celltype <- if_else(
+  barcodes$celltype == "Endothelial/Mesnchymal",
+  "Endothelial/Mesenchymal",
+  barcodes$celltype
+)
+
 clusters   <- factor(barcodes$celltype,
-                     c("Acinar","Ductal","Endothelial/Mesnchymal","Macrophage",
+                     c("Acinar","Ductal","Endothelial/Mesenchymal","Macrophage",
                        "Alpha","Beta","Delta","Gamma"))
 
 barcodes <- barcodes %>%
@@ -65,7 +72,7 @@ sp1 <- structure_plot(
   )
 p1 <- sp1 +
   labs(y = "Membership") +
-  guides(fill=guide_legend(title="Factor")) +
+  guides(fill=guide_legend(title="Factor", ncol=1)) +
   guides(colour = "none") +
   ggtitle("c = 1 Cell Scores - Celltype Associated Factors") +
   theme(
@@ -74,8 +81,9 @@ p1 <- sp1 +
     axis.title.y = element_text(size = 13),
     legend.key.size = unit(0.7, "cm"),   # make color boxes bigger
     legend.text = element_text(size = 13),
-    legend.title = element_text(size = 13)
-  )
+    legend.title = element_text(size = 13),
+    legend.title.position = "top"
+  ) 
 
 sp2 <- structure_plot(
   L[i,paste0("k", other_topics)],
@@ -83,7 +91,7 @@ sp2 <- structure_plot(
   colors = other_colors)
 p2 <- sp2 +
   labs(y = "Membership") +
-  guides(fill=guide_legend(title="Factor")) +
+  guides(fill=guide_legend(title="Factor", ncol=1)) +
   guides(colour = "none") +
   ggtitle("c = 1 Cell Scores - Treatment Associated Factors") +
   theme(
@@ -92,14 +100,15 @@ p2 <- sp2 +
     axis.title.y = element_text(size = 13),
     legend.key.size = unit(1, "cm"),   # make color boxes bigger
     legend.text = element_text(size = 13),
-    legend.title = element_text(size = 13)
+    legend.title = element_text(size = 13),
+    legend.title.position = "top"
   )
 
 sp3 <- structure_plot(L[i,paste0("k", other_topics)],grouping = conditions[i],gap = 30,n = Inf,
                       colors = other_colors)
 p3 <- sp3 +
   labs(y = "Membership",fill = "") +
-  guides(fill=guide_legend(title="Factor")) +
+  guides(fill=guide_legend(title="Factor", ncol=1)) +
   guides(colour = "none") +
   ggtitle("c = 1 Cell Scores - Treatment Associated Factors") +
   theme(
@@ -108,7 +117,8 @@ p3 <- sp3 +
     axis.title.y = element_text(size = 13),
     legend.key.size = unit(1, "cm"),   # make color boxes bigger
     legend.text = element_text(size = 13),
-    legend.title = element_text(size = 13)
+    legend.title = element_text(size = 13),
+    legend.title.position = "top"
   )
 
 
@@ -137,7 +147,7 @@ p4 <- structure_plot(
   grouping = clusters[i],gap = 15
   ) +
   labs(y = "Membership",fill = "") +
-  guides(fill=guide_legend(title="Factor"))	+
+  guides(fill=guide_legend(title="Factor", ncol=1))	+
   guides(colour = "none") +
   ggtitle("c = \u221E Cell Scores - CellType Associated Factors")	+
   theme(
@@ -146,7 +156,8 @@ p4 <- structure_plot(
     axis.title.y = element_text(size = 13),
     legend.key.size = unit(0.7, "cm"),   # make color boxes bigger
     legend.text = element_text(size = 13),
-    legend.title = element_text(size = 13)
+    legend.title = element_text(size = 13),
+    legend.title.position = "top"
   )			 
 p5 <- structure_plot(
   log1pNMF:::normalize_bars(diag(1/s[i]) %*% L[i,paste0("k", other_topics)]),
@@ -154,7 +165,7 @@ p5 <- structure_plot(
   colors = other_colors
   ) +
   labs(y = "Membership",fill = "") +
-  guides(fill=guide_legend(title="Factor")) +
+  guides(fill=guide_legend(title="Factor", ncol=1)) +
   guides(colour = "none") +
   ggtitle("c = \u221E Cell Scores - Treatment Associated Factors") +
   theme(
@@ -163,7 +174,8 @@ p5 <- structure_plot(
     axis.title.y = element_text(size = 13),
     legend.key.size = unit(1, "cm"),   # make color boxes bigger
     legend.text = element_text(size = 13),
-    legend.title = element_text(size = 13)
+    legend.title = element_text(size = 13),
+    legend.title.position = "top"
   )
 p6 <- structure_plot(
   log1pNMF:::normalize_bars(diag(1/s[i]) %*% L[i,paste0("k", other_topics)]),
@@ -171,7 +183,7 @@ p6 <- structure_plot(
   colors = other_colors
   ) +
   labs(y = "Membership",fill = "") +
-  guides(fill=guide_legend(title="Factor")) +
+  guides(fill=guide_legend(title="Factor", ncol=1)) +
   guides(colour = "none") +
   ggtitle("c = \u221E Cell Scores - Treatment Associated Factors") +
   theme(
@@ -180,7 +192,8 @@ p6 <- structure_plot(
     axis.title.y = element_text(size = 13),
     legend.key.size = unit(1, "cm"),   # make color boxes bigger
     legend.text = element_text(size = 13),
-    legend.title = element_text(size = 13)
+    legend.title = element_text(size = 13),
+    legend.title.position = "top"
   )
 
 library(ggpubr)

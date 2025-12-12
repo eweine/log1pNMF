@@ -53,6 +53,7 @@ tm_k13 <- res_list$pancreas$`Inf`
 
 F_tm <- tm_k13$F
 L_tm <- tm_k13$L
+L_tm <- Matrix::Diagonal(x = 1/log1p_k13$s) %*% L_tm
 colnames(F_tm) <- paste0(
   "k", 
   c(11,12, 7, 6, 5, 1, 9, 4, 3, 2, 10, 13, 8)
@@ -66,7 +67,7 @@ delta_counts <- counts[which(clusters == "Delta"), ]
 gamma_counts <- counts[which(clusters == "Gamma"), ]
 
 gene_means_df <- data.frame(
-  gene = names(delta_gene_means),
+  gene = colnames(delta_counts),
   delta = unname(Matrix::colMeans(delta_counts)),
   gamma = unname(Matrix::colMeans(gamma_counts)),
   log1p_delta = unname(F_log1p[,"k3"]),
@@ -75,10 +76,16 @@ gene_means_df <- data.frame(
   tm_gamma = unname(F_tm[,"k13"])
 )
 
-genes_to_label <- c("Ppy", "Sst", "Rbp4")
+genes_to_label <- c("Ppy", "Pyy", "Iapp", "Sst", "Rbp4")
 
 g3 <- ggplot(data = gene_means_df, aes(x = delta, y = gamma)) +
   geom_point(size = 1) +
+  geom_abline(
+    slope = 1,
+    intercept = 0,
+    linetype = "dashed",
+    color = "red"
+  ) +
   geom_text_repel(
     data = subset(gene_means_df, gene %in% genes_to_label),
     aes(label = gene),
@@ -106,10 +113,16 @@ g3 <- ggplot(data = gene_means_df, aes(x = delta, y = gamma)) +
     plot.title = element_text(hjust = 0.5, size = 12),
     axis.title.x = element_text(size = 10),
     axis.title.y = element_text(size = 10)
-    )
+    )  
 
 g1 <- ggplot(data = gene_means_df, aes(x = log1p_delta, y = log1p_gamma)) +
   geom_point(size = 1) +
+  geom_abline(
+    slope = 1,
+    intercept = 0,
+    linetype = "dashed",
+    color = "red"
+  ) +
   geom_text_repel(
     data = subset(gene_means_df, gene %in% genes_to_label),
     aes(label = gene),
@@ -130,10 +143,22 @@ g1 <- ggplot(data = gene_means_df, aes(x = log1p_delta, y = log1p_gamma)) +
     axis.title.y = element_text(size = 11)
   ) +
   xlab("k3") +
-  ylab("k13") 
+  ylab("k13") +
+  geom_abline(
+    slope = 1,
+    intercept = 0,
+    linetype = "dashed",
+    color = "red"
+  )
 
 g2 <- ggplot(data = gene_means_df, aes(x = tm_delta, y = tm_gamma)) +
   geom_point(size = 1) +
+  geom_abline(
+    slope = 1,
+    intercept = 0,
+    linetype = "dashed",
+    color = "red"
+  ) +
   geom_text_repel(
     data = subset(gene_means_df, gene %in% genes_to_label),
     aes(label = gene),
@@ -162,7 +187,13 @@ g2 <- ggplot(data = gene_means_df, aes(x = tm_delta, y = tm_gamma)) +
     axis.title.y = element_text(size = 11)
   ) +
   xlab("k3") +
-  ylab("k13") 
+  ylab("k13")  +
+  geom_abline(
+    slope = 1,
+    intercept = 0,
+    linetype = "dashed",
+    color = "red"
+  )
 
 g_scores <- ggarrange(
   g1, g2,

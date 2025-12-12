@@ -12,9 +12,7 @@ K <- 13
 load("../data/raw_data/pancreas_cytokine_lsa.Rdata")
 load("../data/experiment_results.Rdata")
 barcodes   <- as.data.frame(barcodes)
-clusters   <- factor(barcodes$celltype,
-                     c("Acinar","Ductal","Endothelial/Mesnchymal","Macrophage",
-                       "Alpha","Beta","Delta","Gamma"))
+
 
 barcodes <- barcodes %>%
   dplyr::mutate(
@@ -24,6 +22,16 @@ barcodes <- barcodes %>%
       condition
     )
   )
+
+barcodes$celltype <- if_else(
+  barcodes$celltype == "Endothelial/Mesnchymal",
+  "Endothelial/Mesenchymal",
+  barcodes$celltype
+)
+
+clusters   <- factor(barcodes$celltype,
+                     c("Acinar","Ductal","Endothelial/Mesenchymal","Macrophage",
+                       "Alpha","Beta","Delta","Gamma"))
 
 conditions <- factor(barcodes$condition,
                      c("Untreated","IL-1B","IFNg","IL-1B + IFNg"))
@@ -88,7 +96,7 @@ for (cc in cc_vec) {
       axis.title.y = element_text(size = 11),
       axis.text.x = element_text(size = 8)
     ) + ylab("Membership") +
-    guides(fill=guide_legend(title="Factor")) +
+    guides(fill=guide_legend(title="Factor", ncol=1)) +
     guides(colour = "none")
   
 }
