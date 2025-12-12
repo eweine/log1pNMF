@@ -38,36 +38,32 @@ Y_tilde <- MatrixExtra::mapSparse(Y_tilde, log1p)
 set.seed(1)
 fit0 <- fit_poisson_log1p_nmf(
   Y = counts,
-  K = 1,
-  init_method = "random",
+  K = 13,
+  init_method = "rank1",
   loglik = "exact",
-  control = list(maxiter = 5)
+  control = list(maxiter = 1)
 )
 
-init_W <- cbind(
-  fit0$LL,
-  matrix(
-    data = 1e-5,
-    nrow = nrow(counts),
-    ncol = K - 1
-  )
+fit_approx <- fit_poisson_log1p_nmf(
+  Y = counts,
+  K = 13,
+  loglik = "approx",
+  control = list(maxiter = 249),
+  init_LL = fit0$LL,
+  init_FF = fit0$FF
 )
+readr::write_rds(fit_approx, "~/Documents/data/passPCA/lsa_k13_cheby_approx.rds")
 
-
-init_H <- rbind(
-  t(fit0$FF),
-  matrix(
-    data = 1e-5,
-    nrow = K - 1,
-    ncol = ncol(counts)
-  )
-)
+init_W <- fit0$LL
+init_H <- t(fit0$FF)
 
 fit <- nnmf(
   A = as.matrix(Y_tilde),
   init = list(W = init_W, H = init_H),
-  k = 12
+  k = 13
 )
+
+readr::write_rds(fit, "~/Documents/data/passPCA/lsa_k13_frob_fit.rds")
 
 library(fastTopics)
 structure_plot(
@@ -84,10 +80,10 @@ structure_plot(
 )
 
 celltype_factors <- c(
-  1, 2, 3, 4, 5, 7, 8, 10, 11
+  1, 2, 3, 5, 6, 7, 8, 9, 12
 )
 other_factors <- c(
-  6, 9, 12
+  4, 10, 11, 12, 13
 )
 
 structure_plot(
@@ -113,34 +109,35 @@ hoyer_sparsity <- function(x) {
   
 }
 
-mean(apply(log1p_k13$LL, 2, hoyer_sparsity))
-mean(apply(fit$W, 2, hoyer_sparsity))
-mean(apply(log1p_k13$FF, 2, hoyer_sparsity))
-mean(apply(t(fit$H), 2, hoyer_sparsity))
-
-log1p_approx_fit <- readr::read_rds("~/Downloads/panc_lsa_k13_log1p_approx_cheby.rds")
-
 structure_plot(
-  log1pNMF:::normalize_bars(log1p_approx_fit$LL)[i,],
-  grouping = conditions[i],
+  log1pNMF:::normalize_bars(fit_approx$LL)[i,],
+  grouping = clusters[i],
   gap = 20
 )
 
 celltype_factors_cheb <- c(
-  1, 2, 3, 4, 6, 7, 10, 11, 12
+  1, 2, 3, 4, 5, 6, 8, 9, 11, 12
 )
 other_factors_cheb <- c(
-  5, 8, 9, 13 
+  7, 10, 13
 )
 
 structure_plot(
-  log1pNMF:::normalize_bars(log1p_approx_fit$LL)[i, celltype_factors_cheb],
+  log1pNMF:::normalize_bars(fit_approx$LL)[i, celltype_factors_cheb],
   grouping = clusters[i],
   gap = 20
 )
 
 structure_plot(
-  log1pNMF:::normalize_bars(log1p_approx_fit$LL)[i, other_factors_cheb],
+  log1pNMF:::normalize_bars(fit_approx$LL)[i, other_factors_cheb],
   grouping = conditions[i],
   gap = 20
 )
+
+mean(apply(log1p_k13$LL, 2, hoyer_sparsity))
+mean(apply(fit$W, 2, hoyer_sparsity))
+mean(apply(fit_approx$LL, 2, hoyer_sparsity))
+mean(apply(log1p_k13$FF, 2, hoyer_sparsity))
+mean(apply(fit_approx$FF, 2, hoyer_sparsity))
+mean(apply(t(fit$H), 2, hoyer_sparsity))
+

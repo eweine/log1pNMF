@@ -38,6 +38,14 @@ pancreas_fit_list[["Inf"]] <- readr::read_rds(
   glue::glue("~/Documents/single-cell-jamboree/output/panc_cyto_lsa_res/stancill_lsa_k13_r1_init_250_iter.rds")
 )
 
+pancreas_fit_list[["c = 1, cheby"]] <- readr::read_rds(
+  "~/Documents/data/passPCA/lsa_k13_cheby_approx.rds"
+)
+
+pancreas_fit_list[["c = 1, frob"]] <- readr::read_rds(
+  "~/Documents/data/passPCA/lsa_k13_frob_fit.rds"
+)
+
 res_list$pancreas <- pancreas_fit_list
 
 res_list$mcf7 <- readr::read_rds("~/Documents/data/mcf7_fit_list.rds")

@@ -126,7 +126,7 @@ g3 <- ggplot(data = ll_diff_df, aes(x = cc, y = ll_ratio, color = approx_type)) 
   cowplot::theme_cowplot() +
   xlab("c") +
   ylab("Likelihood Ratio (approx / exact)") +
-  ggtitle("Data from Topic Model") +
+  ggtitle("Data from log1p Model with c = \u221E") +
   theme(
     axis.title.y = element_text(size = 13),
     axis.title.x = element_text(size = 13),
