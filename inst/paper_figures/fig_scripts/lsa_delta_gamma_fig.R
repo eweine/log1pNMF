@@ -18,7 +18,7 @@ s <- s / mean(s)
 
 barcodes   <- as.data.frame(barcodes)
 clusters   <- factor(barcodes$celltype,
-                     c("Acinar","Ductal","Endothelial/Mesnchymal","Macrophage",
+                     c("Acinar","Ductal","Endothelial/Mesenchymal","Macrophage",
                        "Alpha","Beta","Delta","Gamma"))
 
 barcodes <- barcodes %>%
@@ -53,7 +53,7 @@ tm_k13 <- res_list$pancreas$`Inf`
 
 F_tm <- tm_k13$F
 L_tm <- tm_k13$L
-L_tm <- Matrix::Diagonal(x = 1/log1p_k13$s) %*% L_tm
+L_tm <- Matrix::Diagonal(x = 1/s) %*% L_tm
 colnames(F_tm) <- paste0(
   "k", 
   c(11,12, 7, 6, 5, 1, 9, 4, 3, 2, 10, 13, 8)
@@ -89,7 +89,7 @@ g3 <- ggplot(data = gene_means_df, aes(x = delta, y = gamma)) +
   geom_text_repel(
     data = subset(gene_means_df, gene %in% genes_to_label),
     aes(label = gene),
-    size = 4,
+    size = 3.5,
     max.overlaps = Inf,
     segment.color = "black",     # draw connecting segment
     segment.size = 0.4,
@@ -126,14 +126,14 @@ g1 <- ggplot(data = gene_means_df, aes(x = log1p_delta, y = log1p_gamma)) +
   geom_text_repel(
     data = subset(gene_means_df, gene %in% genes_to_label),
     aes(label = gene),
-    size = 4,
+    size = 3.5,
     max.overlaps = Inf,
     segment.color = "black",     # draw connecting segment
     segment.size = 0.4,
     min.segment.length = 0,
     force_pull = 2,
     nudge_x = 0.5, 
-    nudge_y = 0.5
+    nudge_y = 0.75
   ) +
   theme_cowplot(font_size = 12) +
   ggtitle("c = 1 Gene Scores") +
@@ -162,7 +162,7 @@ g2 <- ggplot(data = gene_means_df, aes(x = tm_delta, y = tm_gamma)) +
   geom_text_repel(
     data = subset(gene_means_df, gene %in% genes_to_label),
     aes(label = gene),
-    size = 4,
+    size = 3.5,
     max.overlaps = Inf,
     segment.color = "black",     # draw connecting segment
     segment.size = 0.4,
