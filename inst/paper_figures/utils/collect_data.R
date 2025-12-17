@@ -50,6 +50,11 @@ pancreas_fit_list[["c = 1, frob, k = 12"]] <- readr::read_rds(
   "~/Documents/data/passPCA/lsa_k12_frob_fit.rds"
 )
 
+pancreas_fit_list[["c = 1, frob, k = 11"]] <- readr::read_rds(
+  "~/Documents/data/passPCA/lsa_k11_frob_fit.rds"
+)
+
+
 res_list$pancreas <- pancreas_fit_list
 
 res_list$mcf7 <- readr::read_rds("~/Documents/data/mcf7_fit_list.rds")

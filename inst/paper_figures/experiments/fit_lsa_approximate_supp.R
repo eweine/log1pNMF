@@ -30,6 +30,15 @@ fit0_12 <- fit_poisson_log1p_nmf(
   control = list(maxiter = 1)
 )
 
+set.seed(1)
+fit0_11 <- fit_poisson_log1p_nmf(
+  Y = counts,
+  K = 11,
+  init_method = "rank1",
+  loglik = "exact",
+  control = list(maxiter = 1)
+)
+
 fit_approx <- fit_poisson_log1p_nmf(
   Y = counts,
   K = 13,
@@ -39,6 +48,18 @@ fit_approx <- fit_poisson_log1p_nmf(
   init_FF = fit0$FF
 )
 readr::write_rds(fit_approx, "~/Documents/data/passPCA/lsa_k13_cheby_approx.rds")
+
+init_W <- fit0_11$LL
+init_H <- t(fit0_11$FF)
+
+fit <- nnmf(
+  A = as.matrix(Y_tilde),
+  init = list(W = init_W, H = init_H),
+  k = 11
+)
+
+readr::write_rds(fit, "~/Documents/data/passPCA/lsa_k11_frob_fit.rds")
+
 
 init_W <- fit0_12$LL
 init_H <- t(fit0_12$FF)

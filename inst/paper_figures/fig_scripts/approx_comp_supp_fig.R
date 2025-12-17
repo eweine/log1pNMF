@@ -309,4 +309,62 @@ ggsave(
   height = 11
 )
 
-# it would be good to calculate sparsity (and potentially orthogonality) here
+# analysis for Frobenius K = 12 fit here:
+log1p_frob <- res_list$pancreas$`c = 1, frob, k = 12`
+
+L <- log1p_frob$W
+FF_log1p_frob <- t(log1p_frob$H)
+colnames(L) <- paste0(
+  "k", 
+  1:12
+)
+L <- L[,paste0("k", 1:12)]
+d <- apply(L,2,max)
+L <- scale_cols(L,1/d)
+
+colnames(FF_log1p_frob) <- paste0(
+  "k", 
+  1:12
+)
+FF_log1p_frob <- FF_log1p_frob[,paste0("k", 1:12)]
+
+other_topics <- c(
+  4, 9, 8, 11
+)
+
+structure_plot(
+  L[i, other_topics],
+  grouping = conditions[i],
+  gap = 20
+)
+
+log1p_frob <- res_list$pancreas$`c = 1, frob, k = 11`
+
+L <- log1p_frob$W
+FF_log1p_frob <- t(log1p_frob$H)
+colnames(L) <- paste0(
+  "k", 
+  1:11
+)
+L <- L[,paste0("k", 1:11)]
+d <- apply(L,2,max)
+L <- scale_cols(L,1/d)
+
+colnames(FF_log1p_frob) <- paste0(
+  "k", 
+  1:11
+)
+FF_log1p_frob <- FF_log1p_frob[,paste0("k", 1:11)]
+
+other_topics <- c(
+  1, 6, 9, 11
+)
+
+structure_plot(
+  L[i, other_topics],
+  grouping = conditions[i],
+  gap = 20
+)
+
+
+
