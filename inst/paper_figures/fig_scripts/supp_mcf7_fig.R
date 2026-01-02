@@ -1,7 +1,5 @@
-library(rsvd)
 library(fastglmpca)
 library(fastTopics)
-library(flashier)
 library(data.table)
 library(GEOquery)
 library(ggplot2)
@@ -111,27 +109,34 @@ for (cc in cc_vec) {
     theme(
       plot.title = element_text(size = 12),
       axis.title.y = element_text(size = 12),
-      axis.text.x = element_text(angle = 0,hjust = 0.5, size = 11)
+      axis.text.x = element_text(angle = 0,hjust = 0.5, size = 11),
+      legend.title = element_text(size = 14),
+      legend.text  = element_text(size = 12),
+      legend.key.size = unit(1.2, "cm")
     ) + ylab("Membership") +
-    guides(fill=guide_legend(title="Factor")) +
+    guides(fill=guide_legend(title="Factor", ncol = 1)) +
     guides(colour = "none")
   
 }
 
+L <- log1pNMF:::normalize_bars(diag(1 / fit_list[[as.character(1)]]$s) %*% fit_list[[as.character(Inf)]]$L)
 set.seed(1)
 plot_list[[as.character(Inf)]] <- structure_plot(
-  fit_list[[as.character(Inf)]], 
+  L, 
   colors = topic_colors,
   grouping = samples$label,
   loadings_order = 1:n,
   topics = rev(1:3)
-)  + ggtitle("Topic Model Loadings") +
+)  + ggtitle("log1p Model Loadings (c = \u221E)") +
   theme(
     plot.title = element_text(size = 12),
     axis.title.y = element_text(size = 12),
-    axis.text.x = element_text(angle = 0,hjust = 0.5, size = 11)
+    axis.text.x = element_text(angle = 0,hjust = 0.5, size = 11),
+    legend.title = element_text(size = 14),
+    legend.text  = element_text(size = 12),
+    legend.key.size = unit(1, "cm")
   ) + ylab("Membership") +
-  guides(fill=guide_legend(title="Factor")) +
+  guides(fill=guide_legend(title="Factor", ncol = 1)) +
   guides(colour = "none")
 
 g <- ggarrange(

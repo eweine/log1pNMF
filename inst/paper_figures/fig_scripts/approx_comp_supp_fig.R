@@ -283,14 +283,16 @@ p6 <- sp6 +
 g1 <- ggarrange(
   p1, p3, p5, 
   nrow = 3, ncol = 1, 
-  legend = "right", common.legend = TRUE
+  legend = "right", common.legend = TRUE,
+  labels = c("A", "B", "C")
   )
 
 g2 <- ggarrange(
   p2, p4, p6, 
   nrow = 3, ncol = 1, 
   legend.grob = get_legend(p6),
-  legend = "right", common.legend = TRUE
+  legend = "right", common.legend = TRUE,
+  labels = c("A", "B", "C")
 )
 
 ggsave(

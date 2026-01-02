@@ -66,13 +66,13 @@ g1 <- ggplot(data = ll_diff_df, aes(x = cc, y = ll_ratio, color = approx_type)) 
   geom_point() +
   geom_line() +
   cowplot::theme_cowplot() +
-  xlab("c") +
-  ylab("Likelihood Ratio (approx / exact)") +
-  ggtitle("Data from log1p Model with c = 1e-3") +
+  xlab("Value of c for Optimization") +
+  ylab("Likelihood Ratio") +
+  ggtitle("Data Simulated with c = 0.001") +
   theme(
-    axis.title.y = element_text(size = 13),
-    axis.title.x = element_text(size = 13),
-    plot.title = element_text(size = 12.33)
+    axis.title.y = element_text(size = 14),
+    axis.title.x = element_text(size = 14),
+    plot.title = element_text(size = 14.5)
     ) +
   ylim(0, 1.05) +
   scale_x_continuous(breaks = c(1e-4, 1e-2, 1, 1e2, 1e4), transform = "log10") +
@@ -95,13 +95,13 @@ g2 <- ggplot(data = ll_diff_df, aes(x = cc, y = ll_ratio, color = approx_type)) 
   geom_point() +
   geom_line() +
   cowplot::theme_cowplot() +
-  xlab("c") +
-  ylab("Likelihood Ratio (approx / exact)") +
-  ggtitle("Data from log1p Model with c = 1") +
+  xlab("Value of c for Optimization") +
+  ylab("Likelihood Ratio") +
+  ggtitle("Data Simulated with c = 1") +
   theme(
-    axis.title.y = element_text(size = 13),
-    axis.title.x = element_text(size = 13),
-    plot.title = element_text(size = 12.33)
+    axis.title.y = element_text(size = 14),
+    axis.title.x = element_text(size = 14),
+    plot.title = element_text(size = 14.5)
   ) +
   ylim(0, 1.05) +
   scale_x_continuous(breaks = c(1e-4, 1e-2, 1, 1e2, 1e4), transform = "log10") +
@@ -124,13 +124,13 @@ g3 <- ggplot(data = ll_diff_df, aes(x = cc, y = ll_ratio, color = approx_type)) 
   geom_point() +
   geom_line() +
   cowplot::theme_cowplot() +
-  xlab("c") +
-  ylab("Likelihood Ratio (approx / exact)") +
-  ggtitle("Data from log1p Model with c = \u221E") +
+  xlab("Value of c for Optimization") +
+  ylab("Likelihood Ratio") +
+  ggtitle("Data Simulated with c = \u221E") +
   theme(
-    axis.title.y = element_text(size = 13),
-    axis.title.x = element_text(size = 13),
-    plot.title = element_text(size = 12.33)
+    axis.title.y = element_text(size = 14),
+    axis.title.x = element_text(size = 14),
+    plot.title = element_text(size = 14.5)
   ) +
   ylim(0, 1.05) +
   scale_x_continuous(breaks = c(1e-4, 1e-2, 1, 1e2, 1e4), transform = "log10") +

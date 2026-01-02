@@ -34,6 +34,10 @@ g <- ggplot(data = out_df, aes(x = lambda, y = b)) +
                "),
     labeller = labeller(cc = function(x) paste("c =", x))) +
   cowplot::theme_cowplot() +
+  theme(
+    axis.title.x = element_text(size = 14),
+    axis.title.y = element_text(size = 14)
+  ) +
   xlab(bquote("   " ~ lambda)) +
   ylab(bquote(g[c](lambda)))
 

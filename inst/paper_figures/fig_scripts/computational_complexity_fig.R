@@ -64,7 +64,7 @@ ga <- ggplot(data = o_df, aes(x = n, y = o, color = Calculation)) +
     breaks = c(1, 5, 10, 20),
     trans = "log10"  # Ensure 1 is included
   ) +
-  ylab("Complexity Relative to Topic Model") +
+  ylab("Relative Computational Complexity") +
   xlab("n") +
   cowplot::theme_cowplot() +
   ggtitle("m = 10,000, K = 25, Sparsity = 95%") +
@@ -117,7 +117,7 @@ gb <- ggplot(data = o_df, aes(x = K, y = o, color = Calculation)) +
     transform = "log10", # Ensure 1 is included
     breaks = c(1, 5, 10, 20)
   ) +
-  ylab("Complexity Relative to Topic Model") +
+  ylab("Relative Computational Complexity") +
   cowplot::theme_cowplot() +
   ggtitle("n = 10,000, m = 10,000, Sparsity = 95%") +
   geom_hline(yintercept = 1, linetype = "dashed") +
@@ -172,7 +172,7 @@ gc <- ggplot(data = o_df, aes(x = pct_0, y = o, color = Calculation)) +
     labels = scales::percent,      # Format x-axis labels as percentages
     breaks = scales::pretty_breaks(n = 5) # Optional: Adjust the number of breaks
   ) +
-  ylab("Complexity Relative to Topic Model") +
+  ylab("Relative Computational Complexity") +
   xlab("Sparsity") +
   cowplot::theme_cowplot() +
   ggtitle("n = 10,000, m = 10,000, K = 25") +
@@ -200,7 +200,7 @@ ggsave(
   "../images/computational_complexity.png",
   f1,
   device = "png",
-  width = 8.25,
+  width = 8.75,
   height = 8
 )
 

@@ -69,7 +69,7 @@ p1 <- sp1 +
   labs(y = "Membership") +
   guides(fill=guide_legend(title="Factor", ncol=1)) +
   guides(colour = "none") +
-  ggtitle("c = 1 Cell Scores - Celltype Associated Factors") +
+  ggtitle("c = 1 Cell Scores \u2014 Cell Type Associated Factors") +
   theme(
     plot.title = element_text(size = 13),
     axis.text.x = element_text(size = 13),
@@ -88,9 +88,9 @@ p2 <- sp2 +
   labs(y = "Membership") +
   guides(fill=guide_legend(title="Factor", ncol=1)) +
   guides(colour = "none") +
-  ggtitle("c = 1 Cell Scores - Treatment Associated Factors") +
+  ggtitle("c = 1 Cell Scores \u2014 Treatment Associated Factors") +
   theme(
-    plot.title = element_text(size = 13),
+    plot.title = element_text(size = 14),
     axis.text.x = element_text(size = 13),
     axis.title.y = element_text(size = 13),
     legend.key.size = unit(1, "cm"),   # make color boxes bigger
@@ -105,9 +105,9 @@ p3 <- sp3 +
   labs(y = "Membership",fill = "") +
   guides(fill=guide_legend(title="Factor", ncol=1)) +
   guides(colour = "none") +
-  ggtitle("c = 1 Cell Scores - Treatment Associated Factors") +
+  ggtitle("c = 1 Cell Scores \u2014 Treatment Associated Factors") +
   theme(
-    plot.title = element_text(size = 13),
+    plot.title = element_text(size = 14),
     axis.text.x = element_text(size = 13),
     axis.title.y = element_text(size = 13),
     legend.key.size = unit(1, "cm"),   # make color boxes bigger
@@ -144,7 +144,7 @@ p4 <- structure_plot(
   labs(y = "Membership",fill = "") +
   guides(fill=guide_legend(title="Factor", ncol=1))	+
   guides(colour = "none") +
-  ggtitle("c = \u221E Cell Scores - CellType Associated Factors")	+
+  ggtitle("c = \u221E Cell Scores \u2014 Cell Type Associated Factors")	+
   theme(
     plot.title = element_text(size = 13),
     axis.text.x = element_text(size = 13),
@@ -162,9 +162,9 @@ p5 <- structure_plot(
   labs(y = "Membership",fill = "") +
   guides(fill=guide_legend(title="Factor", ncol=1)) +
   guides(colour = "none") +
-  ggtitle("c = \u221E Cell Scores - Treatment Associated Factors") +
+  ggtitle("c = \u221E Cell Scores \u2014 Treatment Associated Factors") +
   theme(
-    plot.title = element_text(size = 13),
+    plot.title = element_text(size = 14),
     axis.text.x = element_text(size = 13),
     axis.title.y = element_text(size = 13),
     legend.key.size = unit(1, "cm"),   # make color boxes bigger
@@ -180,9 +180,9 @@ p6 <- structure_plot(
   labs(y = "Membership",fill = "") +
   guides(fill=guide_legend(title="Factor", ncol=1)) +
   guides(colour = "none") +
-  ggtitle("c = \u221E Cell Scores - Treatment Associated Factors") +
+  ggtitle("c = \u221E Cell Scores \u2014 Treatment Associated Factors") +
   theme(
-    plot.title = element_text(size = 13),
+    plot.title = element_text(size = 14),
     axis.text.x = element_text(size = 13),
     axis.title.y = element_text(size = 13),
     legend.key.size = unit(1, "cm"),   # make color boxes bigger

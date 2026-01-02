@@ -2,9 +2,20 @@ load("../data/experiment_results.Rdata")
 dat <- readr::read_csv("../data/raw_data/bbc_news_text_complexity_summarization.csv")
 
 set.seed(1)
+library(dplyr)
 library(fastTopics)
 library(tm)
 library(SnowballC)
+dat <- dat %>%
+  dplyr::mutate(
+    labels = case_when(
+      labels == "business" ~ "Business", 
+      labels == "entertainment" ~ "Entertainment",
+      labels == "politics" ~ "Politics",
+      labels == "sport" ~ "Sports",
+      labels == "tech" ~ "Tech"
+    )
+  )
 
 my_corpus <- VCorpus(VectorSource(dat$text))
 

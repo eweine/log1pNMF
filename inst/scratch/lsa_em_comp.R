@@ -67,7 +67,7 @@ tm_df <- data.frame(
   gene = rownames(F_tm)
 )
 
-genes_to_label <- c("Vim")
+genes_to_label <- c("Vim", "Igfbp7")
 
 ggplot(data = tm_df, aes(x = log1p(k9), y = log1p(k12))) +
   geom_point(size = 1) +
@@ -84,7 +84,7 @@ ggplot(data = tm_df, aes(x = log1p(k9), y = log1p(k12))) +
 
 k9_distinctive <- tm_df %>%
   dplyr::filter(
-    log1p(k9) > 3.5 & log1p(k12) < 0.5
+    log1p(k9) > 4.5 & log1p(k12) < 0.5
   )
 
 genes_to_label <- k9_distinctive$gene
