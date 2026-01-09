@@ -44,6 +44,16 @@ library(log1pNMF)
 library(Matrix)
 library(dplyr)
 #cc_vec <- c(1e3)
+dat <- dat %>%
+  dplyr::mutate(
+    labels = case_when(
+      labels == "business" ~ "Business", 
+      labels == "entertainment" ~ "Entertainment",
+      labels == "politics" ~ "Politics",
+      labels == "sport" ~ "Sports",
+      labels == "tech" ~ "Tech"
+    )
+  )
 
 n <- nrow(dtm2)
 p <- ncol(dtm2)
@@ -114,22 +124,23 @@ for (cc in cc_vec) {
       axis.title.y = element_text(size = 12),
       axis.text.x = element_text(angle = 0,hjust = 0.5, size = 11)
     ) + ylab("Membership") +
-    guides(fill=guide_legend(title="Factor")) +
+    guides(fill=guide_legend(title="Factor", ncol = 1)) +
     guides(colour = "none")
   
 }
 
+L <- log1pNMF:::normalize_bars(diag(1 / fit_list[[as.character(1)]]$s) %*% fit_list[[as.character(Inf)]]$L)
 set.seed(1)
 plot_list[[as.character(Inf)]] <- structure_plot(
-  fit_list[[as.character(Inf)]], 
+  L, 
   grouping = dat$labels,gap = 25,perplexity = 70,n = Inf, font.size = 12
-)  + ggtitle("Topic Model Loadings") +
+)  + ggtitle("log1p Model Loadings (c = \u221E)") +
   theme(
     plot.title = element_text(size = 12),
     axis.title.y = element_text(size = 12),
     axis.text.x = element_text(angle = 0,hjust = 0.5, size = 11)
   ) + ylab("Membership") +
-  guides(fill=guide_legend(title="Factor")) +
+  guides(fill=guide_legend(title="Factor", ncol = 1)) +
   guides(colour = "none")
   
 g <- ggarrange(

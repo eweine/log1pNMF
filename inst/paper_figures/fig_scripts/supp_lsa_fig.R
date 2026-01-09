@@ -95,17 +95,19 @@ for (cc in cc_vec) {
   
 }
 
+L <- log1pNMF:::normalize_bars(diag(1 / fit_list[[as.character(1)]]$s) %*% fit_list[[as.character(Inf)]]$L)
+
 set.seed(1)
 plot_list[[as.character(Inf)]] <- structure_plot(
-  poisson2multinom(fit_list[[as.character(Inf)]])$L[i,], 
+  L[i,], 
   grouping = clusters[i],gap = 25,perplexity = 70,n = Inf, font.size = 12
-)  + ggtitle("Topic Model Loadings") +
+)  + ggtitle("log1p Model Loadings (c = \u221E)") +
   theme(
     plot.title = element_text(size = 12),
     axis.title.y = element_text(size = 11),
     axis.text.x = element_text(size = 8)
   ) + ylab("Membership") +
-  guides(fill=guide_legend(title="Factor")) +
+  guides(fill=guide_legend(title="Factor", ncol=1)) +
   guides(colour = "none")
 
 # 2. create a single blank plot
