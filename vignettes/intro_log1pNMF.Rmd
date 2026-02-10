@@ -1,0 +1,325 @@
+---
+title: Using log1p NMF to Analyze scRNA-seq Data
+author: Eric Weine, Peter Carbonetto, Rafael Irizarry, and Matthew Stephens
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    toc: no
+    highlight: textmate
+    theme: readable
+vignette: >
+  %\VignetteIndexEntry{Using log1p NMF to Analyze scRNA-seq Data}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+Introduction
+--------------------
+
+The aim of this vignette is to demonstrate how to fit a log1p Poisson NMF model and analyze its output using the `log1pNMF` package. 
+
+```{r knitr-opts, include=FALSE}
+knitr::opts_chunk$set(comment = "#",collapse = TRUE,results = "hold",
+                      fig.align = "center",dpi = 120)
+```
+
+For an $n \times p$ matrix of counts $\mathbf{Y}$, a log1p NMF model is defined as
+\begin{align}
+y_{ij} &\sim \textrm{Poisson}(\lambda_{ij}) \\ 
+g(\lambda_{ij}; c) &= b_{ij}  \\ 
+\mathbf{B} &= \mathbf{L}\mathbf{F}^{\top},
+\end{align}
+where $\mathbf{L}$ and $\mathbf{F}$ are non-negative $n \times K$ and $p \times K$ matrices, respectively, and $c > 0$ is a hyper-parameter which controls the behavior of the "shifted-log link function", defined as 
+\begin{equation}
+g(\lambda; c) = \max(1, c) \cdot \log\left(1 + \lambda/c\right).
+\end{equation}
+
+For more details / intuition about the log1p NMF model, see [Weine *et al* 2026][weine-2026].
+
+An example using scRNA-seq
+--------------------
+
+To fit a log1p NMF model, the user has to (at minimum) provide 3 inputs:
+
+1. A matrix of counts $\mathbf{Y}$.
+2. A setting of $K$ to determine the rank of the factorization.
+3. A setting of $c$ to determine the behavior of the shifted-log link function.
+
+As an example count matrix, we will use a scRNA-seq data set from [Zheng *et al* (2017)][zheng-2017]. These data are reference
+transcriptome profiles from 10 bead-enriched subpopulations of
+peripheral blood mononuclear cells (PBMCs). The original data set is
+much larger; for this introduction, we have taken a subset of
+roughly 3,700 cells.
+
+```{r load-pkgs, message=FALSE, warning=FALSE}
+library(Matrix)
+library(log1pNMF)
+library(fastTopics)
+```
+
+
+To begin, load the packages that are needed.
+
+```{r load-data}
+data(pbmc_facs)
+dim(pbmc_facs$counts)
+```
+
+Set the seed so that the results can be reproduced.
+
+```{r set-seed}
+set.seed(1)
+```
+
+The UMI counts are "sparse"---that is, most of the counts are
+zero. Indeed, over 95% of the UMI counts are zero:
+
+```{r nonzero-rate}
+mean(pbmc_facs$counts > 0)
+```
+
+For the purposes of this vignette only, we randomly subset the data
+further to reduce the running time:
+
+```{r subset-genes-1}
+counts <- pbmc_facs$counts
+p      <- ncol(counts)
+cols   <- sample(p,3000)
+counts <- counts[,cols]
+```
+
+Now we have a 3,774 x 3,000 counts matrix:
+
+```{r subset-genes-2}
+dim(counts)
+```
+
+The original dataset contains cell type labels for each cell. For convenience, we will combine all the T cell labels into one
+
+```{r}
+celltype <- as.character(pbmc_facs$samples$celltype)
+celltype[celltype == "CD4+/CD25 T Reg" |
+         celltype == "CD4+ T Helper2" |
+         celltype == "CD8+/CD45RA+ Naive Cytotoxic" |
+         celltype == "CD4+/CD45RA+/CD25- Naive T" |
+         celltype == "CD4+/CD45RO+ Memory" |
+         celltype == "CD8+ Cytotoxic T" ] <- "T cell"
+celltype <- factor(celltype)
+```
+
+```{r}
+log1p_fit <- fit_poisson_log1p_nmf(
+  Y = counts,
+  K = 6,
+  cc = 1,
+  loglik = "exact",
+  init_method = "rank1"
+)
+```
+
+```{r}
+normalized_structure_plot(
+  log1p_fit,
+  grouping = celltype,
+  gap = 15
+)
+```
+```{r}
+log1p_fit_approx <- fit_poisson_log1p_nmf(
+  Y = counts,
+  K = 6,
+  cc = 1,
+  loglik = "approx",
+  init_method = "rank1"
+)
+```
+
+```{r}
+normalized_structure_plot(
+  log1p_fit_approx,
+  grouping = celltype,
+  gap = 15
+)
+```
+
+```{r}
+tm_fit <- fit_poisson_nmf(X = counts, k = 5)
+```
+
+```{r}
+structure_plot(
+  tm_fit,
+  grouping = celltype,
+  gap = 15
+)
+```
+```{r}
+log1p_fit_smaller <- fit_poisson_log1p_nmf(
+  Y = counts,
+  K = 5,
+  cc = 1,
+  loglik = "exact",
+  init_method = "random"
+)
+```
+```{r}
+normalized_structure_plot(
+  log1p_fit_smaller,
+  grouping = celltype,
+  gap = 15
+)
+```
+
+
+The example data set
+--------------------
+
+We will illustrate fastglmpca using a single-cell RNA-seq data set
+from [Zheng *et al* (2017)][zheng-2017]. These data are reference
+transcriptome profiles from 10 bead-enriched subpopulations of
+peripheral blood mononuclear cells (PBMCs). The original data set is
+much larger; for this introduction, we have taken a subset of
+roughly 3,700 cells.
+
+The data we will analyze are unique molecular identifier (UMI)
+counts. These data are stored as an $n \times m$ sparse matrix, where
+$n$ is the number of genes and $m$ is the number of cells:
+
+```{r load-data}
+data(pbmc_facs)
+dim(pbmc_facs$counts)
+```
+
+The UMI counts are "sparse"---that is, most of the counts are
+zero. Indeed, over 95% of the UMI counts are zero:
+
+```{r nonzero-rate}
+mean(pbmc_facs$counts > 0)
+```
+
+For the purposes of this vignette only, we randomly subset the data
+further to reduce the running time:
+
+```{r subset-genes-1}
+counts <- pbmc_facs$counts
+n      <- nrow(counts)
+rows   <- sample(n,3000)
+counts <- counts[rows,]
+```
+
+Now we have a 3,000 x 3,774 counts matrix:
+
+```{r subset-genes-2}
+dim(counts)
+```
+
+Initializating and fitting the GLM-PCA model
+--------------------------------------------
+
+Since no preprocessing of UMI counts is needed (e.g., a
+log-transformation), the first step is to initialize the model fit
+using `init_glmpca_pois()`. This function has many input arguments and
+options, but here we will keep all settings at the defaults, and we
+set K, the rank of the matrix factorization, to 2:
+
+```{r init-glmpca}
+fit0 <- init_glmpca_pois(counts,K = 2)
+```
+
+By default, `init_glmpca_pois()` adds gene- (or row-) specific
+intercept, and a fixed cell- (or column-) specific size-factor. This
+is intended to mimic the defaults in [glmpca][glmpca-pkg].
+`init_glmpca_pois()` has many other options which we do not demonstrate
+here.
+
+Once we have initialized the model, we are ready to run the
+optimization algorithm to fit the model (i.e., estimate the model
+parameters). This is accomplished by a call to `fit_glmpca_pois()`:
+
+```{r fit-glmpca-1, results="hide", eval=FALSE}
+fit <- fit_glmpca_pois(counts,fit0 = fit0)
+```
+
+If you prefer not to wait for the model optimization (it may take
+several minutes to run), you are welcome to load the previously fitted
+model (which is the output from the `fit_glmpca_pois` call above):
+
+```{r fit-glmpca-2}
+fit <- pbmc_facs$fit
+```
+
+The return value of `fit_glmpca_pois()` resembles the output of
+`svd()` and similar functions, with a few other outputs giving
+additional information about the model:
+
+```{r fit-glmpca-3}
+names(fit)
+```
+
+In particular, the outputs that are capital letters the low-rank
+reconstruction of the counts matrix:
+
+```{r fitted-counts}
+fitted_counts <- with(fit,
+  exp(tcrossprod(U %*% diag(d),V) +
+      tcrossprod(X,B) +
+      tcrossprod(W,Z)))
+```
+
+Let's compare (a random subset of) the reconstructed ("fitted") counts
+versus the observed counts:
+
+```{r fitted-vs-observed, fig.height=3, fig.width=3}
+i <- sample(prod(dim(counts)),2e4)
+pdat <- data.frame(obs    = as.matrix(counts)[i],
+                   fitted = fitted_counts[i])
+ggplot(pdat,aes(x = obs,y = fitted)) +
+  geom_point() +
+  geom_abline(intercept = 0,slope = 1,color = "magenta",linetype = "dotted") +
+  labs(x = "observed count",y = "fitted count") +
+  theme_cowplot(font_size = 12)
+```
+
+The U and V outputs in particular are interesting because they give
+low-dimensional (in this case, 2-d) embeddings of the genes and cells,
+respectively. Let's compare this 2-d embedding of the cells the
+provided cell-type labels:
+
+```{r plot-v, fig.height=3, fig.width=4.5}
+celltype_colors <- c("forestgreen","dodgerblue","darkmagenta",
+                     "gray","hotpink","red")
+celltype <- as.character(pbmc_facs$samples$celltype)
+celltype[celltype == "CD4+/CD25 T Reg" |
+         celltype == "CD4+ T Helper2" |
+         celltype == "CD8+/CD45RA+ Naive Cytotoxic" |
+		 celltype == "CD4+/CD45RA+/CD25- Naive T" |
+		 celltype == "CD4+/CD45RO+ Memory"] <- "T cell"
+celltype <- factor(celltype)
+pdat <- data.frame(celltype = celltype,
+                   pc1 = fit$V[,1],
+				   pc2 = fit$V[,2])
+ggplot(pdat,aes(x = pc1,y = pc2,color = celltype)) +
+  geom_point() +
+  scale_color_manual(values = celltype_colors) +
+  theme_cowplot(font_size = 10)
+```
+
+The 2-d embedding separates well the CD34+ and CD14+ cells from the
+others, and somewhat distinguishes the other cell types (B cells, T
+cells, NK cells).
+
+Session info
+------------
+
+This is the version of R and the packages that were used to generate
+these results.
+
+```{r session-info}
+sessionInfo()
+```
+
+[zheng-2017]: https://doi.org/10.1038/ncomms14049
+[weine-2026]: https://arxiv.org/abs/2601.05845
+[collins-2001]: https://proceedings.neurips.cc/paper_files/paper/2001/file/f410588e48dc83f2822a880a68f78923-Paper.pdf
+[glmpca-pkg]: https://cran.r-project.org/package=glmpca
+
