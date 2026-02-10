@@ -96,7 +96,7 @@ dim(counts)
 
 The original dataset contains cell type labels for each cell. For convenience, we will combine all the T cell labels into one
 
-```{r}
+```{r label-cells}
 celltype <- as.character(pbmc_facs$samples$celltype)
 celltype[celltype == "CD4+/CD25 T Reg" |
          celltype == "CD4+ T Helper2" |
