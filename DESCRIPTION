@@ -16,15 +16,17 @@ LazyData: true
 RoxygenNote: 7.3.3
 Imports:
     Rcpp,
+    RcppParallel,
     Matrix,
     pracma,
     methods,
     distr,
     RhpcBLASctl,
     parallel
-LinkingTo: 
+LinkingTo:
     Rcpp,
-    RcppArmadillo
+    RcppArmadillo,
+    RcppParallel
 Suggests: 
     testthat,
     fastTopics

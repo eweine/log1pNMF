@@ -29,16 +29,6 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// openmp_available
-bool openmp_available();
-RcppExport SEXP _log1pNMF_openmp_available() {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    rcpp_result_gen = Rcpp::wrap(openmp_available());
-    return rcpp_result_gen;
-END_RCPP
-}
 // fit_factor_model_log1p_exact_cpp_src
 List fit_factor_model_log1p_exact_cpp_src(const std::vector<int>& sc_x, const std::vector<int>& sc_i, const std::vector<int>& sc_j, const std::vector<int>& sc_T_x, const std::vector<int>& sc_T_i, const std::vector<int>& sc_T_j, const arma::vec& s, arma::mat& U_T, arma::mat& V_T, const int n, const int p, const int max_iter, const double alpha, const double beta, const int num_ccd_iter, const std::vector<int>& update_indices, const bool verbose, const double tol);
 RcppExport SEXP _log1pNMF_fit_factor_model_log1p_exact_cpp_src(SEXP sc_xSEXP, SEXP sc_iSEXP, SEXP sc_jSEXP, SEXP sc_T_xSEXP, SEXP sc_T_iSEXP, SEXP sc_T_jSEXP, SEXP sSEXP, SEXP U_TSEXP, SEXP V_TSEXP, SEXP nSEXP, SEXP pSEXP, SEXP max_iterSEXP, SEXP alphaSEXP, SEXP betaSEXP, SEXP num_ccd_iterSEXP, SEXP update_indicesSEXP, SEXP verboseSEXP, SEXP tolSEXP) {
@@ -100,7 +90,6 @@ END_RCPP
 
 static const R_CallMethodDef CallEntries[] = {
     {"_log1pNMF_get_loglik_exact", (DL_FUNC) &_log1pNMF_get_loglik_exact, 8},
-    {"_log1pNMF_openmp_available", (DL_FUNC) &_log1pNMF_openmp_available, 0},
     {"_log1pNMF_fit_factor_model_log1p_exact_cpp_src", (DL_FUNC) &_log1pNMF_fit_factor_model_log1p_exact_cpp_src, 18},
     {"_log1pNMF_fit_factor_model_log1p_quad_approx_sparse_cpp_src", (DL_FUNC) &_log1pNMF_fit_factor_model_log1p_quad_approx_sparse_cpp_src, 20},
     {NULL, NULL, 0}

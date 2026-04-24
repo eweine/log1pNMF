@@ -1,12 +1,46 @@
 #include <RcppArmadillo.h>
 #include <Rcpp.h>
+#include <RcppParallel.h>
 #include "ll.h"
-#ifdef _OPENMP
-#include <omp.h>
-#endif
 
 using namespace Rcpp;
 using namespace arma;
+
+struct SparseTermLoglikExact : public RcppParallel::Worker {
+  const arma::mat& U_T;
+  const arma::mat& V_T;
+  const std::vector<int>& nonzero_y;
+  const std::vector<int>& nonzero_y_i_idx;
+  const std::vector<int>& nonzero_y_j_idx;
+  const arma::vec& s;
+  double sum;
+
+  SparseTermLoglikExact(
+    const arma::mat& U_T, const arma::mat& V_T,
+    const std::vector<int>& nonzero_y,
+    const std::vector<int>& nonzero_y_i_idx,
+    const std::vector<int>& nonzero_y_j_idx,
+    const arma::vec& s
+  ) : U_T(U_T), V_T(V_T), nonzero_y(nonzero_y),
+      nonzero_y_i_idx(nonzero_y_i_idx), nonzero_y_j_idx(nonzero_y_j_idx),
+      s(s), sum(0.0) {}
+
+  SparseTermLoglikExact(const SparseTermLoglikExact& other, RcppParallel::Split)
+    : U_T(other.U_T), V_T(other.V_T), nonzero_y(other.nonzero_y),
+      nonzero_y_i_idx(other.nonzero_y_i_idx), nonzero_y_j_idx(other.nonzero_y_j_idx),
+      s(other.s), sum(0.0) {}
+
+  void operator()(std::size_t begin, std::size_t end) {
+    for (std::size_t r = begin; r < end; r++) {
+      sum += nonzero_y[r] * std::log(
+        std::exp(arma::dot(U_T.col(nonzero_y_i_idx[r]), V_T.col(nonzero_y_j_idx[r])))
+        - s[nonzero_y_i_idx[r]]
+      );
+    }
+  }
+
+  void join(const SparseTermLoglikExact& rhs) { sum += rhs.sum; }
+};
 
 double get_sparse_term_loglik_exact(
     const arma::mat& U_T,
@@ -17,23 +51,34 @@ double get_sparse_term_loglik_exact(
     const arma::vec& s,
     const int num_nonzero_y
 ) {
+  SparseTermLoglikExact worker(
+    U_T, V_T, nonzero_y, nonzero_y_i_idx, nonzero_y_j_idx, s
+  );
+  RcppParallel::parallelReduce(0, num_nonzero_y, worker);
+  return worker.sum;
+}
 
-  double sum = 0.0;
+struct DenseTermLoglikExact : public RcppParallel::Worker {
+  const arma::mat& U_T;
+  const arma::mat& V_T;
+  const int p;
+  double sum;
 
-  #pragma omp parallel for reduction(+:sum)
-  for (int r = 0; r < num_nonzero_y; r++) {
+  DenseTermLoglikExact(const arma::mat& U_T, const arma::mat& V_T, int p)
+    : U_T(U_T), V_T(V_T), p(p), sum(0.0) {}
 
-    sum += nonzero_y[r] * log(
-      exp(
-        dot(
-          U_T.col(nonzero_y_i_idx[r]), V_T.col(nonzero_y_j_idx[r])
-        )
-      ) - s[nonzero_y_i_idx[r]]
-    );
+  DenseTermLoglikExact(const DenseTermLoglikExact& other, RcppParallel::Split)
+    : U_T(other.U_T), V_T(other.V_T), p(other.p), sum(0.0) {}
+
+  void operator()(std::size_t begin, std::size_t end) {
+    for (std::size_t i = begin; i < end; i++) {
+      arma::vec dots = V_T.t() * U_T.col(i);
+      sum -= arma::sum(arma::exp(dots));
+    }
   }
 
-  return sum;
-}
+  void join(const DenseTermLoglikExact& rhs) { sum += rhs.sum; }
+};
 
 double get_dense_term_loglik_exact(
     const arma::mat& U_T,
@@ -41,21 +86,51 @@ double get_dense_term_loglik_exact(
     const int n,
     const int p
 ) {
+  DenseTermLoglikExact worker(U_T, V_T, p);
+  RcppParallel::parallelReduce(0, n, worker);
+  return worker.sum;
+}
 
-  double sum = 0.0;
+struct SparseTermLoglikQuadApprox : public RcppParallel::Worker {
+  const arma::mat& U_T;
+  const arma::mat& V_T;
+  const std::vector<int>& nonzero_y;
+  const std::vector<int>& nonzero_y_i_idx;
+  const std::vector<int>& nonzero_y_j_idx;
+  const arma::vec& s;
+  const double a1;
+  const double a2;
+  double ll;
 
-  #pragma omp parallel for reduction(+:sum)
-  for (int i = 0; i < n; i++) {
+  SparseTermLoglikQuadApprox(
+    const arma::mat& U_T, const arma::mat& V_T,
+    const std::vector<int>& nonzero_y,
+    const std::vector<int>& nonzero_y_i_idx,
+    const std::vector<int>& nonzero_y_j_idx,
+    const arma::vec& s, double a1, double a2
+  ) : U_T(U_T), V_T(V_T), nonzero_y(nonzero_y),
+      nonzero_y_i_idx(nonzero_y_i_idx), nonzero_y_j_idx(nonzero_y_j_idx),
+      s(s), a1(a1), a2(a2), ll(0.0) {}
 
-    for (int j = 0; j < p; j++) {
+  SparseTermLoglikQuadApprox(const SparseTermLoglikQuadApprox& other, RcppParallel::Split)
+    : U_T(other.U_T), V_T(other.V_T), nonzero_y(other.nonzero_y),
+      nonzero_y_i_idx(other.nonzero_y_i_idx), nonzero_y_j_idx(other.nonzero_y_j_idx),
+      s(other.s), a1(other.a1), a2(other.a2), ll(0.0) {}
 
-      sum -= exp(dot(U_T.col(i), V_T.col(j)));
-
+  void operator()(std::size_t begin, std::size_t end) {
+    for (std::size_t r = begin; r < end; r++) {
+      double cp = arma::dot(
+        U_T.col(nonzero_y_i_idx[r]), V_T.col(nonzero_y_j_idx[r])
+      );
+      ll += nonzero_y[r] * std::log(std::expm1(cp)) -
+        s[nonzero_y_i_idx[r]] * std::exp(cp) +
+        a1 * s[nonzero_y_i_idx[r]] * cp +
+        a2 * s[nonzero_y_i_idx[r]] * cp * cp;
     }
   }
 
-  return sum;
-}
+  void join(const SparseTermLoglikQuadApprox& rhs) { ll += rhs.ll; }
+};
 
 double get_sparse_term_loglik_quad_sparse_approx(
     const arma::mat& U_T,
@@ -68,23 +143,11 @@ double get_sparse_term_loglik_quad_sparse_approx(
     const double a1,
     const double a2
 ) {
-
-  double ll = 0.0;
-  double cp;
-
-  #pragma omp parallel for reduction(+:ll) private(cp)
-  for (int r = 0; r < num_nonzero_y; r++) {
-
-    cp = dot(U_T.col(nonzero_y_i_idx[r]), V_T.col(nonzero_y_j_idx[r]));
-
-    ll += nonzero_y[r] * log(expm1(cp)) -
-      s[nonzero_y_i_idx[r]] * exp(cp) + a1 * s[nonzero_y_i_idx[r]] * cp +
-      a2 * s[nonzero_y_i_idx[r]] * cp * cp;
-
-  }
-
-  return(ll);
-
+  SparseTermLoglikQuadApprox worker(
+    U_T, V_T, nonzero_y, nonzero_y_i_idx, nonzero_y_j_idx, s, a1, a2
+  );
+  RcppParallel::parallelReduce(0, num_nonzero_y, worker);
+  return worker.ll;
 }
 
 double get_loglik_quad_approx_sparse(

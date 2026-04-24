@@ -5,10 +5,6 @@ get_loglik_exact <- function(U_T, V_T, y_nz_vals, y_nz_rows_idx, y_nz_cols_idx, 
     .Call(`_log1pNMF_get_loglik_exact`, U_T, V_T, y_nz_vals, y_nz_rows_idx, y_nz_cols_idx, s, n, p)
 }
 
-openmp_available <- function() {
-    .Call(`_log1pNMF_openmp_available`)
-}
-
 fit_factor_model_log1p_exact_cpp_src <- function(sc_x, sc_i, sc_j, sc_T_x, sc_T_i, sc_T_j, s, U_T, V_T, n, p, max_iter, alpha, beta, num_ccd_iter, update_indices, verbose, tol) {
     .Call(`_log1pNMF_fit_factor_model_log1p_exact_cpp_src`, sc_x, sc_i, sc_j, sc_T_x, sc_T_i, sc_T_j, s, U_T, V_T, n, p, max_iter, alpha, beta, num_ccd_iter, update_indices, verbose, tol)
 }

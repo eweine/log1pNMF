@@ -173,21 +173,9 @@ fit_poisson_log1p_nmf <- function(
   # alpha scaling
   sqrt_alpha <- sqrt(max(1, cc))
 
-  # I need to figure out how to use and output OMP threads
-  if (openmp_available()) {
-    
-    RhpcBLASctl::omp_set_num_threads(fit$control$threads)
-    if (fit$control$threads > 1) {
-      
-      # move all threads to openmp
-      RhpcBLASctl::blas_set_num_threads(1)
-      
-    }
-    
-  } else {
-    
-    fit$control$threads <- 1
-    
+  RcppParallel::setThreadOptions(numThreads = fit$control$threads)
+  if (fit$control$threads > 1) {
+    RhpcBLASctl::blas_set_num_threads(1)
   }
 
 

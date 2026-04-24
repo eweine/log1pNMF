@@ -1,10 +1,8 @@
 #include <RcppArmadillo.h>
 #include <Rcpp.h>
+#include <RcppParallel.h>
 #include "ll.h"
 #include "utils.h"
-#ifdef _OPENMP
-#include <omp.h>
-#endif
 
 using namespace Rcpp;
 using namespace arma;
@@ -124,6 +122,48 @@ arma::vec solve_pois_reg_log1p (
 
 }
 
+struct RegressExactWorker : public RcppParallel::Worker {
+  const arma::mat& X;
+  const std::vector<arma::vec>& Y;
+  const std::vector<arma::uvec>& Y_nz_idx;
+  const arma::vec& s;
+  const bool common_size_factor;
+  arma::mat& B;
+  const std::vector<int>& update_indices;
+  const int num_iter;
+  const double alpha;
+  const double beta;
+
+  RegressExactWorker(
+    const arma::mat& X, const std::vector<arma::vec>& Y,
+    const std::vector<arma::uvec>& Y_nz_idx, const arma::vec& s,
+    bool common_size_factor, arma::mat& B,
+    const std::vector<int>& update_indices, int num_iter,
+    double alpha, double beta
+  ) : X(X), Y(Y), Y_nz_idx(Y_nz_idx), s(s),
+      common_size_factor(common_size_factor), B(B),
+      update_indices(update_indices), num_iter(num_iter),
+      alpha(alpha), beta(beta) {}
+
+  void operator()(std::size_t begin, std::size_t end) {
+    for (std::size_t j = begin; j < end; j++) {
+      if (common_size_factor) {
+        arma::vec s_j(Y[j].n_elem);
+        s_j.fill(s[j]);
+        B.col(j) = solve_pois_reg_log1p(
+          X, Y[j], Y_nz_idx[j], s_j, B.col(j),
+          update_indices, num_iter, alpha, beta
+        );
+      } else {
+        B.col(j) = solve_pois_reg_log1p(
+          X, Y[j], Y_nz_idx[j], s.elem(Y_nz_idx[j]), B.col(j),
+          update_indices, num_iter, alpha, beta
+        );
+      }
+    }
+  }
+};
+
 // Y is an nxm matrix (each col is an n-dim data vec)
 // X is an nxp matrix (each row is a p-dim covariate)
 // B is a pxm matrix (each col is a p-dim reg coef)
@@ -139,52 +179,12 @@ arma::mat regress_cols_of_Y_on_X_log1p_pois_exact(
     const double alpha,
     const double beta
 ) {
-
-  if (common_size_factor) {
-
-    #pragma omp parallel for shared(B)
-    for (int j = 0; j < static_cast<int>(B.n_cols); j++) {
-
-      arma::vec s_j(Y[j].n_elem);
-      s_j.fill(s[j]);
-
-      B.col(j) = solve_pois_reg_log1p (
-        X,
-        Y[j],
-        Y_nz_idx[j],
-        s_j,
-        B.col(j),
-        update_indices,
-        num_iter,
-        alpha,
-        beta
-      );
-
-    }
-
-  } else {
-
-    #pragma omp parallel for shared(B)
-    for (int j = 0; j < static_cast<int>(B.n_cols); j++) {
-
-      B.col(j) = solve_pois_reg_log1p (
-        X,
-        Y[j],
-        Y_nz_idx[j],
-        s.elem(Y_nz_idx[j]),
-        B.col(j),
-        update_indices,
-        num_iter,
-        alpha,
-        beta
-      );
-
-    }
-
-  }
-
+  RegressExactWorker worker(
+    X, Y, Y_nz_idx, s, common_size_factor, B,
+    update_indices, num_iter, alpha, beta
+  );
+  RcppParallel::parallelFor(0, B.n_cols, worker);
   return(B);
-
 }
 
 // [[Rcpp::export]]
