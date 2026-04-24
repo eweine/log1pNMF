@@ -4,6 +4,7 @@ library(log1pNMF)
 library(ggpubr)
 library(tidyr)
 library(cowplot)
+library(dplyr)
 
 high_expressed_genes <- 500
 low_expressed_genes <- 500
