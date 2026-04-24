@@ -105,7 +105,7 @@
 #' the terms of the log likelihood correspond to \eqn{0} values of \eqn{Y}. Only
 #' used when \code{loglik} is set accordingly and when \code{approx_technique}
 #' is set to \code{"chebyshev"}. By default, the interval is set to
-#' \eqn{[0, \alpha_c\log(1 + 1/c)]}, which best approximates values of \eqn{\lambda}
+#' \eqn{[0, \alpha_c \log(1 + 1/c)]}, which best approximates values of \eqn{\lambda}
 #' between \eqn{0} and \eqn{1}. See Details for more information.
 #' @param control a list of control parameters. See Details for more
 #' information.
@@ -310,6 +310,9 @@ fit_poisson_log1p_nmf <- function(
         }
 
       }
+      
+      # adjust approximation interval to internal alpha-less scaling
+      chebyshev_interval[2] <- chebyshev_interval[2] / max(1, cc)
 
       poly_approx <- pracma::polyApprox(
         exp,
