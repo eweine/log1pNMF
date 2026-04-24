@@ -39,7 +39,7 @@ g <- ggplot(data = out_df, aes(x = lambda, y = b)) +
     axis.title.y = element_text(size = 14)
   ) +
   xlab(bquote("   " ~ lambda)) +
-  ylab(bquote(g[c](lambda)))
+  ylab(bquote(g(lambda * ";" ~ c)))
 
 ggsave(
   "../images/link.png",
