@@ -1,3 +1,12 @@
+RCPP_PARALLEL_LIBS_DIR = $(shell ${R_HOME}/bin/Rscript -e "cat(system.file('libs', package='RcppParallel'))")
+RCPP_PARALLEL_LIB_DIR  = $(shell ${R_HOME}/bin/Rscript -e "cat(system.file('lib',  package='RcppParallel'))")
+
 PKG_CXXFLAGS = $(SHLIB_OPENMP_CXXFLAGS)
 PKG_LIBS = $(SHLIB_OPENMP_CXXFLAGS) $(LAPACK_LIBS) $(BLAS_LIBS) $(FLIBS) \
-           $(shell ${R_HOME}/bin/Rscript -e "RcppParallel::RcppParallelLibs()")
+           $(shell ${R_HOME}/bin/Rscript -e "RcppParallel::RcppParallelLibs()") \
+           $(RCPP_PARALLEL_LIBS_DIR)/RcppParallel.so
+
+all: $(SHLIB)
+	install_name_tool -change RcppParallel.so @rpath/RcppParallel.so $(SHLIB)
+	install_name_tool -add_rpath $(RCPP_PARALLEL_LIBS_DIR) $(SHLIB)
+	install_name_tool -add_rpath $(RCPP_PARALLEL_LIB_DIR)  $(SHLIB)
