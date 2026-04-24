@@ -69,7 +69,7 @@ interval \code{chebyshev_interval}.}
 the terms of the log likelihood correspond to \eqn{0} values of \eqn{Y}. Only
 used when \code{loglik} is set accordingly and when \code{approx_technique}
 is set to \code{"chebyshev"}. By default, the interval is set to
-\eqn{[0, \alpha_c\log(1 + 1/c)]}, which best approximates values of \eqn{\lambda}
+\eqn{[0, \alpha_c \log(1 + 1/c)]}, which best approximates values of \eqn{\lambda}
 between \eqn{0} and \eqn{1}. See Details for more information.}
 
 \item{control}{a list of control parameters. See Details for more

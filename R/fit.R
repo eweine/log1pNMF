@@ -308,11 +308,11 @@ fit_poisson_log1p_nmf <- function(
             )
 
         }
+        
+        # adjust approximation interval to internal alpha-less scaling
+        chebyshev_interval[2] <- chebyshev_interval[2] / max(1, cc)
 
       }
-      
-      # adjust approximation interval to internal alpha-less scaling
-      chebyshev_interval[2] <- chebyshev_interval[2] / max(1, cc)
 
       poly_approx <- pracma::polyApprox(
         exp,
