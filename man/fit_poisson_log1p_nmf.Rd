@@ -69,7 +69,7 @@ interval \code{chebyshev_interval}.}
 the terms of the log likelihood correspond to \eqn{0} values of \eqn{Y}. Only
 used when \code{loglik} is set accordingly and when \code{approx_technique}
 is set to \code{"chebyshev"}. By default, the interval is set to
-\eqn{[0, \log(1 + 1/c)]}, which best approximates values of \eqn{\lambda}
+\eqn{[0, \alpha_c\log(1 + 1/c)]}, which best approximates values of \eqn{\lambda}
 between \eqn{0} and \eqn{1}. See Details for more information.}
 
 \item{control}{a list of control parameters. See Details for more
@@ -105,13 +105,13 @@ a log1p link using (approximate) maximum likelihood.
 \details{
 Here, we fit the model
 \deqn{y_{ij} \sim \textrm{Poisson}(s_{i}\lambda_{ij})}
-\deqn{\alpha \times \log(1 + \lambda_{ij} / c) = \sum_{k = 1}^{K} \ell_{ik}f_{jk},}
+\deqn{\alpha_c \times \log(1 + \lambda_{ij} / c) = \sum_{k = 1}^{K} \ell_{ik}f_{jk},}
 where \eqn{Y} is an \eqn{n \times p} matrix of non-negative counts, \eqn{L} is a
 non-negative \eqn{n \times K} matrix of "loadings," \eqn{F} is a
 non-negative \eqn{p \times K} matrix of "factors," \eqn{s_{i}} is a
 "size-factor" controlling for the total size of the \eqn{i^{\textrm{th}}}
 row of \eqn{Y}, \eqn{c} is a tuning parameter controlling the shape of
-the link function, and \eqn{\alpha} is a scaling constant defined as \eqn{max(1, c)}.
+the link function, and \eqn{\alpha_c} is a scaling constant defined as \eqn{\max(1, c)}.
 
 Exact optimization of the log-likelihood of this function can be slow, owing
 mostly to the fact that \eqn{\exp(\sum_{k = 1}^{K} \ell_{ik}f_{jk})} must be
