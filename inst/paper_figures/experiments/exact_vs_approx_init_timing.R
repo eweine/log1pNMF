@@ -30,20 +30,20 @@ library(log1pNMF)
 ## Edit these for the target data set / machine. The data file is expected to
 ## load a sparse counts matrix (rows = observations, cols = features) into the
 ## variable named by `data_var`; this matches fit_lsa_models.R.
-data_path    <- "../data/panc_cyto_lsa.Rdata"  # loads `counts`
+data_path    <- "/rafalab/eweine/log1p_experiments/pancreas_cytokine_lsa.Rdata"  # loads `counts`
 data_var     <- "counts"
 K            <- 13          # rank of the factorization
 cc           <- 1           # link-function tuning parameter c
 maxiter      <- 250         # iterations for each full fit
 init_maxiter <- 5           # rank-1 warm-up iterations (package default)
 seed         <- 1
-n_threads    <- max(parallel::detectCores() - 1, 1)
-out_dir      <- "."         # where the .rds outputs are written
+n_threads    <- 48
+out_dir      <- "/rafalab/eweine/log1p_experiments/"         # where the .rds outputs are written
 out_tag      <- sprintf("exact_vs_approx_init_timing_K%d_c%s", K, format(cc))
 
 ## Force every fit to run the full `maxiter` iterations so the trajectories are
 ## complete for plotting (set to the package default 1e-8 to allow early stops).
-tol          <- -Inf
+tol          <- 1e-8
 
 ## ---- load data -------------------------------------------------------------
 message("Loading data from ", data_path)
