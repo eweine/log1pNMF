@@ -19,7 +19,8 @@ arma::vec solve_pois_reg_log1p (
     const std::vector<int>& update_indices,
     int num_iter,
     const double alpha,
-    const double beta
+    const double beta,
+    double& col_obj
 ) {
 
   double first_deriv;
@@ -120,6 +121,13 @@ arma::vec solve_pois_reg_log1p (
     }
   }
 
+  // current_lik is the full negative-loglik contribution of this column at the
+  // final b (dense exp sum plus the sparse log term). It is committed only on
+  // an accepted line-search step (see above), so it is always in sync with the
+  // returned b and can be handed back without any recomputation. Summed across
+  // columns and negated, this equals get_loglik_exact(U_T, V_T).
+  col_obj = current_lik;
+
   return(b);
 
 }
@@ -127,6 +135,11 @@ arma::vec solve_pois_reg_log1p (
 // Y is an nxm matrix (each col is an n-dim data vec)
 // X is an nxp matrix (each row is a p-dim covariate)
 // B is a pxm matrix (each col is a p-dim reg coef)
+// As above, but also accumulates the model objective. Each column solve
+// returns its full negative-loglik contribution; summed over all columns and
+// negated (obj_out) this equals get_loglik_exact at the current (U_T, V_T),
+// so a caller running this as the final pass of an iteration avoids a separate
+// O(n*p*K) log-likelihood evaluation.
 arma::mat regress_cols_of_Y_on_X_log1p_pois_exact(
     const arma::mat& X,
     const std::vector<arma::vec>& Y,
@@ -137,16 +150,21 @@ arma::mat regress_cols_of_Y_on_X_log1p_pois_exact(
     const std::vector<int>& update_indices,
     int num_iter,
     const double alpha,
-    const double beta
+    const double beta,
+    double& obj_out
 ) {
+
+  double obj_sum = 0.0;
 
   if (common_size_factor) {
 
-    #pragma omp parallel for shared(B)
+    #pragma omp parallel for shared(B) reduction(+:obj_sum)
     for (int j = 0; j < static_cast<int>(B.n_cols); j++) {
 
       arma::vec s_j(Y[j].n_elem);
       s_j.fill(s[j]);
+
+      double col_obj = 0.0;
 
       B.col(j) = solve_pois_reg_log1p (
         X,
@@ -157,15 +175,20 @@ arma::mat regress_cols_of_Y_on_X_log1p_pois_exact(
         update_indices,
         num_iter,
         alpha,
-        beta
+        beta,
+        col_obj
       );
+
+      obj_sum += col_obj;
 
     }
 
   } else {
 
-    #pragma omp parallel for shared(B)
+    #pragma omp parallel for shared(B) reduction(+:obj_sum)
     for (int j = 0; j < static_cast<int>(B.n_cols); j++) {
+
+      double col_obj = 0.0;
 
       B.col(j) = solve_pois_reg_log1p (
         X,
@@ -176,12 +199,18 @@ arma::mat regress_cols_of_Y_on_X_log1p_pois_exact(
         update_indices,
         num_iter,
         alpha,
-        beta
+        beta,
+        col_obj
       );
+
+      obj_sum += col_obj;
 
     }
 
   }
+
+  // negate: solver returns the negative-loglik contribution per column
+  obj_out = -obj_sum;
 
   return(B);
 
@@ -302,6 +331,7 @@ List fit_factor_model_log1p_exact_cpp_src(
     }
     // --------------------------------------
 
+    double u_obj_unused = 0.0;
     U_T = regress_cols_of_Y_on_X_log1p_pois_exact(
       V_T.t(),
       y_rows_data,
@@ -312,9 +342,15 @@ List fit_factor_model_log1p_exact_cpp_src(
       update_indices,
       num_ccd_iter,
       alpha,
-      beta
+      beta,
+      u_obj_unused
     );
 
+    // the V-pass is the last block update of the iteration, so its accumulated
+    // objective equals get_loglik_exact at the current (U_T, V_T). The rescale
+    // below is objective-invariant (it leaves every U_T.col(i)'*V_T.col(j)
+    // unchanged), so this value is also the objective at the rescaled iterate,
+    // and no separate O(n*p*K) evaluation is needed.
     V_T = regress_cols_of_Y_on_X_log1p_pois_exact(
       U_T.t(),
       y_cols_data,
@@ -325,7 +361,8 @@ List fit_factor_model_log1p_exact_cpp_src(
       update_indices,
       num_ccd_iter,
       alpha,
-      beta
+      beta,
+      loglik
     );
 
     arma::vec d = mean(U_T, 1) / mean(V_T, 1);
@@ -333,17 +370,6 @@ List fit_factor_model_log1p_exact_cpp_src(
 
     U_T.each_col() %= arma::sqrt(1/d);
     V_T.each_col() %= arma::sqrt(d);
-
-    loglik = get_loglik_exact(
-      U_T,
-      V_T,
-      sc_x,
-      sc_i,
-      sc_j,
-      s,
-      n,
-      p
-    );
 
     loglik_history.push_back(loglik);
 
