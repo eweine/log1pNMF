@@ -23,7 +23,8 @@ arma::vec solve_pois_reg_log1p_quad_approx_sparse_scalar_s (
     const std::vector<int>& update_indices,
     int num_iter,
     const double alpha,
-    const double beta
+    const double beta,
+    double& row_obj
 ) {
 
   const arma::mat X_T_nz = X_T.cols(y_nz_idx);
@@ -55,6 +56,12 @@ arma::vec solve_pois_reg_log1p_quad_approx_sparse_scalar_s (
     y,
     log(exp_eta_nz_m1)
   );
+
+  // Tracks whether `exact_lik` still matches the current (accepted) eta_nz.
+  // It is overwritten by every trial proposal below, so a line search that
+  // ends in rejection leaves it holding a stale value; the flag lets us skip
+  // recomputing the sparse term at the end when the last step was accepted.
+  bool exact_lik_in_sync = true;
 
   int num_indices = update_indices.size();
 
@@ -130,12 +137,16 @@ arma::vec solve_pois_reg_log1p_quad_approx_sparse_scalar_s (
           eta_nz = eta_nz_proposed;
           exp_eta_nz = exp_eta_nz_proposed;
           exp_eta_nz_m1 = exp_eta_nz_m1_proposed;
+          // accepted: exact_lik now matches the committed eta_nz
+          exact_lik_in_sync = true;
           break;
         } else {
           t *= beta;
           if(t < 1e-12) {
 
             b[j] = b_j_og;
+            // rejected: eta_nz reverts but exact_lik holds the trial value
+            exact_lik_in_sync = false;
             break;
 
           }
@@ -143,6 +154,17 @@ arma::vec solve_pois_reg_log1p_quad_approx_sparse_scalar_s (
       }
     }
   }
+
+  // Full negative-loglik contribution of this row at the final b. Summed
+  // across rows and negated, this equals get_loglik_quad_approx_sparse at
+  // (U_T, V_T) exactly, so the caller obtains the objective without a separate
+  // O(nnz*K) pass. Only recompute the sparse exp/log term (an O(nnz_row) batch
+  // of logs) when the last line search left exact_lik stale.
+  if (!exact_lik_in_sync) {
+    exact_lik = s * sum(exp_eta_nz) - dot(y, log(exp_eta_nz_m1));
+  }
+  row_obj = exact_lik + dot(X_0_cs_times_sa1, b) +
+    s * a2 * dot(b, X_0_T_X_0 * b);
 
   return(b);
 
@@ -326,6 +348,11 @@ arma::mat regress_cols_of_Y_on_X_log1p_quad_approx_sparse_vec_s(
 
 }
 
+// As above, but also accumulates the model objective. Because this pass
+// regresses the rows of U against the current V (X_T), the per-row objective
+// contributions returned by the solver sum (after negation) to exactly
+// get_loglik_quad_approx_sparse(U_T, V_T). The total is written to obj_out so
+// the caller can avoid a separate O(nnz*K) log-likelihood evaluation.
 arma::mat regress_cols_of_Y_on_X_log1p_quad_approx_sparse_scalar_s(
     const arma::mat& X_T,
     const std::vector<arma::vec>& Y,
@@ -337,15 +364,19 @@ arma::mat regress_cols_of_Y_on_X_log1p_quad_approx_sparse_scalar_s(
     const std::vector<int>& update_indices,
     int num_iter,
     const double alpha,
-    const double beta
+    const double beta,
+    double& obj_out
 ) {
 
   const arma::mat X_cs = arma::sum(X_T, 1);
   const arma::mat X_T_X = X_T * X_T.t();
 
-  // Commenting out parallelism for testing
-  #pragma omp parallel for shared(B)
+  double obj_sum = 0.0;
+
+  #pragma omp parallel for shared(B) reduction(+:obj_sum)
   for (int j = 0; j < static_cast<int>(B.n_cols); j++) {
+
+    double row_obj = 0.0;
 
     B.col(j) = solve_pois_reg_log1p_quad_approx_sparse_scalar_s(
       X_T,
@@ -360,10 +391,16 @@ arma::mat regress_cols_of_Y_on_X_log1p_quad_approx_sparse_scalar_s(
       update_indices,
       num_iter,
       alpha,
-      beta
+      beta,
+      row_obj
     );
 
+    obj_sum += row_obj;
+
   }
+
+  // negate: solver returns the negative-loglik contribution per row
+  obj_out = -obj_sum;
 
   return(B);
 
@@ -506,6 +543,10 @@ List fit_factor_model_log1p_quad_approx_sparse_cpp_src(
       beta
     );
 
+    // the row-regression pass computes the objective as a by-product: since
+    // it regresses U against the current V_T, the accumulated per-row
+    // contributions equal get_loglik_quad_approx_sparse(U_T, V_T) exactly,
+    // so no separate log-likelihood evaluation is needed here.
     U_T = regress_cols_of_Y_on_X_log1p_quad_approx_sparse_scalar_s(
       V_T,
       y_rows_data,
@@ -517,18 +558,8 @@ List fit_factor_model_log1p_quad_approx_sparse_cpp_src(
       update_indices,
       num_ccd_iter,
       alpha,
-      beta
-    );
-
-    loglik = get_loglik_quad_approx_sparse(
-      U_T,
-      V_T,
-      sc_x,
-      sc_i,
-      sc_j,
-      s,
-      a1,
-      a2
+      beta,
+      loglik
     );
 
     loglik_history.push_back(loglik);
