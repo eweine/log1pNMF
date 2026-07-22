@@ -1,5 +1,6 @@
 #include <RcppArmadillo.h>
 #include <Rcpp.h>
+#include <chrono>
 #include "ll.h"
 #include "utils.h"
 #ifdef _OPENMP
@@ -235,7 +236,8 @@ List fit_factor_model_log1p_exact_cpp_src(
     const int num_ccd_iter,
     const std::vector<int>& update_indices,
     const bool verbose,
-    const double tol
+    const double tol,
+    const bool track_time
 ) {
 
   bool converged = false;
@@ -293,7 +295,18 @@ List fit_factor_model_log1p_exact_cpp_src(
   std::vector<double> loglik_history;
   loglik_history.reserve(max_iter);
   loglik_history.push_back(loglik);
-  
+
+  // optional cumulative wall-clock (seconds) per iteration for benchmarking,
+  // excluding the progress bar; off by default. The exact objective is already
+  // the model log-likelihood here, so no separate exact-loglik trace is needed.
+  std::vector<double> time_history;
+  if (track_time) time_history.reserve(max_iter);
+  long long algo_ns = 0;
+
+  // seed at the initial iterate (index 0) so time_trace aligns with
+  // objective_trace, which also records the pre-loop value
+  if (track_time) time_history.push_back(0.0);
+
   if (verbose) {
 
     Rprintf(
@@ -330,6 +343,9 @@ List fit_factor_model_log1p_exact_cpp_src(
       R_FlushConsole();
     }
     // --------------------------------------
+
+    std::chrono::steady_clock::time_point iter_t0;
+    if (track_time) iter_t0 = std::chrono::steady_clock::now();
 
     double u_obj_unused = 0.0;
     U_T = regress_cols_of_Y_on_X_log1p_pois_exact(
@@ -371,6 +387,13 @@ List fit_factor_model_log1p_exact_cpp_src(
     U_T.each_col() %= arma::sqrt(1/d);
     V_T.each_col() %= arma::sqrt(d);
 
+    if (track_time) {
+      algo_ns += std::chrono::duration_cast<std::chrono::nanoseconds>(
+        std::chrono::steady_clock::now() - iter_t0
+      ).count();
+      time_history.push_back(static_cast<double>(algo_ns) * 1e-9);
+    }
+
     loglik_history.push_back(loglik);
 
     if (loglik - prev_lik < tol) {
@@ -405,7 +428,8 @@ List fit_factor_model_log1p_exact_cpp_src(
     _["U"]         = U_T.t(),
     _["V"]         = V_T.t(),
     _["converged"] = converged,
-    _["objective_trace"] = loglik_history
+    _["objective_trace"] = loglik_history,
+    _["time_trace"] = time_history
   );
 
   return(fit);

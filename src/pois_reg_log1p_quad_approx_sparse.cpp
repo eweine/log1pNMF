@@ -1,5 +1,6 @@
 #include <RcppArmadillo.h>
 #include <Rcpp.h>
+#include <chrono>
 #include "ll.h"
 #include "utils.h"
 #ifdef _OPENMP
@@ -428,7 +429,9 @@ List fit_factor_model_log1p_quad_approx_sparse_cpp_src(
     const int num_ccd_iter,
     const std::vector<int>& update_indices,
     const bool verbose,
-    const double tol
+    const double tol,
+    const bool track_time,
+    const bool track_exact_loglik
 ) {
 
   bool converged = false;
@@ -486,7 +489,33 @@ List fit_factor_model_log1p_quad_approx_sparse_cpp_src(
   std::vector<double> loglik_history;
   loglik_history.reserve(max_iter);
   loglik_history.push_back(loglik);
-  
+
+  // Optional per-iteration diagnostics for benchmarking (off by default).
+  // time_history holds cumulative wall-clock seconds spent in the actual
+  // updates, excluding the cost of computing the diagnostics themselves.
+  // exact_loglik_history holds the exact Poisson log1p log-likelihood at each
+  // iterate (the additive normalizing constant is restored on the R side).
+  std::vector<double> time_history;
+  std::vector<double> exact_loglik_history;
+  if (track_time) time_history.reserve(max_iter);
+  if (track_exact_loglik) exact_loglik_history.reserve(max_iter);
+  long long algo_ns = 0;
+
+  // seed the diagnostics at the initial iterate (index 0) so they align with
+  // objective_trace, which also records the pre-loop value
+  if (track_time) time_history.push_back(0.0);
+  if (track_exact_loglik) {
+    arma::mat U_aug(K + 1, n);
+    U_aug.row(0) = arma::log(s.t());
+    U_aug.rows(1, K) = U_T;
+    arma::mat V_aug(K + 1, p);
+    V_aug.row(0).ones();
+    V_aug.rows(1, K) = V_T;
+    exact_loglik_history.push_back(
+      get_loglik_exact(U_aug, V_aug, sc_x, sc_i, sc_j, s, n, p)
+    );
+  }
+
   if (verbose) {
 
     Rprintf(
@@ -523,6 +552,12 @@ List fit_factor_model_log1p_quad_approx_sparse_cpp_src(
       R_FlushConsole();
     }
     // --------------------------------------
+
+    // time only the actual model updates; the optional diagnostics computed
+    // afterwards are excluded from algo_ns so the recorded wall-clock reflects
+    // the algorithm alone
+    std::chrono::steady_clock::time_point iter_t0;
+    if (track_time) iter_t0 = std::chrono::steady_clock::now();
 
     arma::vec d = mean(U_T, 1) / mean(V_T, 1);
 
@@ -562,6 +597,29 @@ List fit_factor_model_log1p_quad_approx_sparse_cpp_src(
       loglik
     );
 
+    if (track_time) {
+      algo_ns += std::chrono::duration_cast<std::chrono::nanoseconds>(
+        std::chrono::steady_clock::now() - iter_t0
+      ).count();
+      time_history.push_back(static_cast<double>(algo_ns) * 1e-9);
+    }
+
+    // exact Poisson log1p log-likelihood at the current iterate, evaluated by
+    // augmenting (U_T, V_T) with the intercept factor the exact model carries:
+    // cp_ij = log(s_i) + <U_T.col(i), V_T.col(j)>. get_loglik_exact then
+    // returns the value up to a constant that is restored on the R side.
+    if (track_exact_loglik) {
+      arma::mat U_aug(K + 1, n);
+      U_aug.row(0) = arma::log(s.t());
+      U_aug.rows(1, K) = U_T;
+      arma::mat V_aug(K + 1, p);
+      V_aug.row(0).ones();
+      V_aug.rows(1, K) = V_T;
+      exact_loglik_history.push_back(
+        get_loglik_exact(U_aug, V_aug, sc_x, sc_i, sc_j, s, n, p)
+      );
+    }
+
     loglik_history.push_back(loglik);
 
     if (loglik - prev_lik < tol) {
@@ -596,7 +654,9 @@ List fit_factor_model_log1p_quad_approx_sparse_cpp_src(
     _["U"]         = U_T.t(),
     _["V"]         = V_T.t(),
     _["converged"] = converged,
-    _["objective_trace"] = loglik_history
+    _["objective_trace"] = loglik_history,
+    _["time_trace"] = time_history,
+    _["exact_loglik_trace"] = exact_loglik_history
   );
 
   return(fit);

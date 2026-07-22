@@ -45,13 +45,23 @@ fit_factor_model_log1p_quad_approx_sparse <- function(
     fit$control$num_ccd_iter,
     update_idx,
     fit$control$verbose,
-    fit$control$tol
+    fit$control$tol,
+    isTRUE(fit$control$track_time),
+    isTRUE(fit$control$track_exact_loglik)
   )
 
   fit$LL <- new_UV$U
   fit$FF <- new_UV$V
   fit$converged <- new_UV$converged
   fit$objective_trace <- new_UV$objective_trace
+
+  if (isTRUE(fit$control$track_time)) {
+    fit$time_trace <- new_UV$time_trace
+  }
+
+  if (isTRUE(fit$control$track_exact_loglik)) {
+    fit$exact_loglik_trace <- new_UV$exact_loglik_trace
+  }
 
   return(fit)
 
