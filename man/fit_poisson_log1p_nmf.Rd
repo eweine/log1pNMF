@@ -170,10 +170,9 @@ for benchmarking.}
 
 \item{\code{track_exact_loglik}}{Boolean (default \code{FALSE}). If
 \code{TRUE}, the returned fit includes \code{exact_loglik_trace}, the exact
-Poisson log1p log-likelihood (on the same scale as \code{\link{logLik}}) at
-each iterate. Useful for comparing methods that optimize the approximate
-objective against the exact log-likelihood. Note that computing this at
-every iteration adds overhead, so it is off by default.}
+log-likelihood at each iterate. Useful for comparing methods that optimize 
+the approximate objective against the exact log-likelihood. Note that 
+computing this at every iteration adds overhead, so it is off by default.}
 
 \item{\code{threads}}{Integer indicating the number of threads to be used
 for optimization.}
