@@ -90,6 +90,11 @@ logLik.log1p_nmf_fit <- function (object, Y, s = NULL, ...) {
   V <- cbind(rep(1, p), (1 / sqrt_alpha) * object$FF)
 
   sc <- Matrix::summary(Y)
+  # The additive constant restoring get_loglik_exact to the true Poisson
+  # log-likelihood is p * sum(s') - sum(log(Y!)), where s' = s * cc is the
+  # scaled size factor. sum(s') = p * cc * sum(s) only reduces to n * p * cc
+  # when the size factors average to one, so use sum(s) directly to stay
+  # correct for arbitrary (e.g. custom, un-normalized) size factors.
   ll <- get_loglik_exact(
     t(U),
     t(V),
@@ -99,7 +104,7 @@ logLik.log1p_nmf_fit <- function (object, Y, s = NULL, ...) {
     s,
     n,
     p
-  ) + n*p*object$cc - sum(lfactorial(Y@x))
+  ) + p * sum(s) - sum(lfactorial(Y@x))
   
   return(ll)
   

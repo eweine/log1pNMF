@@ -61,6 +61,20 @@
 #' \item{\code{verbose}}{Boolean indicating if information should be printed
 #' indicating the progress of the algorithm.}
 #'
+#' \item{\code{track_time}}{Boolean (default \code{FALSE}). If \code{TRUE},
+#' the returned fit includes \code{time_trace}, the cumulative wall-clock
+#' time (in seconds) spent in the model updates up to and including each
+#' iteration. The cost of computing the diagnostics themselves (including
+#' \code{track_exact_loglik}) is excluded from the recorded times. Intended
+#' for benchmarking.}
+#'
+#' \item{\code{track_exact_loglik}}{Boolean (default \code{FALSE}). If
+#' \code{TRUE}, the returned fit includes \code{exact_loglik_trace}, the exact
+#' Poisson log1p log-likelihood (on the same scale as \code{\link{logLik}}) at
+#' each iterate. Useful for comparing methods that optimize the approximate
+#' objective against the exact log-likelihood. Note that computing this at
+#' every iteration adds overhead, so it is off by default.}
+#'
 #' \item{\code{threads}}{Integer indicating the number of threads to be used
 #' for optimization.}
 #'
@@ -521,6 +535,17 @@ fit_poisson_log1p_nmf <- function(
     maxiter = fit$control$maxiter
   )
 
+  # get_loglik_exact (used for exact_loglik_trace) omits the additive constant
+  # that turns it into the true Poisson log-likelihood; restore it here, where
+  # cc, the size factors, and Y are all available. See logLik.log1p_nmf_fit.
+  if (isTRUE(fit$control$track_exact_loglik) &&
+      !is.null(fit$exact_loglik_trace)) {
+
+    ll_const <- ncol(Y) * fit$cc * sum(fit$s) - sum(lfactorial(Y@x))
+    fit$exact_loglik_trace <- fit$exact_loglik_trace + ll_const
+
+  }
+
   if (sqrt_alpha > 1) {
     
     fit$LL <- fit$LL * sqrt_alpha
@@ -556,6 +581,8 @@ fit_poisson_log1p_nmf_control_default <- function() {
     num_ccd_iter = 3,
     tol = 1e-8,
     verbose = TRUE,
+    track_time = FALSE,
+    track_exact_loglik = FALSE,
     threads = max(parallel::detectCores() - 1, 1)
   )
 

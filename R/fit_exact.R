@@ -46,7 +46,8 @@ fit_factor_model_log1p_exact <- function(
     fit$control$num_ccd_iter,
     update_idx,
     fit$control$verbose,
-    fit$control$tol
+    fit$control$tol,
+    isTRUE(fit$control$track_time)
   )
 
   # remove size factor
@@ -54,6 +55,17 @@ fit_factor_model_log1p_exact <- function(
   fit$FF <- new_UV$V[, -1, drop = FALSE]
   fit$converged <- new_UV$converged
   fit$objective_trace <- new_UV$objective_trace
+
+  if (isTRUE(fit$control$track_time)) {
+    fit$time_trace <- new_UV$time_trace
+  }
+
+  # the exact objective already is the model log-likelihood core; expose it
+  # under exact_loglik_trace when requested so downstream code is uniform
+  # across the approximate and exact fitting paths
+  if (isTRUE(fit$control$track_exact_loglik)) {
+    fit$exact_loglik_trace <- new_UV$objective_trace
+  }
 
   return(fit)
 
