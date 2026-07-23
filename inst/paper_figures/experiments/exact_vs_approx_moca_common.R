@@ -21,12 +21,12 @@ library(log1pNMF)
 counts_path    <- "/rafalab/eweine/log1pNMF/inst/paper_figures/data/gene_count_cleaned.RDS"  # genes x cells dgCMatrix
 K              <- 25        # rank of the factorization (adjust for MOCA as desired)
 cc             <- 1         # link-function tuning parameter c
-maxiter_approx <- 300       # approximate fit: sparse, ~hours on MOCA
-maxiter_exact  <- 25        # exact fit: dense-over-cells, very slow on 1.33M cells
+maxiter_approx <- 100       # ~11.5 h of optimization at ~414 s/iter (probe)
+maxiter_exact  <- 10        # exact is ~1+ h/iter on 1.33M cells; ~10 h+ of opt
 init_maxiter   <- 5         # rank-1 warm-up iterations (package default)
 seed           <- 1
 n_threads      <- 32
-out_dir        <- "/home/ericweine/log1p_experiments/"
+out_dir        <- "/rafalab/eweine/log1p_experiments/"  # MUST exist -- outputs are written here at job end
 out_tag        <- sprintf("exact_vs_approx_moca_K%d_c%s", K, format(cc))
 tol            <- 1e-8
 
