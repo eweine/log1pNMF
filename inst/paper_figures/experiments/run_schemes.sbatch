@@ -13,6 +13,13 @@
 
 module load R/4.3.1
 
+# Force OpenMP to use the full allocation. SLURM often exports OMP_NUM_THREADS=1
+# by default, which makes the package's parallel loops run single-threaded even
+# though 48 cores are allocated. Setting it here (and echoing it) fixes/confirms.
+export OMP_NUM_THREADS=${SLURM_CPUS_PER_TASK:-48}
+echo "OMP_NUM_THREADS=$OMP_NUM_THREADS"
+env | grep -iE 'OMP|MKL|BLAS|GOMP' || true
+
 # the job scripts source("exact_vs_approx_common.R") with a RELATIVE path,
 # so we must run from the experiments directory
 EXPDIR=/home/ericweine/log1pNMF/inst/paper_figures/experiments
