@@ -18,14 +18,14 @@ library(Matrix)
 library(log1pNMF)
 
 ## ---- configuration ----------------------------------------------------------
-counts_path    <- "/home/ericweine/log1p_experiments/gene_count_cleaned.RDS"  # genes x cells dgCMatrix
-K              <- 13        # rank of the factorization (adjust for MOCA as desired)
+counts_path    <- "/rafalab/eweine/log1pNMF/inst/paper_figures/data/gene_count_cleaned.RDS"  # genes x cells dgCMatrix
+K              <- 25        # rank of the factorization (adjust for MOCA as desired)
 cc             <- 1         # link-function tuning parameter c
 maxiter_approx <- 300       # approximate fit: sparse, ~hours on MOCA
 maxiter_exact  <- 25        # exact fit: dense-over-cells, very slow on 1.33M cells
 init_maxiter   <- 5         # rank-1 warm-up iterations (package default)
 seed           <- 1
-n_threads      <- 48
+n_threads      <- 32
 out_dir        <- "/home/ericweine/log1p_experiments/"
 out_tag        <- sprintf("exact_vs_approx_moca_K%d_c%s", K, format(cc))
 tol            <- 1e-8
