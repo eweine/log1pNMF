@@ -10,8 +10,6 @@
 #SBATCH --mem=100G
 
 module load R/4.3.2
-export OMP_NUM_THREADS=${SLURM_CPUS_PER_TASK:-32}
-echo "OMP_NUM_THREADS=$OMP_NUM_THREADS"
 
 EXPDIR=/rafalab/eweine/log1pNMF/inst/paper_figures/experiments
 cd "$EXPDIR"
