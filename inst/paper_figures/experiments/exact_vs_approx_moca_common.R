@@ -35,6 +35,17 @@ message("Loading MOCA counts from ", counts_path)
 counts <- readRDS(counts_path)                 # genes x cells
 message(sprintf("  raw: %d genes x %d cells, %s nonzeros",
                 nrow(counts), ncol(counts), format(length(counts@x), big.mark = ",")))
+
+## drop all-zero genes (this atlas has one gene with zero counts across all
+## cells; such a feature is degenerate for the model). tabulate over the row
+## indices avoids a full rowSums pass. All cells have >= 17 nonzeros, so there
+## are no all-zero observations to drop.
+gkeep <- tabulate(counts@i + 1L, nbins = nrow(counts)) > 0
+if (!all(gkeep)) {
+  message("  dropping ", sum(!gkeep), " all-zero gene(s)")
+  counts <- counts[gkeep, ]
+}
+
 message("Transposing to cells x genes (peak memory ~2x here) ...")
 Y <- Matrix::t(counts)                          # cells x genes (observations x features)
 rm(counts); gc()
