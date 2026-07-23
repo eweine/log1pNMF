@@ -1,7 +1,7 @@
 #' Fit log1p Poisson Factor Model with Approximate Log Likelihood
 #'
-#' @param sc summary of sparse matrix to fit model on
-#' @param sc_t summary of transpose of sparse matrix to fit model on
+#' @param sc_x,sc_i,sc_j nonzero values and 0-based row/column indices of the data
+#' @param sc_t_x,sc_t_i,sc_t_j the same, for the transpose of the data
 #' @param s size factor
 #' @param n number of rows of data matrix
 #' @param p number of columns of data matrix
@@ -14,8 +14,12 @@
 #' @useDynLib log1pNMF, .registration = TRUE
 #' @importFrom Rcpp sourceCpp
 fit_factor_model_log1p_quad_approx_sparse <- function(
-    sc,
-    sc_t,
+    sc_x,
+    sc_i,
+    sc_j,
+    sc_t_x,
+    sc_t_i,
+    sc_t_j,
     s,
     n,
     p,
@@ -26,12 +30,12 @@ fit_factor_model_log1p_quad_approx_sparse <- function(
   update_idx <- 0:(ncol(fit$LL) - 1)
 
   new_UV <- fit_factor_model_log1p_quad_approx_sparse_cpp_src(
-    sc$x,
-    sc$i - 1L,
-    sc$j - 1L,
-    sc_t$x,
-    sc_t$i - 1L,
-    sc_t$j - 1L,
+    sc_x,
+    sc_i,
+    sc_j,
+    sc_t_x,
+    sc_t_i,
+    sc_t_j,
     s,
     t(fit$LL),
     t(fit$FF),

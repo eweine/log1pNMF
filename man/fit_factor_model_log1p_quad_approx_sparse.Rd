@@ -4,12 +4,24 @@
 \alias{fit_factor_model_log1p_quad_approx_sparse}
 \title{Fit log1p Poisson Factor Model with Approximate Log Likelihood}
 \usage{
-fit_factor_model_log1p_quad_approx_sparse(sc, sc_t, s, n, p, fit, maxiter)
+fit_factor_model_log1p_quad_approx_sparse(
+  sc_x,
+  sc_i,
+  sc_j,
+  sc_t_x,
+  sc_t_i,
+  sc_t_j,
+  s,
+  n,
+  p,
+  fit,
+  maxiter
+)
 }
 \arguments{
-\item{sc}{summary of sparse matrix to fit model on}
+\item{sc_x, sc_i, sc_j}{nonzero values and 0-based row/column indices of the data}
 
-\item{sc_t}{summary of transpose of sparse matrix to fit model on}
+\item{sc_t_x, sc_t_i, sc_t_j}{the same, for the transpose of the data}
 
 \item{s}{size factor}
 

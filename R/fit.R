@@ -352,6 +352,14 @@ fit_poisson_log1p_nmf <- function(
   sc <- Matrix::summary(Y)
   sc_t <- Matrix::summary(Matrix::t(Y))
 
+  # Extract the 0-based integer triplets the C++ fit consumes, then drop the
+  # summary data frames: the fit works entirely from these vectors (and its own
+  # C++ copies of them), so holding sc / sc_t through the fit only wastes memory.
+  # The values are identical to the previous in-wrapper `sc$i - 1L` etc.
+  sc_x   <- sc$x;   sc_i   <- sc$i - 1L;   sc_j   <- sc$j - 1L
+  sc_t_x <- sc_t$x; sc_t_i <- sc_t$i - 1L; sc_t_j <- sc_t$j - 1L
+  rm(sc, sc_t); gc()
+
   if (!is.null(init_LL) || !(is.null(init_FF))) {
 
     if (is.null(init_LL) || is.null(init_FF)) {
@@ -486,8 +494,8 @@ fit_poisson_log1p_nmf <- function(
       )
 
       fit <- fit_factor_model_log1p_exact(
-        sc = sc,
-        sc_t = sc_t,
+        sc_x = sc_x, sc_i = sc_i, sc_j = sc_j,
+        sc_t_x = sc_t_x, sc_t_i = sc_t_i, sc_t_j = sc_t_j,
         s = fit$s * fit$cc,
         n = nrow(Y),
         p = ncol(Y),
@@ -536,8 +544,8 @@ fit_poisson_log1p_nmf <- function(
 
   # main fit
   fit <- fit_fn(
-    sc = sc,
-    sc_t = sc_t,
+    sc_x = sc_x, sc_i = sc_i, sc_j = sc_j,
+    sc_t_x = sc_t_x, sc_t_i = sc_t_i, sc_t_j = sc_t_j,
     s = fit$s * fit$cc,
     n = n_obs,
     p = p_feat,
