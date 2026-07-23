@@ -27,11 +27,11 @@ fit_factor_model_log1p_quad_approx_sparse <- function(
 
   new_UV <- fit_factor_model_log1p_quad_approx_sparse_cpp_src(
     sc$x,
-    sc$i - 1,
-    sc$j - 1,
+    sc$i - 1L,
+    sc$j - 1L,
     sc_t$x,
-    sc_t$i - 1,
-    sc_t$j - 1,
+    sc_t$i - 1L,
+    sc_t$j - 1L,
     s,
     t(fit$LL),
     t(fit$FF),

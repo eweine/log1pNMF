@@ -30,11 +30,11 @@ fit_factor_model_log1p_exact <- function(
 
   new_UV <- fit_factor_model_log1p_exact_cpp_src(
     sc$x,
-    sc$i - 1,
-    sc$j - 1,
+    sc$i - 1L,
+    sc$j - 1L,
     sc_t$x,
-    sc_t$i - 1,
-    sc_t$j - 1,
+    sc_t$i - 1L,
+    sc_t$j - 1L,
     s,
     t(U),
     t(V),

@@ -517,6 +517,17 @@ fit_poisson_log1p_nmf <- function(
 
   }
 
+  # From here on Y is only needed for its dimensions, names, and the log(Y!)
+  # constant (restored below); capture those now and free the (potentially
+  # many-GB) data matrix before the memory-heavy main fit. sc / sc_t already hold
+  # the sparse triplets the fit consumes.
+  n_obs     <- nrow(Y)
+  p_feat    <- ncol(Y)
+  rn_cells  <- rownames(Y)
+  cn_genes  <- colnames(Y)
+  lfact_sum <- sum(lfactorial(Y@x))
+  rm(Y); gc()
+
   if (fit$control$verbose) {
 
     cat("Fitting model...\n")
@@ -528,19 +539,19 @@ fit_poisson_log1p_nmf <- function(
     sc = sc,
     sc_t = sc_t,
     s = fit$s * fit$cc,
-    n = nrow(Y),
-    p = ncol(Y),
+    n = n_obs,
+    p = p_feat,
     fit = fit,
     maxiter = fit$control$maxiter
   )
 
   # get_loglik_exact (used for exact_loglik_trace) omits the additive constant
-  # that turns it into the true Poisson log-likelihood; restore it here, where
-  # cc, the size factors, and Y are all available. See logLik.log1p_nmf_fit.
+  # that turns it into the true Poisson log-likelihood; restore it here from the
+  # quantities captured before Y was freed. See logLik.log1p_nmf_fit.
   if (isTRUE(fit$control$track_exact_loglik) &&
       !is.null(fit$exact_loglik_trace)) {
 
-    ll_const <- ncol(Y) * fit$cc * sum(fit$s) - sum(lfactorial(Y@x))
+    ll_const <- p_feat * fit$cc * sum(fit$s) - lfact_sum
     fit$exact_loglik_trace <- fit$exact_loglik_trace + ll_const
 
   }
@@ -554,8 +565,8 @@ fit_poisson_log1p_nmf <- function(
   
   fit$alpha <- sqrt_alpha ^ 2
   
-  rownames(fit$LL) <- rownames(Y)
-  rownames(fit$FF) <- colnames(Y)
+  rownames(fit$LL) <- rn_cells
+  rownames(fit$FF) <- cn_genes
   colnames(fit$LL) <- paste0("k", 1:ncol(fit$LL))
   colnames(fit$FF) <- paste0("k", 1:ncol(fit$FF))
 
