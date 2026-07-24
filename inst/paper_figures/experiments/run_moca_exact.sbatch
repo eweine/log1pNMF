@@ -2,7 +2,7 @@
 #SBATCH --job-name=log1p_moca_exact
 #SBATCH --output=log1p_moca_exact_%j.out
 #SBATCH --error=log1p_moca_exact_%j.err
-#SBATCH --time=30:00:00
+#SBATCH --time=20:00:00
 #SBATCH --partition=defq
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
