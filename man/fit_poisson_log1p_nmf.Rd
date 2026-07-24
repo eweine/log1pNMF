@@ -54,7 +54,8 @@ of \eqn{c \geq 1}.}
 and \code{init_FF} are specified). \code{"random"} will initialize \eqn{L}
 and \eqn{F} to small positive values generated from an exponential
 distribution. \code{"rank1"} will initialize the first factor by fitting
-a model with \eqn{K = 1} to the data, with all other factors initialized to
+a model with \eqn{K = 1} to the data (using the same objective, approximate
+or exact, as the main fit), with all other factors initialized to
 small positive values from an exponential distribution.}
 
 \item{approx_technique}{technique used for quadratic approximation of terms

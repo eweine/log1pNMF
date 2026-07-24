@@ -112,7 +112,8 @@
 #' and \code{init_FF} are specified). \code{"random"} will initialize \eqn{L}
 #' and \eqn{F} to small positive values generated from an exponential
 #' distribution. \code{"rank1"} will initialize the first factor by fitting
-#' a model with \eqn{K = 1} to the data, with all other factors initialized to
+#' a model with \eqn{K = 1} to the data (using the same objective, approximate
+#' or exact, as the main fit), with all other factors initialized to
 #' small positive values from an exponential distribution.
 #' @param approx_technique technique used for quadratic approximation of terms
 #' corresponding to \eqn{0} values of \eqn{Y} in the log likelihood. Method
@@ -500,7 +501,19 @@ fit_poisson_log1p_nmf <- function(
         ncol = 1
       )
 
-      fit <- fit_factor_model_log1p_exact(
+      # Use the objective-appropriate solver for the rank-1 warm-up: the
+      # approximate solver when the main fit is approximate, the exact solver
+      # otherwise. On large data the approximate solver is far cheaper -- it
+      # works over the nonzeros and never forms the dense n*p term the exact
+      # solver evaluates each iteration -- so an approximate main fit no longer
+      # pays for an exact warm-up. Both take the same size factor and triplets;
+      # the approximate solver additionally reads fit$a1 / fit$a2 (set above).
+      init_fit_fn <- if (loglik == "approx")
+        fit_factor_model_log1p_quad_approx_sparse
+      else
+        fit_factor_model_log1p_exact
+
+      fit <- init_fit_fn(
         sc_x = sc_x, sc_i = sc_i, sc_j = sc_j,
         sc_t_x = sc_t_x, sc_t_i = sc_t_i, sc_t_j = sc_t_j,
         s = fit$s * fit$cc,
