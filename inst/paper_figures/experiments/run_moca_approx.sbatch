@@ -6,7 +6,8 @@
 #SBATCH --partition=defq
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
-#SBATCH --cpus-per-task=32
+#SBATCH --exclusive
+#SBATCH --cpus-per-task=64
 #SBATCH --mem=100G
 
 module load R/4.3.2

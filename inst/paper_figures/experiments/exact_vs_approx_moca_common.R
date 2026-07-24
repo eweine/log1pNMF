@@ -25,7 +25,7 @@ maxiter_approx <- 100       # ~11.5 h of optimization at ~414 s/iter (probe)
 maxiter_exact  <- 10        # exact is ~1+ h/iter on 1.33M cells; ~10 h+ of opt
 init_maxiter   <- 5         # rank-1 warm-up iterations (package default)
 seed           <- 1
-n_threads      <- 32
+n_threads      <- 64
 out_dir        <- "/rafalab/eweine/log1p_experiments/"  # MUST exist -- outputs are written here at job end
 out_tag        <- sprintf("exact_vs_approx_moca_K%d_c%s", K, format(cc))
 tol            <- 1e-8
