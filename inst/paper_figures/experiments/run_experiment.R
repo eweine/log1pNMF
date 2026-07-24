@@ -22,4 +22,6 @@ common <- switch(dataset,
 
 message(sprintf("=== %s / %s / %s ===", dataset, scheme, method))
 source(common)
+## make sure the output directory exists so the fit's final saveRDS cannot fail
+dir.create(out_dir, showWarnings = FALSE, recursive = TRUE)
 run_job(scheme, method)
