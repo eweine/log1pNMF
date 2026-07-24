@@ -32,6 +32,7 @@ n_threads      <- 48
 out_dir        <- "/home/ericweine/log1p_experiments/"    # where the .rds outputs go
 out_tag        <- sprintf("exact_vs_approx_init_timing_K%d_c%s", K, format(cc))
 tol            <- 1e-8
+max_time       <- Inf       # no optimization-time budget (maxiter governs)
 
 ## ---- load data --------------------------------------------------------------
 message("Loading data from ", data_path)
@@ -46,7 +47,7 @@ config <- list(
   data_path = data_path, data_var = data_var, K = K, cc = cc,
   maxiter_approx = maxiter_approx, maxiter_exact = maxiter_exact,
   init_maxiter = init_maxiter, seed = seed,
-  n_threads = n_threads, tol = tol, n = n, p = p
+  n_threads = n_threads, tol = tol, max_time = max_time, n = n, p = p
 )
 
 ## the fitting/init/trace machinery (ctrl, fit_one, make_rank1_init, init_*,

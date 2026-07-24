@@ -19,7 +19,8 @@ ctrl <- function(mi) {
     verbose            = TRUE,
     threads            = n_threads,
     track_time         = TRUE,
-    track_exact_loglik = TRUE
+    track_exact_loglik = TRUE,
+    max_time           = max_time   # optimization-time budget (seconds); Inf = none
   )
 }
 
