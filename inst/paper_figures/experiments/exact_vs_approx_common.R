@@ -18,7 +18,7 @@ library(log1pNMF)
 ## ---- configuration (keep identical across the parallel runs) ----------------
 ## The data file is expected to load a sparse counts matrix (rows = observations,
 ## cols = features) into the variable named by `data_var`; matches fit_lsa_models.R.
-data_path      <- "/home/ericweine/log1p_experiments/pancreas_cytokine_lsa.Rdata"  # loads `counts`
+data_path      <- "/rafalab/eweine/log1pNMF/inst/paper_figures/data/pancreas_cytokine_lsa.Rdata"  # loads `counts`
 data_var       <- "counts"
 K              <- 13        # rank of the factorization
 cc             <- 1         # link-function tuning parameter c

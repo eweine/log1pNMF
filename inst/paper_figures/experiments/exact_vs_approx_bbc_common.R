@@ -15,7 +15,7 @@ library(Matrix)
 library(log1pNMF)
 
 ## ---- configuration ----------------------------------------------------------
-csv_path       <- "/rafalab/eweine/log1pNMF/inst/paper_figures/data/raw_data/bbc_news_text_complexity_summarization.csv"
+csv_path       <- "/rafalab/eweine/log1pNMF/inst/paper_figures/data/bbc_news_text_complexity_summarization.csv"
 K              <- 10        # rank of the factorization (matches the BBC analysis)
 cc             <- 1         # link-function tuning parameter c
 maxiter_approx <- 100000L   # high safety cap; max_time / tol are the real stops
