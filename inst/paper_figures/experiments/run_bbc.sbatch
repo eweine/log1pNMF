@@ -7,7 +7,7 @@
 #SBATCH --output=eva_bbc_%A_%a.out
 #SBATCH --array=0-3
 #SBATCH --time=12:00:00
-#SBATCH --cpus-per-task=8
+#SBATCH --cpus-per-task=64
 #SBATCH --mem=8G
 #SBATCH --exclusive
 #SBATCH --partition=defq

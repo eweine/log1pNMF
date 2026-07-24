@@ -26,7 +26,7 @@ maxiter_approx <- 100000L   # high safety cap; max_time / tol are the real stops
 maxiter_exact  <- 100000L   # high safety cap; max_time / tol are the real stops
 init_maxiter   <- 5         # rank-1 warm-up iterations (package default)
 seed           <- 1
-n_threads      <- 48
+n_threads      <- 64        # keep identical across all datasets for consistency
 out_dir        <- "/home/ericweine/log1p_experiments/"    # where the .rds outputs go
 out_tag        <- sprintf("exact_vs_approx_pancreas_K%d_c%s", K, format(cc))
 tol            <- 1e-8      # a fit that converges within the budget stops early

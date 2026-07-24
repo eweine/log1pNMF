@@ -5,7 +5,7 @@
 #SBATCH --output=eva_pancreas_%A_%a.out
 #SBATCH --array=0-3
 #SBATCH --time=12:00:00
-#SBATCH --cpus-per-task=48
+#SBATCH --cpus-per-task=64
 #SBATCH --mem=32G
 #SBATCH --exclusive
 #SBATCH --partition=defq
