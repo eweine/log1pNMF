@@ -237,7 +237,8 @@ List fit_factor_model_log1p_exact_cpp_src(
     const std::vector<int>& update_indices,
     const bool verbose,
     const double tol,
-    const bool track_time
+    const bool track_time,
+    const double max_time
 ) {
 
   bool converged = false;
@@ -344,8 +345,9 @@ List fit_factor_model_log1p_exact_cpp_src(
     }
     // --------------------------------------
 
-    std::chrono::steady_clock::time_point iter_t0;
-    if (track_time) iter_t0 = std::chrono::steady_clock::now();
+    // always time (cheap) so max_time works even when track_time is off
+    std::chrono::steady_clock::time_point iter_t0 =
+      std::chrono::steady_clock::now();
 
     double u_obj_unused = 0.0;
     U_T = regress_cols_of_Y_on_X_log1p_pois_exact(
@@ -387,14 +389,15 @@ List fit_factor_model_log1p_exact_cpp_src(
     U_T.each_col() %= arma::sqrt(1/d);
     V_T.each_col() %= arma::sqrt(d);
 
-    if (track_time) {
-      algo_ns += std::chrono::duration_cast<std::chrono::nanoseconds>(
-        std::chrono::steady_clock::now() - iter_t0
-      ).count();
-      time_history.push_back(static_cast<double>(algo_ns) * 1e-9);
-    }
+    algo_ns += std::chrono::duration_cast<std::chrono::nanoseconds>(
+      std::chrono::steady_clock::now() - iter_t0
+    ).count();
+    if (track_time) time_history.push_back(static_cast<double>(algo_ns) * 1e-9);
 
     loglik_history.push_back(loglik);
+
+    // stop once the accumulated optimization time reaches max_time
+    if (static_cast<double>(algo_ns) * 1e-9 >= max_time) break;
 
     if (loglik - prev_lik < tol) {
 

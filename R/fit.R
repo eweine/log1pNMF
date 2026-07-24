@@ -74,6 +74,13 @@
 #' the approximate objective against the exact log-likelihood. Note that 
 #' computing this at every iteration adds overhead, so it is off by default.}
 #'
+#' \item{\code{max_time}}{Numeric (default \code{Inf}). A budget, in seconds, on
+#' the cumulative optimization time (the same clock as \code{time_trace},
+#' excluding setup and the exact-loglik diagnostic). Fitting stops after the
+#' first iteration whose completion pushes the accumulated optimization time to
+#' or past \code{max_time}. \code{maxiter} still applies as a cap. Useful for
+#' running for a fixed amount of compute independent of hardware speed.}
+#'
 #' \item{\code{threads}}{Integer indicating the number of threads to be used
 #' for optimization.}
 #'
@@ -601,6 +608,7 @@ fit_poisson_log1p_nmf_control_default <- function() {
     verbose = TRUE,
     track_time = FALSE,
     track_exact_loglik = FALSE,
+    max_time = Inf,
     threads = max(parallel::detectCores() - 1, 1)
   )
 

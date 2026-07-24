@@ -32,6 +32,9 @@ fit_factor_model_log1p_exact <- function(
   V <- cbind(rep(1, p), fit$FF)
   update_idx <- 1:ncol(fit$LL)
 
+  # optimization-time budget (seconds); Inf means no limit
+  max_time <- if (is.null(fit$control$max_time)) Inf else fit$control$max_time
+
   new_UV <- fit_factor_model_log1p_exact_cpp_src(
     sc_x,
     sc_i,
@@ -51,7 +54,8 @@ fit_factor_model_log1p_exact <- function(
     update_idx,
     fit$control$verbose,
     fit$control$tol,
-    isTRUE(fit$control$track_time)
+    isTRUE(fit$control$track_time),
+    max_time
   )
 
   # remove size factor

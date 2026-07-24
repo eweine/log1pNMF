@@ -431,7 +431,8 @@ List fit_factor_model_log1p_quad_approx_sparse_cpp_src(
     const bool verbose,
     const double tol,
     const bool track_time,
-    const bool track_exact_loglik
+    const bool track_exact_loglik,
+    const double max_time
 ) {
 
   bool converged = false;
@@ -555,9 +556,10 @@ List fit_factor_model_log1p_quad_approx_sparse_cpp_src(
 
     // time only the actual model updates; the optional diagnostics computed
     // afterwards are excluded from algo_ns so the recorded wall-clock reflects
-    // the algorithm alone
-    std::chrono::steady_clock::time_point iter_t0;
-    if (track_time) iter_t0 = std::chrono::steady_clock::now();
+    // the algorithm alone. Always time (cheap) so max_time works even when the
+    // per-iteration trace is not being recorded.
+    std::chrono::steady_clock::time_point iter_t0 =
+      std::chrono::steady_clock::now();
 
     arma::vec d = mean(U_T, 1) / mean(V_T, 1);
 
@@ -597,12 +599,10 @@ List fit_factor_model_log1p_quad_approx_sparse_cpp_src(
       loglik
     );
 
-    if (track_time) {
-      algo_ns += std::chrono::duration_cast<std::chrono::nanoseconds>(
-        std::chrono::steady_clock::now() - iter_t0
-      ).count();
-      time_history.push_back(static_cast<double>(algo_ns) * 1e-9);
-    }
+    algo_ns += std::chrono::duration_cast<std::chrono::nanoseconds>(
+      std::chrono::steady_clock::now() - iter_t0
+    ).count();
+    if (track_time) time_history.push_back(static_cast<double>(algo_ns) * 1e-9);
 
     // exact Poisson log1p log-likelihood at the current iterate, evaluated by
     // augmenting (U_T, V_T) with the intercept factor the exact model carries:
@@ -621,6 +621,10 @@ List fit_factor_model_log1p_quad_approx_sparse_cpp_src(
     }
 
     loglik_history.push_back(loglik);
+
+    // stop once the accumulated optimization time reaches max_time; the
+    // iteration that crosses the limit has already completed and been recorded
+    if (static_cast<double>(algo_ns) * 1e-9 >= max_time) break;
 
     if (loglik - prev_lik < tol) {
 

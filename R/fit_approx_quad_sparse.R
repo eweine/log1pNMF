@@ -29,6 +29,9 @@ fit_factor_model_log1p_quad_approx_sparse <- function(
 
   update_idx <- 0:(ncol(fit$LL) - 1)
 
+  # optimization-time budget (seconds); Inf means no limit
+  max_time <- if (is.null(fit$control$max_time)) Inf else fit$control$max_time
+
   new_UV <- fit_factor_model_log1p_quad_approx_sparse_cpp_src(
     sc_x,
     sc_i,
@@ -51,7 +54,8 @@ fit_factor_model_log1p_quad_approx_sparse <- function(
     fit$control$verbose,
     fit$control$tol,
     isTRUE(fit$control$track_time),
-    isTRUE(fit$control$track_exact_loglik)
+    isTRUE(fit$control$track_exact_loglik),
+    max_time
   )
 
   fit$LL <- new_UV$U
