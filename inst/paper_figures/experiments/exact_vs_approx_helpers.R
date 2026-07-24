@@ -35,15 +35,18 @@ fit_one <- function(loglik, init_LL, init_FF, label) {
   )
 }
 
-## Reproduce the package's rank-1 warm-up as a standalone tracked K = 1 exact fit
-## (random rank-1 draw + init_maxiter exact updates), padded to rank K. Recording
-## it explicitly captures the warm-up's time / log-likelihood trajectory. It is
-## seeded, so the approx and exact jobs of a scheme build an identical warm-up.
-make_rank1_init <- function() {
-  message("Shared rank-1 warm-up (K = 1, ", init_maxiter, " exact iters)")
+## Reproduce the package's rank-1 warm-up as a standalone tracked K = 1 fit
+## (random rank-1 draw + init_maxiter updates), padded to rank K, and recorded so
+## its time / log-likelihood trajectory can be chained into the total runtime.
+## The warm-up uses the SAME objective as the main fit (approx or exact), matching
+## the package's init_method = "rank1": that is how each method's real
+## initialization cost -- which differs between approx and exact -- is counted.
+## Seeded, so a given (scheme, method) rebuilds an identical warm-up across runs.
+make_rank1_init <- function(method) {
+  message("Rank-1 warm-up (K = 1, ", init_maxiter, " ", method, " iters)")
   set.seed(seed)
   rank1 <- fit_poisson_log1p_nmf(
-    Y = Y, K = 1, cc = cc, loglik = "exact",
+    Y = Y, K = 1, cc = cc, loglik = method,
     init_method = "random", control = ctrl(init_maxiter)
   )
   list(rank1    = rank1,
@@ -51,27 +54,22 @@ make_rank1_init <- function() {
        rank1_FF = cbind(rank1$FF, matrix(1e-8, p, K - 1)))
 }
 
-## The initialization schemes. Each returns the shared starting point (LL, FF)
-## and the list of warm-up `prefix` fits to prepend to the from-scratch trace.
-## Seeded, so both methods of a scheme get the identical start.
+## The initialization schemes. Each returns the starting point (LL, FF) and the
+## list of warm-up `prefix` fits to prepend to the from-scratch trace.
+##  - random: a single shared random start, identical for both methods (seeded),
+##    with no warm-up, so the two curves begin from the exact same point.
+##  - rank1: a method-appropriate warm-up whose optimization time is chained into
+##    the total; the approx and exact curves therefore start from their own
+##    (different) warm-up, each having paid its own initialization cost.
 init_random <- function() {
   set.seed(seed)
   list(LL = matrix(stats::runif(n * K, 1e-8, 0.05), n, K),
        FF = matrix(stats::runif(p * K, 1e-8, 0.05), p, K),
        prefix = list())
 }
-init_rank1 <- function() {
-  r1 <- make_rank1_init()
+init_rank1 <- function(method) {
+  r1 <- make_rank1_init(method)
   list(LL = r1$rank1_LL, FF = r1$rank1_FF, prefix = list(r1$rank1))
-}
-init_rank1_plus1 <- function() {
-  r1 <- make_rank1_init()
-  message("Shared rank-1 + 1 exact iteration")
-  onestep <- fit_poisson_log1p_nmf(
-    Y = Y, cc = cc, loglik = "exact",
-    init_LL = r1$rank1_LL, init_FF = r1$rank1_FF, control = ctrl(1)
-  )
-  list(LL = onestep$LL, FF = onestep$FF, prefix = list(r1$rank1, onestep))
 }
 
 ## Chain a fit's aligned time_trace / exact_loglik_trace after any shared warm-up
@@ -94,9 +92,8 @@ chain_traces <- function(fits) {
 ## table. `prefix` is the list of shared warm-up fits prepended to the curve.
 run_job <- function(scheme, method) {
   ini <- switch(scheme,
-                random      = init_random(),
-                rank1       = init_rank1(),
-                rank1_plus1 = init_rank1_plus1(),
+                random = init_random(),
+                rank1  = init_rank1(method),
                 stop("unknown scheme: ", scheme))
   fit <- fit_one(method, ini$LL, ini$FF, scheme)
 

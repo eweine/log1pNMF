@@ -1,18 +1,16 @@
-# Shared setup for the exact-vs-approx initialization-timing experiment.
+# Shared setup for the exact-vs-approx timing experiment on the pancreas data.
 #
-# Sourced by the six job scripts (exact_vs_approx_<scheme>_<method>.R), each of
-# which fits ONE method (approx or exact) from ONE initialization scheme and
-# writes its own output. Splitting to one fit per job means each fit is
-# checkpointed independently: a job hitting the wall-clock limit only loses its
-# own fit, and the other five are unaffected. Keeping the config here guarantees
-# the parallel runs stay mutually consistent.
+# Sourced by run_experiment.R (submitted via run_pancreas.sbatch), once per
+# (scheme, method) combination. One fit per invocation means each is checkpointed
+# independently: a job hitting the wall-clock limit loses only its own fit.
+# Keeping the config here guarantees the parallel runs stay mutually consistent.
 #
-# The experiment fits the log1p Poisson NMF model from an *identical* starting
-# point under approx vs exact objectives, recording per-iteration wall-clock time
-# and the exact Poisson log-likelihood (track_time / track_exact_loglik). The
-# three schemes differ only in how that shared starting point is built. Because
-# the init is seeded, the approx and exact jobs of a scheme build the identical
-# starting point in their own runs.
+# The experiment fits the log1p Poisson NMF model under the approx vs exact
+# objectives, recording per-iteration wall-clock time and the exact Poisson
+# log-likelihood (track_time / track_exact_loglik). The `random` scheme starts
+# both methods from one shared, seeded random point; the `rank1` scheme gives
+# each method its own objective-appropriate warm-up, whose optimization time is
+# chained into the total (so the reported time includes the initialization cost).
 
 library(Matrix)
 library(log1pNMF)
@@ -24,15 +22,15 @@ data_path      <- "/home/ericweine/log1p_experiments/pancreas_cytokine_lsa.Rdata
 data_var       <- "counts"
 K              <- 13        # rank of the factorization
 cc             <- 1         # link-function tuning parameter c
-maxiter_approx <- 300       # iterations for the approximate fit
-maxiter_exact  <- 100       # iterations for the exact fit
+maxiter_approx <- 100000L   # high safety cap; max_time / tol are the real stops
+maxiter_exact  <- 100000L   # high safety cap; max_time / tol are the real stops
 init_maxiter   <- 5         # rank-1 warm-up iterations (package default)
 seed           <- 1
 n_threads      <- 48
 out_dir        <- "/home/ericweine/log1p_experiments/"    # where the .rds outputs go
-out_tag        <- sprintf("exact_vs_approx_init_timing_K%d_c%s", K, format(cc))
-tol            <- 1e-8
-max_time       <- Inf       # no optimization-time budget (maxiter governs)
+out_tag        <- sprintf("exact_vs_approx_pancreas_K%d_c%s", K, format(cc))
+tol            <- 1e-8      # a fit that converges within the budget stops early
+max_time       <- 10 * 3600 # stop each fit after 10 h of optimization time
 
 ## ---- load data --------------------------------------------------------------
 message("Loading data from ", data_path)

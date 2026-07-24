@@ -3,16 +3,16 @@
 #
 # Same design as exact_vs_approx_common.R (pancreas), but the data arrives as a
 # GENES x CELLS dgCMatrix that we transpose to CELLS x GENES on the fly (no
-# separate export). Sourced by the MOCA job scripts, which call run_job(...).
+# separate export). Sourced by run_experiment.R (submitted via run_moca.sbatch).
 #
 # MEMORY: the counts matrix is ~10 GB, and the transpose briefly needs a second
 # copy (~20 GB peak); the fit then builds triplet summaries + per-row/col
-# structures over ~904M nonzeros (tens of GB more). Give the job ~96-128 GB
-# (see run_schemes_moca.sbatch). This will NOT run on a 16 GB machine.
+# structures over ~904M nonzeros (tens of GB more). Give the job ~100 GB (see
+# run_moca.sbatch). This will NOT run on a 16 GB machine.
 #
 # EXACT-FIT COST: the exact objective evaluates densely over all 1.33M cells, so
-# each exact iteration is far heavier than on the pancreas data. maxiter_exact is
-# set small here on purpose; raise it only with a correspondingly long walltime.
+# each exact iteration is far heavier than on the pancreas data. maxiter is a high
+# cap; the 10 h max_time budget (or tol convergence) is what actually stops a fit.
 
 library(Matrix)
 library(log1pNMF)
@@ -21,8 +21,8 @@ library(log1pNMF)
 counts_path    <- "/rafalab/eweine/log1pNMF/inst/paper_figures/data/gene_count_cleaned.RDS"  # genes x cells dgCMatrix
 K              <- 25        # rank of the factorization (adjust for MOCA as desired)
 cc             <- 1         # link-function tuning parameter c
-maxiter_approx <- 500       # high safety cap; max_time is the real stop
-maxiter_exact  <- 500       # high safety cap; max_time is the real stop
+maxiter_approx <- 100000L   # high safety cap; max_time / tol are the real stops
+maxiter_exact  <- 100000L   # high safety cap; max_time / tol are the real stops
 init_maxiter   <- 5         # rank-1 warm-up iterations (package default)
 seed           <- 1
 n_threads      <- 64
