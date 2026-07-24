@@ -38,10 +38,11 @@ arma::vec solve_pois_reg_log1p_quad_approx_sparse_scalar_s (
   double newton_dir;
   double newton_dec;
   vec eta_nz = X_nz * b;
-  vec exp_eta_nz = exp(eta_nz);
-  // exp(LF) - 1 computed as expm1(LF): accurate for small LF, so log(exp_eta_nz_m1)
-  // never underflows to log(0) = -Inf (eta_nz is the offset-free predictor LF here)
+  // Compute expm1(LF) (accurate for small LF, so log() never underflows to
+  // log(0) = -Inf) and recover exp(LF) = expm1(LF) + 1 -- one transcendental, as
+  // before. eta_nz is the offset-free predictor LF here.
   vec exp_eta_nz_m1 = expm1(eta_nz);
+  vec exp_eta_nz = exp_eta_nz_m1 + 1;
   vec eta_nz_proposed;
   vec exp_eta_nz_proposed;
   vec exp_eta_nz_m1_proposed;
@@ -124,8 +125,8 @@ arma::vec solve_pois_reg_log1p_quad_approx_sparse_scalar_s (
       while (true) {
         b[j]             = std::max(b_j_og - t * newton_dir, 1e-12);
         eta_nz_proposed     = eta_nz + (b[j] - b_j_og) * X_nz.col(j);
-        exp_eta_nz_proposed = exp(eta_nz_proposed);
         exp_eta_nz_m1_proposed = expm1(eta_nz_proposed);
+        exp_eta_nz_proposed = exp_eta_nz_m1_proposed + 1;
 
         exact_lik = s * sum(exp_eta_nz_proposed) - dot(
           y,
@@ -201,10 +202,11 @@ arma::vec solve_pois_reg_log1p_quad_approx_sparse_vec_s (
   double newton_dir;
   double newton_dec;
   vec eta_nz = X_nz * b;
-  vec exp_eta_nz = exp(eta_nz);
-  // exp(LF) - 1 computed as expm1(LF): accurate for small LF, so log(exp_eta_nz_m1)
-  // never underflows to log(0) = -Inf (eta_nz is the offset-free predictor LF here)
+  // Compute expm1(LF) (accurate for small LF, so log() never underflows to
+  // log(0) = -Inf) and recover exp(LF) = expm1(LF) + 1 -- one transcendental, as
+  // before. eta_nz is the offset-free predictor LF here.
   vec exp_eta_nz_m1 = expm1(eta_nz);
+  vec exp_eta_nz = exp_eta_nz_m1 + 1;
   vec eta_nz_proposed;
   vec exp_eta_nz_proposed;
   vec exp_eta_nz_m1_proposed;
@@ -272,8 +274,8 @@ arma::vec solve_pois_reg_log1p_quad_approx_sparse_vec_s (
       while (true) {
         b[j]             = std::max(b_j_og - t * newton_dir, 1e-12);
         eta_nz_proposed     = eta_nz + (b[j] - b_j_og) * X_nz.col(j);
-        exp_eta_nz_proposed = exp(eta_nz_proposed);
         exp_eta_nz_m1_proposed = expm1(eta_nz_proposed);
+        exp_eta_nz_proposed = exp_eta_nz_m1_proposed + 1;
 
         exact_lik = dot(s_nz, exp_eta_nz_proposed) - dot(
           y,

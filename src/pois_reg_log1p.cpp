@@ -30,15 +30,21 @@ arma::vec solve_pois_reg_log1p (
   double newton_dec;
   vec eta = X * b;
   vec exp_eta = exp(eta);
-  // Offset-free linear predictor LF (exclude col 0, the fixed size-factor offset).
-  // Computing LF directly avoids reconstructing it as eta - log(s), which would
-  // reintroduce catastrophic cancellation for small LF.
-  vec lf = X.cols(1, X.n_cols - 1) * b.subvec(1, b.n_elem - 1);
+  // LF is the linear predictor WITHOUT the fixed size-factor offset (col 0). Only
+  // its nonzeros are needed (the sparse rate/log term), so compute lf_nz directly
+  // from the nonzero ROWS of X with the offset coefficient zeroed: a matrix-VECTOR
+  // product over nnz rows -- never the dense n*p factor product, and with no
+  // cancellation (the offset column is multiplied by exactly 0, not subtracted).
+  vec b_no_offset = b;
+  b_no_offset[0] = 0.0;
+  vec lf_nz = X.rows(y_nz_idx) * b_no_offset;
   // rate at the nonzeros = exp(eta) - s = s*expm1(LF): stable for small LF, with
   // no cancellation and no underflow to log(0) = -Inf
-  vec rate_nz = s % expm1(lf.elem(y_nz_idx));
+  vec rate_nz = s % expm1(lf_nz);
   vec rate_nz_proposed;
-  vec lf_proposed;
+  vec lf_nz_proposed;
+  vec Xj_nz;
+  uvec jcol(1);
   vec eta_proposed;
   vec exp_eta_proposed;
   vec exp_deriv_term;
@@ -59,6 +65,11 @@ arma::vec solve_pois_reg_log1p (
     for (i = 0; i < num_indices; i++) {
 
       j = update_indices[i];
+
+      // nonzero rows of X.col(j) (O(nnz), no full-column copy), reused across the
+      // line-search trials to update lf_nz
+      jcol[0] = j;
+      Xj_nz = X.submat(y_nz_idx, jcol);
 
       exp_deriv_term = exp_eta % X.col(j);
 
@@ -105,10 +116,10 @@ arma::vec solve_pois_reg_log1p (
         b[j]             = std::max(b_j_og - t * newton_dir, 1e-12);
         eta_proposed     = eta + (b[j] - b_j_og) * X.col(j);
         exp_eta_proposed = exp(eta_proposed);
-        // col 0 (the offset) is never in update_indices, so a change in b[j]
-        // shifts LF by the same increment as eta
-        lf_proposed      = lf + (b[j] - b_j_og) * X.col(j);
-        rate_nz_proposed = s % expm1(lf_proposed.elem(y_nz_idx));
+        // col 0 (the offset) is never updated, so a change in b[j] shifts LF at the
+        // nonzeros by the same increment; update only those (O(nnz), not O(n))
+        lf_nz_proposed   = lf_nz + (b[j] - b_j_og) * Xj_nz;
+        rate_nz_proposed = s % expm1(lf_nz_proposed);
         f_proposed = sum(exp_eta_proposed) - dot(
           y,
           log(rate_nz_proposed)
@@ -116,7 +127,7 @@ arma::vec solve_pois_reg_log1p (
         if (std::isfinite(f_proposed) && f_proposed <= current_lik - t*newton_dec) {
           eta = eta_proposed;
           exp_eta = exp_eta_proposed;
-          lf = lf_proposed;
+          lf_nz = lf_nz_proposed;
           rate_nz = rate_nz_proposed;
           current_lik = f_proposed;
           break;

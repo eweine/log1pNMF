@@ -21,6 +21,7 @@ double get_sparse_term_loglik_exact(
 
   double sum = 0.0;
   const arma::uword last = U_T.n_rows - 1;   // rows 1..last are factors; row 0 is offset
+  const arma::vec log_s = arma::log(s);      // log(s) once per row, not once per nonzero
 
   #pragma omp parallel for reduction(+:sum)
   for (int r = 0; r < num_nonzero_y; r++) {
@@ -37,7 +38,7 @@ double get_sparse_term_loglik_exact(
     const double lf = arma::dot(U_T.col(i).subvec(1, last),
                                 V_T.col(j).subvec(1, last));
 
-    sum += nonzero_y[r] * (std::log(s[i]) + std::log(std::expm1(lf)));
+    sum += nonzero_y[r] * (log_s[i] + std::log(std::expm1(lf)));
   }
 
   return sum;
