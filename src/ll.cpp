@@ -1,5 +1,6 @@
 #include <RcppArmadillo.h>
 #include <Rcpp.h>
+#include <cmath>
 #include "ll.h"
 #ifdef _OPENMP
 #include <omp.h>
@@ -19,17 +20,24 @@ double get_sparse_term_loglik_exact(
 ) {
 
   double sum = 0.0;
+  const arma::uword last = U_T.n_rows - 1;   // rows 1..last are factors; row 0 is offset
 
   #pragma omp parallel for reduction(+:sum)
   for (int r = 0; r < num_nonzero_y; r++) {
 
-    sum += nonzero_y[r] * log(
-      exp(
-        dot(
-          U_T.col(nonzero_y_i_idx[r]), V_T.col(nonzero_y_j_idx[r])
-        )
-      ) - s[nonzero_y_i_idx[r]]
-    );
+    const int i = nonzero_y_i_idx[r];
+    const int j = nonzero_y_j_idx[r];
+
+    // Offset-free linear predictor LF (exclude row 0, the fixed log-size-factor
+    // offset). The rate is exp(offset + LF) - s = s*(exp(LF) - 1) = s*expm1(LF).
+    // Using expm1(LF) computed directly from LF is accurate for small LF, so the
+    // log never sees a value that has underflowed to 0 (which gave -Inf when the
+    // rate was formed as exp(dot) - s). Computing LF directly -- rather than as
+    // dot - log(s) -- avoids reintroducing the same cancellation.
+    const double lf = arma::dot(U_T.col(i).subvec(1, last),
+                                V_T.col(j).subvec(1, last));
+
+    sum += nonzero_y[r] * (std::log(s[i]) + std::log(std::expm1(lf)));
   }
 
   return sum;

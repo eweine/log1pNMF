@@ -30,8 +30,15 @@ arma::vec solve_pois_reg_log1p (
   double newton_dec;
   vec eta = X * b;
   vec exp_eta = exp(eta);
-  vec exp_eta_nz_m1 = exp_eta.elem(y_nz_idx) - s;
-  vec exp_eta_nz_m1_proposed;
+  // Offset-free linear predictor LF (exclude col 0, the fixed size-factor offset).
+  // Computing LF directly avoids reconstructing it as eta - log(s), which would
+  // reintroduce catastrophic cancellation for small LF.
+  vec lf = X.cols(1, X.n_cols - 1) * b.subvec(1, b.n_elem - 1);
+  // rate at the nonzeros = exp(eta) - s = s*expm1(LF): stable for small LF, with
+  // no cancellation and no underflow to log(0) = -Inf
+  vec rate_nz = s % expm1(lf.elem(y_nz_idx));
+  vec rate_nz_proposed;
+  vec lf_proposed;
   vec eta_proposed;
   vec exp_eta_proposed;
   vec exp_deriv_term;
@@ -42,7 +49,7 @@ arma::vec solve_pois_reg_log1p (
 
   double current_lik = sum(exp_eta) - dot(
     y,
-    log(exp_eta_nz_m1)
+    log(rate_nz)
   );
 
   int num_indices = update_indices.size();
@@ -57,13 +64,13 @@ arma::vec solve_pois_reg_log1p (
 
       first_deriv    = sum(exp_deriv_term) - dot(
         y,
-        exp_deriv_term.elem(y_nz_idx) / exp_eta_nz_m1
+        exp_deriv_term.elem(y_nz_idx) / rate_nz
       );
 
       second_deriv   = dot(exp_deriv_term, X.col(j)) + dot(
         y,
         (exp_deriv_term.elem(y_nz_idx) % exp_deriv_term.elem(y_nz_idx)) /
-          square(exp_eta_nz_m1)
+          square(rate_nz)
       );
 
       newton_dir     = first_deriv / second_deriv;
@@ -98,15 +105,19 @@ arma::vec solve_pois_reg_log1p (
         b[j]             = std::max(b_j_og - t * newton_dir, 1e-12);
         eta_proposed     = eta + (b[j] - b_j_og) * X.col(j);
         exp_eta_proposed = exp(eta_proposed);
-        exp_eta_nz_m1_proposed = exp_eta_proposed.elem(y_nz_idx) - s;
+        // col 0 (the offset) is never in update_indices, so a change in b[j]
+        // shifts LF by the same increment as eta
+        lf_proposed      = lf + (b[j] - b_j_og) * X.col(j);
+        rate_nz_proposed = s % expm1(lf_proposed.elem(y_nz_idx));
         f_proposed = sum(exp_eta_proposed) - dot(
           y,
-          log(exp_eta_nz_m1_proposed)
+          log(rate_nz_proposed)
         );
         if (std::isfinite(f_proposed) && f_proposed <= current_lik - t*newton_dec) {
           eta = eta_proposed;
           exp_eta = exp_eta_proposed;
-          exp_eta_nz_m1 = exp_eta_nz_m1_proposed;
+          lf = lf_proposed;
+          rate_nz = rate_nz_proposed;
           current_lik = f_proposed;
           break;
         } else {
