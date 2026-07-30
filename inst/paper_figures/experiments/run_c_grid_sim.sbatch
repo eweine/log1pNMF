@@ -17,11 +17,18 @@
 # wall clock below leaves an hour of headroom for data generation, scoring and
 # a slower node.
 #
-# Submit:   sbatch run_c_grid_sim.sbatch
+# Submit:   mkdir -p /rafalab/eweine/log1pNMF/inst/paper_figures/experiments/logs
+#           sbatch run_c_grid_sim.sbatch
 # Collect:  Rscript collect_c_grid_sim.R
 #
+# --output is an ABSOLUTE path on purpose. Slurm resolves it against the
+# submission directory, not against the EXPDIR this script cd's into, and it
+# opens the file before the script body runs -- so a relative "logs/..." would
+# land wherever sbatch happened to be invoked from, and the mkdir below would
+# come too late to create it. The directory must exist before submitting.
+#
 #SBATCH --job-name=cgrid
-#SBATCH --output=logs/cgrid_%A_%a.out
+#SBATCH --output=/rafalab/eweine/log1pNMF/inst/paper_figures/experiments/logs/cgrid_%A_%a.out
 #SBATCH --array=0-639
 #SBATCH --time=03:00:00
 #SBATCH --cpus-per-task=1
@@ -32,7 +39,7 @@ module load R/4.3.2
 
 EXPDIR=/rafalab/eweine/log1pNMF/inst/paper_figures/experiments
 cd "$EXPDIR"
-mkdir -p logs
+mkdir -p logs      # belt and braces; must already exist for --output to open
 
 ## keep the math libraries single-threaded too, so one task really is one core
 export OMP_NUM_THREADS=1
