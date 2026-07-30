@@ -48,31 +48,11 @@ t1 <- proc.time()[["elapsed"]]
 
 ## Both fitters run to convergence on the same criterion -- an absolute
 ## log-likelihood change below TOL between successive iterations -- with MAXITER
-## and MAX_TIME as safety caps only.
-if (is.infinite(spec$c_fit)) {
-  fit <- fit_poisson_nmf(as(d$Y, "CsparseMatrix"), k = K_FIT,
-                         numiter = MAXITER, method = "scd",
-                         control = list(nc = THREADS, min.delta.loglik = TOL),
-                         verbose = "none")
-  LL_fit  <- fit$L
-  FF_fit  <- fit$F
-  lam_fit <- tcrossprod(LL_fit, FF_fit)
-  n_iter  <- nrow(fit$progress)
-  converged <- n_iter < MAXITER          # fastTopics stops early once converged
-  fitter  <- "fastTopics::fit_poisson_nmf"
-} else {
-  fit <- fit_poisson_log1p_nmf(
-    Y = d$Y, K = K_FIT, cc = spec$c_fit, s = FALSE, loglik = "exact",
-    init_method = "rank1",
-    control = list(maxiter = MAXITER, tol = TOL, max_time = MAX_TIME,
-                   verbose = FALSE, threads = THREADS))
-  LL_fit  <- fit$LL
-  FF_fit  <- fit$FF
-  lam_fit <- fitted(fit)                 # s == 1 here, so this is lambda
-  n_iter  <- length(fit$objective_trace) - 1L
-  converged <- isTRUE(fit$converged)
-  fitter  <- "log1pNMF::fit_poisson_log1p_nmf"
-}
+## and MAX_TIME as safety caps only. fit_cell() cold-starts every c_fit,
+## including Inf, from a rank-1 warm start; see c_grid_sim_common.R.
+f <- fit_cell(d$Y, spec$c_fit)
+LL_fit <- f$LL; FF_fit <- f$FF; lam_fit <- f$lam
+n_iter <- f$n_iter; converged <- f$converged; fitter <- f$fitter
 
 elapsed <- proc.time()[["elapsed"]] - t1
 message(sprintf("fit: %s, %d iterations, converged=%s  (%.1fs)",

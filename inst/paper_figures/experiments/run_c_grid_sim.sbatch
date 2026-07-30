@@ -34,6 +34,7 @@
 #SBATCH --cpus-per-task=1
 #SBATCH --mem=4G
 #SBATCH --partition=defq
+#SBATCH --exclude=node13   # accepted jobs and then hung during the first round
 
 module load R/4.3.2
 

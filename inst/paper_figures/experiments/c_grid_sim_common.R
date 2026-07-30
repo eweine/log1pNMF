@@ -101,6 +101,10 @@ THREADS     <- 1L      # one core per array task
 OUT_DIR     <- Sys.getenv("C_GRID_OUT",
                           "/rafalab/eweine/log1p_experiments/c_grid_sim")
 
+## rerun bookkeeping (see plan_c_grid_rerun.R / run_c_grid_rerun.R)
+WORKLIST    <- file.path(OUT_DIR, "c_grid_rerun_todo.rds")
+SUPERSEDED  <- file.path(OUT_DIR, "superseded")
+
 ## ---- generative model ------------------------------------------------------
 
 #' Draw the shared truth (L, F0) for one seed. Identical across all c.
@@ -213,6 +217,66 @@ data_summary <- function(d) {
     # spread of per-column (gene) mean rate: the dynamic range across features
     gene_mean_q10 = as.numeric(stats::quantile(colMeans(d$lambda), 0.10)),
     gene_mean_q90 = as.numeric(stats::quantile(colMeans(d$lambda), 0.90)))
+}
+
+## ---- fitting ---------------------------------------------------------------
+
+RANK1_PAD <- 1e-8   # value the rank-1 warm start pads the other K-1 columns with
+                    # (matches what fit_poisson_log1p_nmf's own rank1 path uses)
+
+#' Fit one cell.
+#'
+#' Cold start (init_LL = NULL) uses a rank-1 warm start for EVERY c_fit,
+#' including c_fit = Inf: there the analogue is fastTopics' exact rank-1 Poisson
+#' NMF solution padded to K, following the same pattern as
+#' factor_sim_identifiable_reduc_fig.R. The first round of this experiment left
+#' the c_fit = Inf column on fastTopics' default `topicscore` initialization,
+#' which made that column not init-comparable to the rest of the grid.
+#'
+#' Warm start (init_LL / init_FF given) resumes an earlier fit. For the log1p
+#' path this is exact: the package divides the supplied init by sqrt(max(1, cc))
+#' on the way in and multiplies back on the way out, so feeding back a previous
+#' fit's returned LL / FF at the SAME cc reproduces its internal theta bit for
+#' bit. Verified: 60 iterations then a 340-iteration warm continuation gives an
+#' identical log-likelihood to a single cold 400-iteration run.
+fit_cell <- function(Y, cc, init_LL = NULL, init_FF = NULL) {
+
+  warm <- !is.null(init_LL)
+
+  if (is.infinite(cc)) {
+    Ys <- as(Y, "CsparseMatrix")
+    if (warm) {
+      L0 <- init_LL; F0 <- init_FF
+    } else {
+      r1 <- fastTopics:::fit_pnmf_rank1(Ys)
+      L0 <- cbind(r1$L, matrix(RANK1_PAD, nrow(Ys), K_FIT - 1L))
+      F0 <- cbind(r1$F, matrix(RANK1_PAD, ncol(Ys), K_FIT - 1L))
+    }
+    rownames(L0) <- rownames(Ys); rownames(F0) <- colnames(Ys)
+    colnames(L0) <- colnames(F0) <- paste0("k", seq_len(K_FIT))
+
+    fit <- fastTopics::fit_poisson_nmf(
+      Ys, fit0 = fastTopics::init_poisson_nmf(Ys, F = F0, L = L0),
+      numiter = MAXITER, method = "scd",
+      control = list(nc = THREADS, min.delta.loglik = TOL), verbose = "none")
+
+    n_iter <- nrow(fit$progress)
+    return(list(LL = fit$L, FF = fit$F, lam = tcrossprod(fit$L, fit$F),
+                n_iter = n_iter, converged = n_iter < MAXITER,
+                fitter = "fastTopics::fit_poisson_nmf"))
+  }
+
+  args <- list(Y = Y, K = K_FIT, cc = cc, s = FALSE, loglik = "exact",
+               control = list(maxiter = MAXITER, tol = TOL, max_time = MAX_TIME,
+                              verbose = FALSE, threads = THREADS))
+  if (warm) { args$init_LL <- init_LL; args$init_FF <- init_FF }
+  else      { args$init_method <- "rank1" }
+
+  fit <- do.call(log1pNMF::fit_poisson_log1p_nmf, args)
+  list(LL = fit$LL, FF = fit$FF, lam = stats::fitted(fit),   # s == 1, so lambda
+       n_iter = length(fit$objective_trace) - 1L,
+       converged = isTRUE(fit$converged),
+       fitter = "log1pNMF::fit_poisson_log1p_nmf")
 }
 
 ## ---- factor matching + recovery metrics ------------------------------------

@@ -1,0 +1,73 @@
+# Work out which c-grid cells need to be redone, and write a worklist for
+# run_c_grid_rerun.R.
+#
+#   Rscript plan_c_grid_rerun.R
+#
+# Run this on the cluster (it reads OUT_DIR). It classifies all 640 cells and
+# writes c_grid_rerun_todo.rds, then prints the exact sbatch command with the
+# right array range.
+#
+# Three reasons a cell is redone:
+#
+#   reinit       c_fit == Inf. Round one left that column on fastTopics'
+#                default `topicscore` initialization while every other column
+#                used a rank-1 warm start, so the column was not
+#                init-comparable. Refit cold with the rank-1 init.
+#   missing      no .rds, or one that will not readRDS (a task that never ran,
+#                or was killed mid-write -- e.g. the node13 hangs). Refit cold.
+#   unconverged  ran, but converged == FALSE. Resumed from its own saved LL/FF
+#                with a fresh iteration/time budget, which is exact for the
+#                log1p path (see fit_cell in c_grid_sim_common.R).
+#
+# "fresh" cells discard the old fit; "warm" cells continue it.
+
+source("c_grid_sim_common.R")
+
+specs <- lapply(seq_len(N_TASKS) - 1L, task_spec)
+tags  <- vapply(specs, tag_of, character(1))
+files <- file.path(OUT_DIR, paste0(tags, ".rds"))
+
+message("scanning ", OUT_DIR, " ...")
+
+status <- vapply(seq_along(files), function(i) {
+  if (!file.exists(files[i])) return("missing")
+  r <- tryCatch(readRDS(files[i])$row, error = function(e) NULL)
+  if (is.null(r) || !is.data.frame(r)) return("missing")     # truncated / corrupt
+  if (is.infinite(specs[[i]]$c_fit))   return("reinit")
+  if (!isTRUE(r$converged))            return("unconverged")
+  "ok"
+}, character(1))
+
+cat("\ncell status over all ", N_TASKS, " cells:\n", sep = "")
+print(table(status))
+
+## where the unconverged ones sit, so it is obvious whether they cluster
+if (any(status == "unconverged")) {
+  cat("\nunconverged cells (rows = c_true, cols = c_fit):\n")
+  u  <- status == "unconverged"
+  ct <- vapply(specs, function(s) s$c_true, numeric(1))
+  cf <- vapply(specs, function(s) s$c_fit,  numeric(1))
+  print(table(c_true = ct[u], c_fit = cf[u]))
+}
+
+todo <- which(status != "ok")
+if (!length(todo)) {
+  message("\nnothing to redo.")
+  quit(save = "no")
+}
+
+work <- data.frame(
+  task   = todo - 1L,
+  seed   = vapply(specs[todo], function(s) s$seed,   numeric(1)),
+  c_true = vapply(specs[todo], function(s) s$c_true, numeric(1)),
+  c_fit  = vapply(specs[todo], function(s) s$c_fit,  numeric(1)),
+  reason = status[todo],
+  mode   = ifelse(status[todo] == "unconverged", "warm", "fresh"),
+  stringsAsFactors = FALSE)
+
+saveRDS(work, WORKLIST)
+message("\nWrote ", WORKLIST, "  (", nrow(work), " cells)")
+print(table(work$reason, work$mode))
+
+cat("\nsubmit with:\n\n  sbatch --array=0-", nrow(work) - 1L,
+    " run_c_grid_rerun.sbatch\n\n", sep = "")
