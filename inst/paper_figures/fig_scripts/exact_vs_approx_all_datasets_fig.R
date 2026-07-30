@@ -7,10 +7,21 @@
 # time (seconds), exact_loglik, scheme, method, iter. For the rank-1 scheme the
 # method-appropriate warm-up is already chained in at the front of each curve.
 #
-# y = distance from the best log-likelihood = (best exact log-likelihood found for
-# that dataset) - (current exact log-likelihood), on a log axis. The REFERENCE is
-# still a single per-dataset value, so the four curves of a dataset are all
-# measured against the same target; only the visible window differs per panel.
+# y = distance from the best log-likelihood = (best exact log-likelihood ever
+# achieved for that dataset, i.e. the max over every iterate of all four curves)
+# - (current exact log-likelihood), on a LOG1P axis. One reference per dataset,
+# so the four curves are all measured against the same target; only the visible
+# window differs per panel.
+#
+# y is log1p rather than log10 because the reference is attained BY one of the
+# plotted curves, at one of its iterates, so that curve's excess hits exactly 0
+# there. Under log10 that point had to be dropped and its neighbours plotted at
+# ~1e-3, producing a dramatic-looking plunge whose depth was pure floating-point
+# distance-from-itself -- most visible in BBC rank-1 / approximate, and at the
+# right edge of pancreas rank-1 / exact. log1p makes 0 representable and
+# compresses everything below ~1 toward it, which is also the honest reading: a
+# log-likelihood difference under 1 nat is nothing. This is the same argument as
+# for the time axis, and it avoids having to invent a best + epsilon offset.
 #
 # Every panel gets its own x AND y scale (facet scales = "free"). The panels
 # within a row span very different ranges -- pancreas rank-1 reaches ~1e0 while
@@ -69,6 +80,23 @@ log1p_breaks <- function(lims) {
   b[b <= hi]
 }
 
+## same idea on y, but those ranges span up to 13 decades, so thin the grid to
+## about five labels
+log1p_y_breaks <- function(lims) {
+  hi <- max(lims, na.rm = TRUE)
+  if (!is.finite(hi) || hi <= 0) return(0)
+  top  <- ceiling(log10(max(hi, 1)))
+  step <- max(1, ceiling((top + 1) / 5))
+  ## start the decades at 10^step, not 10^0: log1p(0) = 0 and log1p(1) = 0.69 sit
+  ## on top of each other on an axis that runs to log1p(1e13) = 30, so a break at
+  ## 1 just collides with the 0 label
+  b    <- c(0, 10^(seq(step, top, by = step)))
+  b[b <= hi]
+}
+
+sci_lab <- function(x) ifelse(is.na(x), "",
+                       ifelse(x == 0, "0", formatC(x, format = "e", digits = 0)))
+
 SCHEME_LABS <- c(random = "Random init", rank1 = "Rank-1 init")
 ## approx vs exact -- validated colorblind-safe pair (matches the other timing figs)
 MCOL <- c("Approximate" = "#E69F00", "Exact" = "#0072B2")
@@ -87,9 +115,13 @@ load_dataset <- function(tag) {
 ## one dataset -> a two-panel (random | rank-1) ggplot, no legend
 panel_for <- function(ds) {
   d <- load_dataset(ds$tag)
-  best     <- max(d$exact_loglik)                 # single reference for this dataset
-  d$excess <- best - d$exact_loglik
-  d        <- d[d$excess > 0, ]                    # drop the point that attains best
+  ## best ever achieved for this dataset: the max over every iterate of all four
+  ## curves, not over final values. Note this is exactly why one curve per
+  ## dataset touches zero -- the reference is attained BY one of the plotted
+  ## curves, at one of its iterates. log1p renders that as "reached the best"
+  ## rather than as a spurious plunge (see the header).
+  best     <- max(d$exact_loglik)
+  d$excess <- best - d$exact_loglik                # >= 0 by construction
   ## log1p keeps t = 0, so the initialization iterate stays in the plot
   d$hours  <- d$time / ds$tdiv
   d$scheme <- factor(SCHEME_LABS[d$scheme], levels = SCHEME_LABS)
@@ -100,7 +132,7 @@ panel_for <- function(ds) {
     ## both scales free per panel -- see the header note on the tradeoff
     facet_wrap(~ scheme, nrow = 1, scales = "free") +
     scale_color_manual(values = MCOL, name = "Optimization") +
-    scale_y_log10() +
+    scale_y_continuous(trans = "log1p", breaks = log1p_y_breaks, labels = sci_lab) +
     labs(x = ds$tlab, y = NULL, title = ds$title) +
     theme(strip.background = element_blank(),
           strip.text = element_text(face = "bold"),
