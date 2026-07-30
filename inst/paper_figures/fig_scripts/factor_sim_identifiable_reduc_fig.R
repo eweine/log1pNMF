@@ -80,8 +80,8 @@ relabel <- function(L) { M <- L[, ord_of(L), drop = FALSE]; colnames(M) <- c("Ba
 
 ## ---- palettes (see header for validation)
 FACCOL  <- c("Baseline" = "grey60", "A" = "#AE2012", "B" = "#005F73")
-ROLECOL <- c("High Rate, Up"   = "#B36A00", "High Rate, Flat" = "#E0A81E",
-             "Low Rate, Up"    = "#574494", "Low Rate, Flat"  = "#9B7FD4")
+ROLECOL <- c("High-Baseline, Up"   = "#B36A00", "High-Baseline, Flat" = "#E0A81E",
+             "Low-Baseline, Up"    = "#574494", "Low-Baseline, Flat"  = "#9B7FD4")
 
 ## ---- Panel A: ground-truth rates by group (grey baseline + additive colored caps)
 seg1 <- function(k) {
@@ -108,7 +108,7 @@ panelA <- ggplot(segA, aes(xmin = gene - 0.5, xmax = gene + 0.5,
   facet_wrap(~ group, nrow = 1) +
   scale_fill_manual(values = FACCOL, name = "Factor", drop = FALSE) +
   scale_y_continuous(trans = "log1p", breaks = c(0, 2, 20, 1000), limits = c(0, 1100)) +
-  labs(x = "Feature", y = "True rate") +
+  labs(x = "Feature", y = "True Rate") +
   theme(legend.position = "none", strip.background = element_blank(),
         strip.text = element_text(size = 11, face = "bold"))
 
@@ -132,10 +132,10 @@ panelB <- plot_grid(SP(Ltrue, "True Sample Scores", ylab = TRUE),
 ## ---- Panel C: factor-value histograms by feature role
 role_for <- function(prog) {
   other <- setdiff(c("A", "B"), prog)
-  factor(ifelse(panel == paste0(prog,  "-abs"), "High Rate, Up",
-         ifelse(panel == paste0(other, "-abs"), "High Rate, Flat",
-         ifelse(panel == paste0(prog,  "-rel"), "Low Rate, Up", "Low Rate, Flat"))),
-         levels = c("High Rate, Up", "High Rate, Flat", "Low Rate, Up", "Low Rate, Flat"))
+  factor(ifelse(panel == paste0(prog,  "-abs"), "High-Baseline, Up",
+         ifelse(panel == paste0(other, "-abs"), "High-Baseline, Flat",
+         ifelse(panel == paste0(prog,  "-rel"), "Low-Baseline, Up", "Low-Baseline, Flat"))),
+         levels = c("High-Baseline, Up", "High-Baseline, Flat", "Low-Baseline, Up", "Low-Baseline, Flat"))
 }
 fac_df <- function(F, L, model) {
   Fo <- F[, ord_of(L)]                               # (Baseline, A, B)
