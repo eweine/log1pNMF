@@ -33,7 +33,7 @@
 #
 #SBATCH --job-name=cgrid
 #SBATCH --output=/rafalab/eweine/log1pNMF/inst/paper_figures/experiments/logs/cgrid_%A_%a.out
-#SBATCH --array=0-1279
+#SBATCH --array=0-639
 #SBATCH --time=02:00:00
 #SBATCH --cpus-per-task=1
 #SBATCH --mem=4G

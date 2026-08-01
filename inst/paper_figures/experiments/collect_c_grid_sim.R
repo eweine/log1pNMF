@@ -22,16 +22,15 @@ if (any(!ok)) {
   print(utils::head(data.frame(task = miss,
     seed   = vapply(specs[!ok], function(s) s$seed,   numeric(1)),
     c_true = vapply(specs[!ok], function(s) s$c_true, numeric(1)),
-    c_fit  = vapply(specs[!ok], function(s) s$c_fit,  numeric(1)),
-    init   = vapply(specs[!ok], function(s) s$init,   character(1))), 40))
+    c_fit  = vapply(specs[!ok], function(s) s$c_fit,  numeric(1))), 40))
 } else {
   message("all ", length(ok), " cells present")
 }
 
-res <- do.call(rbind, lapply(files[ok], function(f) readRDS(f)$row))
+res <- do.call(rbind, lapply(files[ok], function(f) readRDS(f)$rows))
 rownames(res) <- NULL
 saveRDS(res, out)
-message("Wrote ", out, "  (", nrow(res), " rows)")
+message("Wrote ", out, "  (", nrow(res), " rows = ", sum(ok), " cells x ", length(INITS), " inits)")
 
 ## quick look. Each cell was fit from both a rank-1 and a random start; the
 ## headline tables use the BETTER of the two by log-likelihood, which is the

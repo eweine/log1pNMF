@@ -358,27 +358,29 @@ score_fit <- function(d, LL_fit, FF_fit, lam_fit) {
     perm           = paste(perm, collapse = "-"))
 }
 
-## ---- task id <-> (seed, c_true, c_fit, init) -------------------------------
-## 0-based SLURM_ARRAY_TASK_ID over seeds x c_true x c_fit x init, init fastest
-## then c_fit. Both initializations of a cell are therefore adjacent task ids,
-## so they tend to land on the same node in the same window.
-N_TASKS <- N_SEEDS * length(C_GRID) * length(C_GRID) * length(INITS)
+## ---- task id <-> (seed, c_true, c_fit) -------------------------------------
+## 0-based SLURM_ARRAY_TASK_ID over seeds x c_true x c_fit, c_fit fastest.
+##
+## Each task runs BOTH initializations rather than getting one task each. Slurm
+## defaults MaxArraySize to 1001, so a 1280-task array is rejected outright with
+## "Invalid job array specification"; 640 is known to work here. Pairing them
+## also generates the dataset once instead of twice and guarantees the two inits
+## see byte-identical data.
+N_TASKS <- N_SEEDS * length(C_GRID) * length(C_GRID)
 
 task_spec <- function(id) {
-  nc <- length(C_GRID); ni <- length(INITS)
+  nc <- length(C_GRID)
   stopifnot(id >= 0, id < N_TASKS)
-  init_i <- id %% ni;              rest <- id %/% ni
-  cfit_i <- rest %% nc;            rest <- rest %/% nc
+  cfit_i <- id %% nc;   rest <- id %/% nc
   ctru_i <- rest %% nc
   seed_i <- rest %/% nc
   list(seed   = seed_i + 1L,
        c_true = C_GRID[ctru_i + 1L],
-       c_fit  = C_GRID[cfit_i + 1L],
-       init   = INITS[init_i + 1L])
+       c_fit  = C_GRID[cfit_i + 1L])
 }
 
 tag_of <- function(spec) {
   fmt <- function(x) if (is.infinite(x)) "Inf" else format(x, scientific = FALSE, trim = TRUE)
-  sprintf("cgrid_seed%02d_ctrue%s_cfit%s_%s", spec$seed,
-          fmt(spec$c_true), fmt(spec$c_fit), spec$init)
+  sprintf("cgrid_seed%02d_ctrue%s_cfit%s", spec$seed,
+          fmt(spec$c_true), fmt(spec$c_fit))
 }

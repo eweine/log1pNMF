@@ -7,12 +7,12 @@
 # into the original 0..639 task space -- the original task id travels along in
 # the worklist so output lands on the right filename.
 #
-# mode == "fresh"  refit from scratch with the rank-1 cold start (this is what
-#                  fixes the c_fit = Inf column, and what reruns cells that
-#                  never produced a file).
-# mode == "warm"   resume the saved LL / FF with a fresh iteration and time
-#                  budget. Exact for the log1p path; n_iter accumulates across
-#                  the two runs.
+# Each cell holds BOTH initializations, and both are redone.
+#
+# mode == "fresh"  refit both from scratch (cells that never produced a file).
+# mode == "warm"   resume each init from its OWN saved LL / FF with a fresh
+#                  iteration budget. Exact for the log1p path; n_iter
+#                  accumulates across the two runs.
 #
 # The previous .rds is moved to OUT_DIR/superseded/ rather than deleted, so a
 # rerun is reversible and the old and new fits can be compared.
@@ -41,7 +41,7 @@ if (idx < 0 || idx >= nrow(work))
        nrow(work) - 1L, ")")
 
 w    <- work[idx + 1L, ]
-spec <- list(seed = w$seed, c_true = w$c_true, c_fit = w$c_fit, init = w$init)
+spec <- list(seed = w$seed, c_true = w$c_true, c_fit = w$c_fit)
 tag  <- tag_of(spec)
 out_file <- file.path(OUT_DIR, paste0(tag, ".rds"))
 
@@ -61,46 +61,54 @@ d <- sim_dataset(spec$seed, spec$c_true)
 message(sprintf("data: %d x %d, %.1f%% zeros, mean %.2f, max %d",
                 nrow(d$Y), ncol(d$Y), 100 * mean(d$Y == 0), mean(d$Y), max(d$Y)))
 
-## ---- fit -------------------------------------------------------------------
-set.seed(1000L * spec$seed + w$task)
-t1 <- proc.time()[["elapsed"]]
+## ---- fit each initialization -----------------------------------------------
+## A warm resume continues each init from ITS OWN saved fit, so the two stay
+## independent runs rather than collapsing onto one trajectory.
+rows <- list(); fits <- list()
 
-f <- if (w$mode == "warm")
-  fit_cell(d$Y, spec$c_fit, init = spec$init,
-           init_LL = prev$LL, init_FF = prev$FF) else
-  fit_cell(d$Y, spec$c_fit, init = spec$init)
+for (ini in INITS) {
+  pr <- if (!is.null(prev)) prev$rows[prev$rows$init == ini, ] else NULL
+  pf <- if (!is.null(prev)) prev$fits[[ini]] else NULL
+  warm <- w$mode == "warm" && !is.null(pf)
 
-elapsed <- proc.time()[["elapsed"]] - t1
+  set.seed(1000L * spec$seed + 10L * w$task + match(ini, INITS))
+  t1 <- proc.time()[["elapsed"]]
+  f  <- if (warm) fit_cell(d$Y, spec$c_fit, init = ini,
+                           init_LL = pf$LL, init_FF = pf$FF)
+        else      fit_cell(d$Y, spec$c_fit, init = ini)
+  elapsed <- proc.time()[["elapsed"]] - t1
 
-n_iter_prev <- if (w$mode == "warm") prev$row$n_iter else 0L
-message(sprintf("fit: %s, %d new iterations (%d total), converged=%s  (%.1fs)",
-                f$fitter, f$n_iter, f$n_iter + n_iter_prev, f$converged, elapsed))
+  n_iter_prev <- if (warm && nrow(pr)) pr$n_iter else 0L
+  message(sprintf("fit [%-6s]: %s, %d new iterations (%d total), converged=%s  (%.1fs)",
+                  ini, f$fitter, f$n_iter, f$n_iter + n_iter_prev, f$converged, elapsed))
 
-## ---- score -----------------------------------------------------------------
-score <- score_fit(d, f$LL, f$FF, f$lam)
+  rows[[ini]] <- cbind(
+    data.frame(task = w$task, seed = spec$seed, c_true = spec$c_true,
+               c_fit = spec$c_fit, init = ini,
+               K_true = K_TRUE, K_fit = K_FIT,
+               n = N_ROWS, p = N_COLS,
+               alpha = d$alpha, beta = d$beta,
+               zero_frac = mean(d$Y == 0), mean_Y = mean(d$Y), max_Y = max(d$Y),
+               fitter = f$fitter, n_iter = f$n_iter + n_iter_prev,
+               converged = f$converged, seconds = elapsed,
+               stringsAsFactors = FALSE),
+    score_fit(d, f$LL, f$FF, f$lam),
+    ## provenance: what this row replaced, so the rerun is auditable
+    data.frame(rerun_reason = w$reason,
+               rerun_mode   = if (warm) "warm" else "fresh",
+               n_iter_prev  = n_iter_prev,
+               loglik_prev  = if (is.null(pr) || !nrow(pr)) NA_real_ else pr$loglik,
+               seconds_prev = if (is.null(pr) || !nrow(pr)) NA_real_ else pr$seconds,
+               stringsAsFactors = FALSE))
 
-row <- cbind(
-  data.frame(task = w$task, seed = spec$seed, c_true = spec$c_true,
-             c_fit = spec$c_fit, init = spec$init,
-             K_true = K_TRUE, K_fit = K_FIT,
-             n = N_ROWS, p = N_COLS,
-             alpha = d$alpha, beta = d$beta,
-             zero_frac = mean(d$Y == 0), mean_Y = mean(d$Y), max_Y = max(d$Y),
-             fitter = f$fitter, n_iter = f$n_iter + n_iter_prev,
-             converged = f$converged, seconds = elapsed,
-             stringsAsFactors = FALSE),
-  score,
-  ## provenance: what this row replaced, so the rerun is auditable
-  data.frame(rerun_reason  = w$reason,
-             rerun_mode    = w$mode,
-             n_iter_prev   = n_iter_prev,
-             loglik_prev   = if (is.null(prev)) NA_real_ else prev$row$loglik,
-             seconds_prev  = if (is.null(prev)) NA_real_ else prev$row$seconds,
-             stringsAsFactors = FALSE))
+  if (!is.null(pr) && nrow(pr))
+    message(sprintf("  loglik: %.3f -> %.3f  (gain %.3f)",
+                    pr$loglik, rows[[ini]]$loglik, rows[[ini]]$loglik - pr$loglik))
 
-if (!is.null(prev))
-  message(sprintf("loglik: %.3f -> %.3f  (gain %.3f)",
-                  prev$row$loglik, row$loglik, row$loglik - prev$row$loglik))
+  fits[[ini]] <- list(LL = f$LL, FF = f$FF)
+}
+
+rows <- do.call(rbind, rows); rownames(rows) <- NULL
 
 ## ---- save, keeping the superseded fit --------------------------------------
 if (!is.null(prev) || file.exists(out_file)) {
@@ -108,10 +116,11 @@ if (!is.null(prev) || file.exists(out_file)) {
   invisible(file.rename(out_file, file.path(SUPERSEDED, paste0(tag, ".rds"))))
 }
 
-saveRDS(list(row = row, LL = f$LL, FF = f$FF,
+saveRDS(list(rows = rows, fits = fits,
              L_true = d$truth$L, F0_true = d$truth$F0, FF_true = d$FF_true),
         out_file)
 
 message("Wrote ", out_file)
-print(row[, c("c_true", "c_fit", "init", "rerun_mode", "L_cor_mean", "F_cor_mean",
-              "rate_kl", "loglik", "n_iter", "converged", "seconds")])
+print(rows[, c("c_true", "c_fit", "init", "rerun_mode", "L_cor_mean",
+               "rate_kl", "loglik", "n_iter", "converged", "seconds")],
+      row.names = FALSE)

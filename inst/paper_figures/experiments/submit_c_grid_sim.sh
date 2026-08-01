@@ -10,14 +10,17 @@
 #
 # Skip the probe (e.g. you already ran it) with:  SKIP_PROBE=1 ./submit_c_grid_sim.sh
 
-set -euo pipefail
+set -uo pipefail
 PART=${1:-defq}
 HERE=$(cd "$(dirname "$0")" && pwd)
 cd "$HERE"
 mkdir -p logs
 
+## The probe is advisory. If it fails we still submit -- an unusable probe is no
+## reason to block a run, and bad_nodes.txt may already hold a good list from
+## blame_nodes.sh on the previous round.
 if [ "${SKIP_PROBE:-0}" != "1" ]; then
-  ./probe_nodes.sh "$PART"
+  ./probe_nodes.sh "$PART" || echo "probe failed (rc=$?); submitting with whatever $PWD/bad_nodes.txt already holds"
 fi
 
 EX=$(tr -d '[:space:]' < bad_nodes.txt 2>/dev/null || true)

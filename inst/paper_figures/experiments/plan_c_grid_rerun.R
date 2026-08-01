@@ -13,7 +13,8 @@
 #                or was killed mid-write -- e.g. a node that accepted the job
 #                and then hung). Refit cold. See blame_nodes.sh for finding
 #                which nodes those were.
-#   unconverged  ran, but converged == FALSE. Resumed from its own saved LL/FF
+#   unconverged  ran, but EITHER init reported converged == FALSE. Both are
+#                resumed from their own saved LL/FF
 #                with a fresh iteration budget, which is exact for the log1p
 #                path (see fit_cell in c_grid_sim_common.R), so n_iter
 #                accumulates rather than restarting.
@@ -30,9 +31,10 @@ message("scanning ", OUT_DIR, " ...")
 
 status <- vapply(seq_along(files), function(i) {
   if (!file.exists(files[i])) return("missing")
-  r <- tryCatch(readRDS(files[i])$row, error = function(e) NULL)
+  r <- tryCatch(readRDS(files[i])$rows, error = function(e) NULL)
   if (is.null(r) || !is.data.frame(r)) return("missing")     # truncated / corrupt
-  if (!isTRUE(r$converged))            return("unconverged")
+  if (nrow(r) != length(INITS))        return("missing")     # one init never finished
+  if (!all(r$converged))               return("unconverged") # either init short
   "ok"
 }, character(1))
 
@@ -59,7 +61,6 @@ work <- data.frame(
   seed   = vapply(specs[todo], function(s) s$seed,   numeric(1)),
   c_true = vapply(specs[todo], function(s) s$c_true, numeric(1)),
   c_fit  = vapply(specs[todo], function(s) s$c_fit,  numeric(1)),
-  init   = vapply(specs[todo], function(s) s$init,   character(1)),
   reason = status[todo],
   mode   = ifelse(status[todo] == "unconverged", "warm", "fresh"),
   stringsAsFactors = FALSE)
