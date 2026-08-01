@@ -25,9 +25,9 @@ if (is.na(id)) stop("no task id: pass one as an argument or set SLURM_ARRAY_TASK
 
 spec <- task_spec(id)
 tag  <- tag_of(spec)
-message(sprintf("=== task %d: %s  (seed %d, c_true %s, c_fit %s) on %s ===",
+message(sprintf("=== task %d: %s  (seed %d, c_true %s, c_fit %s, init %s) on %s ===",
                 id, tag, spec$seed, format(spec$c_true), format(spec$c_fit),
-                Sys.info()[["nodename"]]))
+                spec$init, Sys.info()[["nodename"]]))
 
 dir.create(OUT_DIR, showWarnings = FALSE, recursive = TRUE)
 out_file <- file.path(OUT_DIR, paste0(tag, ".rds"))
@@ -63,7 +63,8 @@ score <- score_fit(d, LL_fit, FF_fit, lam_fit)
 
 row <- cbind(
   data.frame(task = id, seed = spec$seed, c_true = spec$c_true,
-             c_fit = spec$c_fit, K_true = K_TRUE, K_fit = K_FIT,
+             c_fit = spec$c_fit, init = spec$init,
+             K_true = K_TRUE, K_fit = K_FIT,
              n = N_ROWS, p = N_COLS,
              alpha = d$alpha, beta = d$beta,
              zero_frac = mean(d$Y == 0), mean_Y = mean(d$Y), max_Y = max(d$Y),
@@ -76,5 +77,5 @@ saveRDS(list(row = row, LL = LL_fit, FF = FF_fit,
         out_file)
 
 message("Wrote ", out_file)
-print(row[, c("c_true", "c_fit", "L_cor_mean", "F_cor_mean",
+print(row[, c("c_true", "c_fit", "init", "L_cor_mean", "F_cor_mean",
               "rate_kl", "loglik", "loglik_oracle", "n_iter", "seconds")])

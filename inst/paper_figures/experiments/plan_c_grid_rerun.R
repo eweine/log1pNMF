@@ -7,17 +7,16 @@
 # writes c_grid_rerun_todo.rds, then prints the exact sbatch command with the
 # right array range.
 #
-# Three reasons a cell is redone:
+# Two reasons a cell is redone:
 #
-#   reinit       c_fit == Inf. Round one left that column on fastTopics'
-#                default `topicscore` initialization while every other column
-#                used a rank-1 warm start, so the column was not
-#                init-comparable. Refit cold with the rank-1 init.
 #   missing      no .rds, or one that will not readRDS (a task that never ran,
-#                or was killed mid-write -- e.g. the node13 hangs). Refit cold.
+#                or was killed mid-write -- e.g. a node that accepted the job
+#                and then hung). Refit cold. See blame_nodes.sh for finding
+#                which nodes those were.
 #   unconverged  ran, but converged == FALSE. Resumed from its own saved LL/FF
-#                with a fresh iteration/time budget, which is exact for the
-#                log1p path (see fit_cell in c_grid_sim_common.R).
+#                with a fresh iteration budget, which is exact for the log1p
+#                path (see fit_cell in c_grid_sim_common.R), so n_iter
+#                accumulates rather than restarting.
 #
 # "fresh" cells discard the old fit; "warm" cells continue it.
 
@@ -33,7 +32,6 @@ status <- vapply(seq_along(files), function(i) {
   if (!file.exists(files[i])) return("missing")
   r <- tryCatch(readRDS(files[i])$row, error = function(e) NULL)
   if (is.null(r) || !is.data.frame(r)) return("missing")     # truncated / corrupt
-  if (is.infinite(specs[[i]]$c_fit))   return("reinit")
   if (!isTRUE(r$converged))            return("unconverged")
   "ok"
 }, character(1))
@@ -61,6 +59,7 @@ work <- data.frame(
   seed   = vapply(specs[todo], function(s) s$seed,   numeric(1)),
   c_true = vapply(specs[todo], function(s) s$c_true, numeric(1)),
   c_fit  = vapply(specs[todo], function(s) s$c_fit,  numeric(1)),
+  init   = vapply(specs[todo], function(s) s$init,   character(1)),
   reason = status[todo],
   mode   = ifelse(status[todo] == "unconverged", "warm", "fresh"),
   stringsAsFactors = FALSE)

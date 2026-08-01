@@ -1,25 +1,29 @@
 #!/bin/bash
-# c-grid simulation: one array task per (seed, c_true, c_fit) cell.
+# c-grid simulation: one array task per (seed, c_true, c_fit, init) cell.
 #
-#   10 seeds x 8 c_true x 8 c_fit = 640 tasks, indexed 0..639 with c_fit
-#   varying fastest (see task_spec() in c_grid_sim_common.R).
+#   10 seeds x 8 c_true x 8 c_fit x 2 inits = 1280 tasks, indexed 0..1279 with
+#   init varying fastest, then c_fit (see task_spec() in c_grid_sim_common.R).
+#   The two initializations of a cell are adjacent task ids on purpose.
 #
-# Each task is single-threaded on purpose: the 500 x 500 problem is small enough
-# that one core beats any thread-level parallelism, and 640 one-core tasks pack
-# into the cluster far better than 640 multi-core ones. Each task regenerates
+# Each task is single-threaded on purpose: the 300 x 300 problem is small enough
+# that one core beats any thread-level parallelism, and 1280 one-core tasks pack
+# into the cluster far better than 1280 multi-core ones. Each task regenerates
 # its own data and writes its own .rds, so tasks share no state and a failure
 # costs one cell.
 #
-# Fits run to convergence (TOL in c_grid_sim_common.R), not to a fixed iteration
-# count. Cost is very uneven across the grid: c_fit >= 1 converges in a few
-# hundred iterations / tens of seconds, while the smallest c_fit values are far
-# slower. MAX_TIME (2 h of optimization time per fit) is the backstop, so the
-# wall clock below leaves an hour of headroom for data generation, scoring and
-# a slower node.
+# Fits run to convergence (TOL) or to MAXITER = 100k, whichever comes first.
+# There is no optimization-time cap: an earlier round used one and left cells
+# stopped mid-descent, which is indistinguishable in the output from a cell that
+# genuinely plateaued. The wall clock below is the only backstop.
 #
-# Submit:   mkdir -p /rafalab/eweine/log1pNMF/inst/paper_figures/experiments/logs
-#           sbatch run_c_grid_sim.sbatch
-# Collect:  Rscript collect_c_grid_sim.R
+# Submit via the wrapper, which probes for hung nodes first and passes them to
+# --exclude. A hung node still advertises itself as idle and will accept an
+# allocation, so sinfo alone will not protect you:
+#
+#   ./submit_c_grid_sim.sh                 # probes, then submits
+#   ./blame_nodes.sh                       # after the round: who ate the tasks
+#   Rscript plan_c_grid_rerun.R            # what still needs redoing
+#   Rscript collect_c_grid_sim.R
 #
 # --output is an ABSOLUTE path on purpose. Slurm resolves it against the
 # submission directory, not against the EXPDIR this script cd's into, and it
@@ -29,12 +33,13 @@
 #
 #SBATCH --job-name=cgrid
 #SBATCH --output=/rafalab/eweine/log1pNMF/inst/paper_figures/experiments/logs/cgrid_%A_%a.out
-#SBATCH --array=0-639
-#SBATCH --time=03:00:00
+#SBATCH --array=0-1279
+#SBATCH --time=02:00:00
 #SBATCH --cpus-per-task=1
 #SBATCH --mem=4G
 #SBATCH --partition=defq
-#SBATCH --exclude=node13   # accepted jobs and then hung during the first round
+## no --exclude directive: submit_c_grid_sim.sh supplies one from the live
+## probe, and a CLI --exclude would override anything written here anyway
 
 module load R/4.3.2
 

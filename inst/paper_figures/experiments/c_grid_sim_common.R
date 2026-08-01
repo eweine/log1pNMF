@@ -57,13 +57,14 @@
 # the seed, so every array task reconstructs an identical dataset.
 
 ## ---- configuration ---------------------------------------------------------
-N_ROWS      <- 500L
-N_COLS      <- 500L
-K_TRUE      <- 5L
-K_FIT       <- 5L
+N_ROWS      <- 300L
+N_COLS      <- 300L
+K_TRUE      <- 3L
+K_FIT       <- 3L
 
 C_GRID      <- c(1e-3, 1e-2, 1e-1, 1, 10, 100, 1000, Inf)
 N_SEEDS     <- 10L
+INITS       <- c("rank1", "random")   # every cell is fit from both
 
 ## generative shape
 A_SIG       <- 0.3     # Dirichlet concentration (< 1 => rows peaked / sparse)
@@ -85,17 +86,16 @@ QPROB       <- 0.999
 ## is why every fit at that setting reported converged = FALSE even after the
 ## objective had stopped moving entirely. 1e-6 is still utterly negligible
 ## against 2.8e5 (a relative change of 4e-12) and does fire.
-## Cost is very uneven across the grid. Measured single-core on a 500 x 500
-## dataset: c_fit = 1 converges in ~320 iterations / 20 s, c_fit = Inf
-## (fastTopics) in ~60 iterations / 6 s, but c_fit = 1e-3 needs ~8700
-## iterations / 330 s, and the worst-misspecified corner (linear-scale truth,
-## c_fit = 1e-3) was still moving at 20000 iterations (561 s). MAX_TIME is
-## therefore the real backstop; MAXITER is set high enough not to bind first.
-## At the measured ~36 iterations/s for that corner, 2 h of optimization is
-## roughly 260k iterations, so MAXITER = 100k is what actually stops it.
+## Cost is very uneven across the grid: c_fit >= 1 converges in a few hundred
+## iterations, while the small-c_fit corner needs thousands and the
+## worst-misspecified corner (linear-scale truth fit with a near-log link) is the
+## slowest of all. There is deliberately NO optimization-time cap now -- an
+## earlier round used one and left cells stopped mid-descent, which is
+## indistinguishable in the output from a cell that genuinely plateaued.
+## MAXITER is the only stop besides TOL, and the SLURM wall clock is the backstop.
 MAXITER     <- 100000L
 TOL         <- 1e-6
-MAX_TIME    <- 7200    # seconds of optimization time per fit; the real cap
+MAX_TIME    <- Inf     # no optimization-time cap; MAXITER / TOL stop the fit
 THREADS     <- 1L      # one core per array task
 
 OUT_DIR     <- Sys.getenv("C_GRID_OUT",
@@ -224,33 +224,49 @@ data_summary <- function(d) {
 RANK1_PAD <- 1e-8   # value the rank-1 warm start pads the other K-1 columns with
                     # (matches what fit_poisson_log1p_nmf's own rank1 path uses)
 
+## The random initialization, matching what fit_poisson_log1p_nmf draws
+## internally for init_method = "random". Building it explicitly means the
+## c_fit = Inf column can be given the SAME random start as every other column,
+## instead of fastTopics' own scheme -- otherwise "random" would not mean the
+## same thing across the grid.
+random_init <- function(n, p, K) {
+  list(LL = matrix(stats::runif(n * K, 1e-8, 0.05), n, K),
+       FF = matrix(stats::runif(p * K, 1e-8, 0.05), p, K))
+}
+
 #' Fit one cell.
 #'
-#' Cold start (init_LL = NULL) uses a rank-1 warm start for EVERY c_fit,
-#' including c_fit = Inf: there the analogue is fastTopics' exact rank-1 Poisson
-#' NMF solution padded to K, following the same pattern as
-#' factor_sim_identifiable_reduc_fig.R. The first round of this experiment left
-#' the c_fit = Inf column on fastTopics' default `topicscore` initialization,
-#' which made that column not init-comparable to the rest of the grid.
+#' `init` is "rank1" or "random", and means the same thing at every c_fit
+#' including Inf. For rank1 at c_fit = Inf the analogue is fastTopics' exact
+#' rank-1 Poisson NMF solution padded to K, following the same pattern as
+#' factor_sim_identifiable_reduc_fig.R; for random it is the same runif draw the
+#' log1p package uses. The first round of this experiment left the c_fit = Inf
+#' column on fastTopics' default `topicscore` initialization, which made that
+#' column not init-comparable to the rest of the grid.
 #'
-#' Warm start (init_LL / init_FF given) resumes an earlier fit. For the log1p
-#' path this is exact: the package divides the supplied init by sqrt(max(1, cc))
-#' on the way in and multiplies back on the way out, so feeding back a previous
-#' fit's returned LL / FF at the SAME cc reproduces its internal theta bit for
-#' bit. Verified: 60 iterations then a 340-iteration warm continuation gives an
-#' identical log-likelihood to a single cold 400-iteration run.
-fit_cell <- function(Y, cc, init_LL = NULL, init_FF = NULL) {
+#' Warm start (init_LL / init_FF given) resumes an earlier fit and overrides
+#' `init`. For the log1p path this is exact: the package divides the supplied
+#' init by sqrt(max(1, cc)) on the way in and multiplies back on the way out, so
+#' feeding back a previous fit's returned LL / FF at the SAME cc reproduces its
+#' internal theta bit for bit. Verified: 60 iterations then a 340-iteration warm
+#' continuation gives an identical log-likelihood to a single cold 400-iteration
+#' run.
+fit_cell <- function(Y, cc, init = "rank1", init_LL = NULL, init_FF = NULL) {
 
   warm <- !is.null(init_LL)
+  stopifnot(init %in% INITS)
 
   if (is.infinite(cc)) {
     Ys <- as(Y, "CsparseMatrix")
     if (warm) {
       L0 <- init_LL; F0 <- init_FF
-    } else {
+    } else if (init == "rank1") {
       r1 <- fastTopics:::fit_pnmf_rank1(Ys)
       L0 <- cbind(r1$L, matrix(RANK1_PAD, nrow(Ys), K_FIT - 1L))
       F0 <- cbind(r1$F, matrix(RANK1_PAD, ncol(Ys), K_FIT - 1L))
+    } else {
+      ri <- random_init(nrow(Ys), ncol(Ys), K_FIT)
+      L0 <- ri$LL; F0 <- ri$FF
     }
     rownames(L0) <- rownames(Ys); rownames(F0) <- colnames(Ys)
     colnames(L0) <- colnames(F0) <- paste0("k", seq_len(K_FIT))
@@ -270,7 +286,7 @@ fit_cell <- function(Y, cc, init_LL = NULL, init_FF = NULL) {
                control = list(maxiter = MAXITER, tol = TOL, max_time = MAX_TIME,
                               verbose = FALSE, threads = THREADS))
   if (warm) { args$init_LL <- init_LL; args$init_FF <- init_FF }
-  else      { args$init_method <- "rank1" }
+  else      { args$init_method <- init }
 
   fit <- do.call(log1pNMF::fit_poisson_log1p_nmf, args)
   list(LL = fit$LL, FF = fit$FF, lam = stats::fitted(fit),   # s == 1, so lambda
@@ -342,21 +358,27 @@ score_fit <- function(d, LL_fit, FF_fit, lam_fit) {
     perm           = paste(perm, collapse = "-"))
 }
 
-## ---- task id <-> (seed, c_true, c_fit) -------------------------------------
-## 0-based SLURM_ARRAY_TASK_ID over seeds x c_true x c_fit, c_fit fastest.
-N_TASKS <- N_SEEDS * length(C_GRID) * length(C_GRID)
+## ---- task id <-> (seed, c_true, c_fit, init) -------------------------------
+## 0-based SLURM_ARRAY_TASK_ID over seeds x c_true x c_fit x init, init fastest
+## then c_fit. Both initializations of a cell are therefore adjacent task ids,
+## so they tend to land on the same node in the same window.
+N_TASKS <- N_SEEDS * length(C_GRID) * length(C_GRID) * length(INITS)
 
 task_spec <- function(id) {
-  nc <- length(C_GRID)
+  nc <- length(C_GRID); ni <- length(INITS)
   stopifnot(id >= 0, id < N_TASKS)
-  seed_i <- id %/% (nc * nc)
-  rest   <- id %%  (nc * nc)
+  init_i <- id %% ni;              rest <- id %/% ni
+  cfit_i <- rest %% nc;            rest <- rest %/% nc
+  ctru_i <- rest %% nc
+  seed_i <- rest %/% nc
   list(seed   = seed_i + 1L,
-       c_true = C_GRID[rest %/% nc + 1L],
-       c_fit  = C_GRID[rest %%  nc + 1L])
+       c_true = C_GRID[ctru_i + 1L],
+       c_fit  = C_GRID[cfit_i + 1L],
+       init   = INITS[init_i + 1L])
 }
 
 tag_of <- function(spec) {
   fmt <- function(x) if (is.infinite(x)) "Inf" else format(x, scientific = FALSE, trim = TRUE)
-  sprintf("cgrid_seed%02d_ctrue%s_cfit%s", spec$seed, fmt(spec$c_true), fmt(spec$c_fit))
+  sprintf("cgrid_seed%02d_ctrue%s_cfit%s_%s", spec$seed,
+          fmt(spec$c_true), fmt(spec$c_fit), spec$init)
 }

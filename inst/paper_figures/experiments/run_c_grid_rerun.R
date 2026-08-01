@@ -41,7 +41,7 @@ if (idx < 0 || idx >= nrow(work))
        nrow(work) - 1L, ")")
 
 w    <- work[idx + 1L, ]
-spec <- list(seed = w$seed, c_true = w$c_true, c_fit = w$c_fit)
+spec <- list(seed = w$seed, c_true = w$c_true, c_fit = w$c_fit, init = w$init)
 tag  <- tag_of(spec)
 out_file <- file.path(OUT_DIR, paste0(tag, ".rds"))
 
@@ -66,8 +66,9 @@ set.seed(1000L * spec$seed + w$task)
 t1 <- proc.time()[["elapsed"]]
 
 f <- if (w$mode == "warm")
-  fit_cell(d$Y, spec$c_fit, init_LL = prev$LL, init_FF = prev$FF) else
-  fit_cell(d$Y, spec$c_fit)
+  fit_cell(d$Y, spec$c_fit, init = spec$init,
+           init_LL = prev$LL, init_FF = prev$FF) else
+  fit_cell(d$Y, spec$c_fit, init = spec$init)
 
 elapsed <- proc.time()[["elapsed"]] - t1
 
@@ -80,7 +81,8 @@ score <- score_fit(d, f$LL, f$FF, f$lam)
 
 row <- cbind(
   data.frame(task = w$task, seed = spec$seed, c_true = spec$c_true,
-             c_fit = spec$c_fit, K_true = K_TRUE, K_fit = K_FIT,
+             c_fit = spec$c_fit, init = spec$init,
+             K_true = K_TRUE, K_fit = K_FIT,
              n = N_ROWS, p = N_COLS,
              alpha = d$alpha, beta = d$beta,
              zero_frac = mean(d$Y == 0), mean_Y = mean(d$Y), max_Y = max(d$Y),
@@ -111,5 +113,5 @@ saveRDS(list(row = row, LL = f$LL, FF = f$FF,
         out_file)
 
 message("Wrote ", out_file)
-print(row[, c("c_true", "c_fit", "rerun_mode", "L_cor_mean", "F_cor_mean",
+print(row[, c("c_true", "c_fit", "init", "rerun_mode", "L_cor_mean", "F_cor_mean",
               "rate_kl", "loglik", "n_iter", "converged", "seconds")])
