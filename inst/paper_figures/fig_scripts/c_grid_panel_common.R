@@ -23,12 +23,27 @@ theme_set(theme_cowplot(font_size = 11))
 exp_dir <- "../experiments"
 
 ## ---- data ------------------------------------------------------------------
-## Each cell was fit from a rank-1 and a random start; take the better of the
-## two by log-likelihood. In this simulation that is immaterial -- the two agree
-## to within 0.008 log-likelihood on all 640 cells -- but it is the right
-## summary for a nonconvex objective.
-c_grid_load <- function() {
+## Each cell was fit from a rank-1 and a random start.
+##
+## init = "rank1" / "random" keeps only that initialization. init = NULL takes
+## the better of the two by log-likelihood.
+##
+## Which to use is NOT a matter of taste. The two inits agree to within 0.008
+## log-likelihood on all 640 cells, so selecting on log-likelihood is effectively
+## a coin flip -- but the resulting FITS are not equivalent: 29% of cells differ
+## by more than 0.01 in Hoyer sparsity and in factor rank correlation, and at
+## c_fit = 1e-3 rank-1 gives roughly twice the factor sparsity of random
+## (0.101 vs 0.051). Worse, random wins the log-likelihood tie in all 80 cells
+## at that c_fit, so "best of both" silently reports the random answer at the
+## small-c end and a mixture elsewhere. Any figure about sparsity or factor
+## correlation must therefore fix the init explicitly. Log-likelihood figures can
+## safely use NULL, since that is the quantity the two agree on.
+c_grid_load <- function(init = NULL) {
   d   <- readRDS(file.path(exp_dir, "c_grid_sim_metrics.rds"))
+  if (!is.null(init)) {
+    stopifnot(init %in% d$init)
+    d <- d[d$init == init, ]
+  }
   key <- paste(d$seed, d$c_true, d$c_fit)
   b   <- d[order(key, -d$loglik), ]
   b   <- b[!duplicated(paste(b$seed, b$c_true, b$c_fit)), ]
@@ -93,3 +108,5 @@ c_grid_panels <- function(b, yvar, ylab, title, subtitle = NULL, ref = NULL, ...
 
 SUB_SEEDS <- "thin lines: 10 individual seeds;  thick line: mean;  circled: c_fit = c_true"
 SUB_REF   <- paste(SUB_SEEDS, "\ndashed: the true value for that simulation")
+
+INIT_LAB <- c(rank1 = "rank-1 initialization", random = "random initialization")
