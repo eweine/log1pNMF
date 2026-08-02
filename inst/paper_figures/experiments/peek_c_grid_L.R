@@ -1,34 +1,28 @@
 # Structure plots of the loadings from one c-grid cell: true L above fitted L.
 #
-#   Rscript peek_c_grid_L.R <seed> <c_true> <c_fit> [init=] [rownorm=] [out=]
+#   Rscript peek_c_grid_L.R <seed> <c_true> <c_fit> [init=] [out=]
 #
 #   Rscript peek_c_grid_L.R 1 1 1                      # well-specified
 #   Rscript peek_c_grid_L.R 1 1 Inf                    # same data, fit at c = Inf
 #   Rscript peek_c_grid_L.R 3 0.001 1000 init=random
-#   Rscript peek_c_grid_L.R 1 1 Inf rownorm=1 out=x.png
 #
 # c_true / c_fit take the grid values 0.001 0.01 0.1 1 10 100 1000 Inf.
 # init is "rank1" (default) or "random".
-# Point C_GRID_OUT at the cell directory if it is not the cluster default.
 #
-# NORMALIZATION
+# Cells are read from C_GRID_OUT if set, else the cluster path, else a
+# c_grid_sim/ directory next to this script.
 #
-# The column step is the paper convention (normalize_bars): divide each loading
-# column by its maximum so every factor peaks at one. Without it a factor with
-# systematically small loadings is invisible, because each cell's bar is
-# dominated by whichever factor carries the largest raw values.
+# NORMALIZATION: the paper convention (normalize_bars) and nothing else --
+# divide each loading column by its maximum so every factor peaks at one. No row
+# normalization. Without the column step a factor with systematically small
+# loadings is invisible, because each cell's bar is dominated by whichever
+# factor carries the largest raw values.
 #
-# rownorm=0 (default) reproduces normalized_structure_plot exactly. Note this
-# does NOT give memberships: fastTopics::structure_plot row-normalizes only when
-# handed a fit object (it runs poisson2multinom); given a plain matrix it plots
-# the values as they are. So bars vary in total height -- verified directly, a
-# matrix with row sums 1.4, 0.76, 1.9 plots at exactly those heights. The true L
-# here happens to land near 1.0 only because its rows are Dirichlet draws and
-# each column max is near one; the fitted L reaches about 1.2.
-#
-# rownorm=1 divides each row by its sum after the column step, so both panels
-# are genuine membership proportions on a common 0-1 scale. Use it when
-# comparing the two panels; use the default when matching the paper figures.
+# Note this means bar heights vary and are not memberships: structure_plot
+# row-normalizes only when handed a fit object (it runs poisson2multinom); given
+# a plain matrix it plots the values as they are. Checked directly -- a matrix
+# with row sums 1.41, 0.76, 1.91 plots at exactly those heights. The axis is
+# labelled "scaled loading" accordingly.
 #
 # Both panels use the SAME cell ordering (by the true dominant factor, then by
 # that factor's weight) and the same colours, and the fitted factors are
@@ -46,7 +40,7 @@ source("c_grid_sim_common.R")
 
 a <- commandArgs(trailingOnly = TRUE)
 if (length(a) < 3)
-  stop("usage: Rscript peek_c_grid_L.R <seed> <c_true> <c_fit> [init=] [rownorm=] [out=]")
+  stop("usage: Rscript peek_c_grid_L.R <seed> <c_true> <c_fit> [init=] [out=]")
 
 kv <- a[grepl("=", a)]
 opt <- setNames(sub("^[^=]*=", "", kv), sub("=.*$", "", kv))
@@ -56,14 +50,24 @@ seed   <- as.integer(a[1])
 c_true <- as.numeric(a[2])
 c_fit  <- as.numeric(a[3])
 init   <- getopt("init", "rank1")
-rownrm <- as.integer(getopt("rownorm", "0")) == 1L
 fmtc   <- function(x) format(x, scientific = FALSE, trim = TRUE)
 out    <- getopt("out",
-  sprintf("peek_L_seed%02d_ctrue%s_cfit%s_%s%s.png", seed, fmtc(c_true), fmtc(c_fit),
-          init, if (rownrm) "_rownorm" else ""))
+  sprintf("peek_L_seed%02d_ctrue%s_cfit%s_%s.png", seed, fmtc(c_true), fmtc(c_fit), init))
+
+## where the per-cell .rds files live
+cell_dir <- Sys.getenv("C_GRID_OUT", "")
+if (!nzchar(cell_dir)) {
+  cand <- c(OUT_DIR, "c_grid_sim")
+  hit  <- cand[dir.exists(cand)]
+  if (!length(hit))
+    stop("cannot find the cell directory. Set C_GRID_OUT, or put the downloaded\n",
+         "  c_grid_sim/ folder next to this script. Looked in:\n    ",
+         paste(cand, collapse = "\n    "))
+  cell_dir <- hit[1]
+}
 
 spec <- list(seed = seed, c_true = c_true, c_fit = c_fit)
-f    <- file.path(OUT_DIR, paste0(tag_of(spec), ".rds"))
+f    <- file.path(cell_dir, paste0(tag_of(spec), ".rds"))
 if (!file.exists(f)) stop("no such cell: ", f)
 x <- readRDS(f)
 if (is.null(x$fits[[init]]))
@@ -95,11 +99,10 @@ sp <- function(M, title, show_x = FALSE) {
   cm <- apply(M, 2, max)
   if (any(cm <= 0)) stop("a loading column is entirely zero; cannot normalize to max 1")
   Mn <- sweep(M, 2, cm, "/")                       # normalize_bars: column max = 1
-  if (rownrm) Mn <- Mn / pmax(rowSums(Mn), .Machine$double.eps)
   colnames(Mn) <- TOP
   g <- structure_plot(Mn, loadings_order = seq_len(nrow(Mn)), grouping = grp,
                       gap = 6, topics = TOP, colors = FCOL) +
-    labs(y = if (rownrm) "membership" else "scaled loading", title = title) +
+    labs(y = "scaled loading", title = title) +
     theme(plot.title = element_text(size = 11, face = "bold"),
           legend.position = "none")
   if (show_x) g + labs(x = "cell, grouped by true dominant factor")
