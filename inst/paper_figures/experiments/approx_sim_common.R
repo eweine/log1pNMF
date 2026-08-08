@@ -16,14 +16,20 @@
 #          a few factors; the loading sparsity is fixed by A_SIG and never
 #          changes across seeds or c.
 #   F      p x K, entries independently 0 with probability PI0, otherwise
-#          min(exp(MU + SIGMA * t_4), CAP): a point mass at zero, a
-#          heavy-tailed body, and a hard cap (unbounded tails make max(Y)
+#          exp(MU + SIGMA * t_4) truncated to [FLOOR, CAP]: a point mass at
+#          zero and a heavy-tailed body, truncated on both sides. The CAP
+#          bounds the maximum count (unbounded tails make max(Y)
 #          seed-unstable; the cap is what the calibration aims at the real
-#          data's size-adjusted maximum). Every feature is CONDITIONED to
-#          load on at least one factor -- the analogue of filtering genes for
-#          detectable expression, and required because log1pNMF rejects
-#          all-zero columns, which dead features produce w.p. PI0^K (~1/3
-#          at K = 5).
+#          data's size-adjusted maximum). The FLOOR is the counterpart of
+#          expression filtering: without it, a feature active in a single
+#          factor can draw a magnitude so small that its column's expected
+#          total count is ~0.1 and Y gets an all-zero column no redraw can
+#          fix (seed 7 did exactly this). At FLOOR = 0.05 the weakest
+#          single-factor column has expected total count ~ 0.05 * n/K = 5.
+#          The floor moves ~4% of the nonzero entries. Every feature is
+#          additionally CONDITIONED to load on at least one factor, since
+#          dead features (probability PI0^K, ~1/3 at K = 5) produce all-zero
+#          columns deterministically, and log1pNMF rejects those.
 #   theta  = L F'
 #   lambda = C_TRUE * expm1(theta)
 #   Y     ~ Poisson(lambda)         (no size factors; everything fits s=FALSE)
@@ -64,20 +70,22 @@ METHODS <- c("exact", "taylor", "chebyshev")
 ## Provenance: pancreas counts (7606 x 18195), curve-matched with profiled
 ## mean at n = p = 500, K = 5, C_TRUE = 1, with the >= 1 factor conditioning.
 A_SIG  <- 0.3
-PI0    <- 0.7737
-MU     <- -1.2585
-SIGMA  <- 0.7085
-CAP    <- 7.7609
+PI0    <- 0.7738
+MU     <- -1.2512
+SIGMA  <- 0.7067
+CAP    <- 7.7587
+FLOOR  <- 0.05    # fixed by design, not calibrated (see header)
 T_DF   <- 4
 C_TRUE <- 1
 
 ## fitting: run to convergence at TOL = 1e-6 (absolute change in the fit's own
 ## objective between successive iterations), rank-1 initialization always.
-## MAXITER is a safety cap only, and there is deliberately NO optimization-time
-## cap -- the SLURM wall clock (generous; see run_approx_sim.sbatch) is the
-## sole backstop. See c_grid_sim_common.R for why a time cap is worse than
-## none: it leaves fits stopped mid-descent, indistinguishable from a plateau.
-MAXITER <- 100000L
+## MAXITER is a safety cap only (250k: far above anything the c-grid round
+## needed), and there is deliberately NO optimization-time cap -- the SLURM
+## wall clock (24h; see run_approx_sim.sbatch) is the sole backstop. See
+## c_grid_sim_common.R for why a time cap is worse than none: it leaves fits
+## stopped mid-descent, indistinguishable from a plateau.
+MAXITER <- 250000L
 TOL     <- 1e-6
 THREADS <- 1L
 
@@ -104,7 +112,7 @@ sim_dataset <- function(seed, n = N_ROWS, p = N_COLS, K = K_TRUE) {
   L  <- matrix(stats::rgamma(n * K, shape = A_SIG), n, K)
   L  <- L / rowSums(L)
   u  <- matrix(stats::runif(p * K), p, K)
-  FF <- pmin(exp(MU + SIGMA * stats::rt(p * K, df = T_DF)), CAP) * nz_of(u)
+  FF <- pmin(pmax(exp(MU + SIGMA * stats::rt(p * K, df = T_DF)), FLOOR), CAP) * nz_of(u)
   lam <- C_TRUE * expm1(tcrossprod(L, FF))
 
   for (try in 1:50) {

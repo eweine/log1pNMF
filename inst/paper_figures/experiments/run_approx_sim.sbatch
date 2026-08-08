@@ -10,33 +10,30 @@
 # its own data and writes its own .rds, so tasks share no state and a failure
 # costs one fit.
 #
-# Fits run to convergence (TOL = 1e-6) or to MAXITER = 100k, whichever comes
+# Fits run to convergence (TOL = 1e-6) or to MAXITER = 250k, whichever comes
 # first. There is deliberately NO optimization-time cap, and the wall clock
-# below is set very generously -- the point of this experiment is to compare
+# below is a generous backstop -- the point of this experiment is to compare
 # the CONVERGED exact and approximate fits, so nothing may stop mid-descent.
-# 48h is roughly 20x the worst fit observed in the (smaller) c-grid round;
-# raise it further if the partition allows and any task ever hits it.
 #
-# Submit via the wrapper, which probes for hung nodes first and passes them
-# to --exclude (a hung node still advertises itself as idle):
+# Submit directly (no node-probing wrapper for this round; any task lost to a
+# bad node is found afterward and resubmitted):
 #
-#   ./submit_approx_sim.sh                 # probes, then submits
-#   ./blame_nodes.sh                       # after the round: who ate the tasks
+#   sbatch run_approx_sim.sbatch
+#   Rscript check_approx_sim.R             # afterward: what is missing/unconverged
 #
 # --output is an ABSOLUTE path on purpose: Slurm resolves it against the
 # submission directory and opens it before the script body runs, so a
-# relative path would land wherever sbatch was invoked from. The directory
-# must exist before submitting (the wrapper mkdir -p's it).
+# relative path would land wherever sbatch was invoked from. The logs/
+# directory must exist BEFORE submitting (mkdir -p logs); the mkdir in the
+# body runs too late for --output.
 #
 #SBATCH --job-name=approxsim
 #SBATCH --output=/rafalab/eweine/log1pNMF/inst/paper_figures/experiments/logs/approxsim_%A_%a.out
 #SBATCH --array=0-269
-#SBATCH --time=48:00:00
+#SBATCH --time=24:00:00
 #SBATCH --cpus-per-task=1
 #SBATCH --mem=4G
 #SBATCH --partition=defq
-## no --exclude directive: submit_approx_sim.sh supplies one from the live
-## probe, and a CLI --exclude would override anything written here anyway
 
 module load R/4.3.2
 

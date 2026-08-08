@@ -35,6 +35,8 @@ K      <- 5L
 A_SIG  <- 0.3
 C_TRUE <- 1
 T_DF   <- 4
+FLOOR  <- 0.05   # lower truncation of magnitudes; fixed by design (see
+                 # approx_sim_common.R header for the dead-column rationale)
 NP_S   <- N_S * P_S
 
 ## ---- target: pancreas count histogram ---------------------------------------
@@ -74,7 +76,7 @@ make_parts <- function(seeds) lapply(seeds, function(s) {
 })
 mean_rate <- function(mu, sig, CAP, PI0, parts)
   mean(sapply(parts, function(pp) {
-    Fm <- pmin(exp(mu + sig * pp$tmat), CAP) * nz_of(pp$u, PI0)
+    Fm <- pmin(pmax(exp(mu + sig * pp$tmat), FLOOR), CAP) * nz_of(pp$u, PI0)
     mean(C_TRUE * expm1(tcrossprod(pp$L, Fm))) }))
 solve_mu <- function(sig, CAP, PI0, parts)
   uniroot(function(m) mean_rate(m, sig, CAP, PI0, parts) - M_REAL,
@@ -83,7 +85,7 @@ solve_mu <- function(sig, CAP, PI0, parts)
 curve_of <- function(Y) sapply(CS, function(cc) {
   g <- log1p(Y / cc); max(g) / mean(g) })
 Y_from <- function(pp, mu, sig, CAP, PI0, pseed) {
-  Fm <- pmin(exp(mu + sig * pp$tmat), CAP) * nz_of(pp$u, PI0)
+  Fm <- pmin(pmax(exp(mu + sig * pp$tmat), FLOOR), CAP) * nz_of(pp$u, PI0)
   set.seed(pseed)
   matrix(rpois(NP_S, C_TRUE * expm1(tcrossprod(pp$L, Fm))), N_S, P_S)
 }
@@ -118,7 +120,7 @@ sim_full <- function(seed) {
   L <- matrix(rgamma(N_S * K, A_SIG), N_S, K); L <- L / rowSums(L)
   tmat <- matrix(rt(P_S * K, T_DF), P_S, K)
   u    <- matrix(runif(P_S * K), P_S, K)
-  Fm   <- pmin(exp(MU + SIG * tmat), CAP) * nz_of(u, PI0)
+  Fm   <- pmin(pmax(exp(MU + SIG * tmat), FLOOR), CAP) * nz_of(u, PI0)
   matrix(rpois(NP_S, C_TRUE * expm1(tcrossprod(L, Fm))), N_S, P_S)
 }
 fresh <- lapply(101:110, sim_full)
