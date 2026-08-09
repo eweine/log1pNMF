@@ -27,16 +27,16 @@ maxiter <- as.integer(Sys.getenv("APPROX_SIM_MAXITER", MAXITER))
 
 spec <- task_spec(id)
 tag  <- tag_of(spec)
-message(sprintf("=== task %d: %s  (seed %d, cc %s, method %s) on %s ===",
-                id, tag, spec$seed, format(spec$cc), spec$method,
-                Sys.info()[["nodename"]]))
+message(sprintf("=== task %d: %s  (seed %d, c_true %s, c_fit %s, method %s) on %s ===",
+                id, tag, spec$seed, fmtc(spec$c_true), fmtc(spec$cc),
+                spec$method, Sys.info()[["nodename"]]))
 
 dir.create(OUT_DIR, showWarnings = FALSE, recursive = TRUE)
 out_file <- file.path(OUT_DIR, paste0(tag, ".rds"))
 
 ## ---- data ------------------------------------------------------------------
 t0 <- proc.time()[["elapsed"]]
-d  <- sim_dataset(spec$seed)
+d  <- sim_dataset(spec$seed, spec$c_true)
 Y  <- as(d$Y, "CsparseMatrix")
 message(sprintf("data: %d x %d, %.1f%% zeros, mean %.3f, max %d  (%.1fs)",
                 nrow(Y), ncol(Y), 100 * mean(d$Y == 0), mean(d$Y), max(d$Y),
@@ -82,7 +82,8 @@ message(sprintf("fit [%s]: %d iterations, converged=%s, exact ll %.2f  (%.1fs)",
                 spec$method, n_iter, converged, ll_exact, elapsed))
 
 row <- data.frame(
-  task = id, seed = spec$seed, cc = spec$cc, method = spec$method,
+  task = id, seed = spec$seed, c_true = spec$c_true, cc = spec$cc,
+  method = spec$method,
   K = K_FIT, n = N_ROWS, p = N_COLS,
   zero_frac = mean(d$Y == 0), mean_Y = mean(d$Y), max_Y = max(d$Y),
   n_iter = n_iter, converged = converged, seconds = elapsed,
@@ -99,5 +100,5 @@ saveRDS(list(row = row,
         out_file)
 
 message("Wrote ", out_file)
-print(row[, c("seed", "cc", "method", "n_iter", "converged", "seconds",
-              "loglik_per_entry")], row.names = FALSE)
+print(row[, c("seed", "c_true", "cc", "method", "n_iter", "converged",
+              "seconds", "loglik_per_entry")], row.names = FALSE)

@@ -1,11 +1,12 @@
 #!/bin/bash
 # Exact-vs-approx simulation: one array task per (seed, cc, method) fit.
 #
-#   10 seeds x 9 cc x 3 methods = 270 tasks, indexed 0..269 with method
-#   varying fastest, then cc (see task_spec() in approx_sim_common.R).
+#   10 seeds x 3 c_true x 9 c_fit x 3 methods = 810 tasks, indexed 0..809
+#   with method varying fastest, then c_fit, then c_true (see task_spec() in
+#   approx_sim_common.R).
 #
 # Each task is single-threaded on purpose: the 500 x 500 problem is small
-# enough that one core beats thread-level parallelism, and 270 one-core tasks
+# enough that one core beats thread-level parallelism, and 810 one-core tasks
 # pack into the cluster far better than multi-core ones. Each task regenerates
 # its own data and writes its own .rds, so tasks share no state and a failure
 # costs one fit.
@@ -29,7 +30,7 @@
 #
 #SBATCH --job-name=approxsim
 #SBATCH --output=/rafalab/eweine/log1pNMF/inst/paper_figures/experiments/logs/approxsim_%A_%a.out
-#SBATCH --array=0-269
+#SBATCH --array=0-809
 #SBATCH --time=24:00:00
 #SBATCH --cpus-per-task=1
 #SBATCH --mem=4G

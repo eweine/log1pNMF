@@ -1,55 +1,60 @@
-# Shared configuration and data generator for the exact-vs-approx simulation.
+# Shared configuration and data generator for the exact-vs-approx simulation,
+# swept over the c used to GENERATE the data.
 #
-# Question: how much log-likelihood does the approximate objective give up
-# relative to the exact one, on data with realistic count properties, across
-# the c grid? Each dataset is generated ONCE per seed from the calibrated
-# generator below, and every (c_fit, method) fits that same dataset from a
-# rank-1 initialization until the objective converges.
+# Two questions share these runs. (1) Approximation quality: how much
+# log-likelihood does the approximate objective give up relative to the exact
+# one, across the fitting-c grid, on data with realistic count properties?
+# (2) The simulation section: how do sparsity and related properties of the
+# fits change with the fitting c, when the truth was generated at different
+# c_true? Each dataset is generated once per (seed, c_true) from the
+# calibrated generator below, and every (c_fit, method) fits that same
+# dataset from a rank-1 initialization until the objective converges.
 #
-# Sourced by run_approx_sim.R (the array worker).
+# Sourced by run_approx_sim.R (the array worker) and check_approx_sim.R.
 #
 # ---------------------------------------------------------------------------
-# GENERATIVE MODEL (calibrated; see calibrate_approx_sim.R and the notebook
-# sim_design.Rmd in the log1p_experiments repo for the full story)
+# GENERATIVE MODEL (calibrated per c_true; see calibrate_approx_sim.R and the
+# notebook sim_design.Rmd in the log1p_experiments repo)
 #
 #   L      n x K, rows ~ Dirichlet(A_SIG * 1_K): every sample concentrates on
-#          a few factors; the loading sparsity is fixed by A_SIG and never
-#          changes across seeds or c.
-#   F      p x K, entries independently 0 with probability PI0, otherwise
-#          exp(MU + SIGMA * t_4) truncated to [FLOOR, CAP]: a point mass at
-#          zero and a heavy-tailed body, truncated on both sides. The CAP
-#          bounds the maximum count (unbounded tails make max(Y)
-#          seed-unstable; the cap is what the calibration aims at the real
-#          data's size-adjusted maximum). The FLOOR is the counterpart of
-#          expression filtering: without it, a feature active in a single
-#          factor can draw a magnitude so small that its column's expected
-#          total count is ~0.1 and Y gets an all-zero column no redraw can
-#          fix (seed 7 did exactly this). At FLOOR = 0.05 the weakest
-#          single-factor column has expected total count ~ 0.05 * n/K = 5.
-#          The floor moves ~4% of the nonzero entries. Every feature is
+#          a few factors. A_SIG never changes, so the true loading sparsity
+#          is identical across seeds AND across c_true -- and because L
+#          depends only on (seed, A_SIG), the same seed gives the SAME L at
+#          every c_true.
+#   F      p x K, entries independently 0 with probability pi0, otherwise
+#          exp(mu + sigma * t_4) truncated to [floor, cap]. The cap bounds
+#          the maximum count (unbounded tails make max(Y) seed-unstable);
+#          the floor is the counterpart of expression filtering -- without
+#          it, a feature active in a single factor can draw a magnitude so
+#          small that its column of Y is all zero with probability ~1
+#          (seed 7 did exactly this at c_true = 1), and log1pNMF rejects
+#          all-zero columns. The floor is fixed on the RATE scale
+#          (RATE_FLOOR expected counts) and mapped through each link, so it
+#          means the same thing at every c_true. Every feature is
 #          additionally CONDITIONED to load on at least one factor, since
-#          dead features (probability PI0^K, ~1/3 at K = 5) produce all-zero
-#          columns deterministically, and log1pNMF rejects those.
+#          dead features (probability pi0^K, ~1/3 at K = 5) produce all-zero
+#          columns deterministically.
 #   theta  = L F'
-#   lambda = C_TRUE * expm1(theta)
-#   Y     ~ Poisson(lambda)         (no size factors; everything fits s=FALSE)
+#   lambda = c_true * expm1(theta)   for finite c_true
+#          = theta                   for c_true = Inf (plain Poisson NMF)
+#   Y     ~ Poisson(lambda)          (no size factors; everything fits s=FALSE)
 #
 # The counts are redrawn (deterministically, seeded) in the rare event a row
 # or column of Y is still all zero by Poisson chance.
 #
-# The four numbers (PI0, MU, SIGMA, CAP) come from calibrate_approx_sim.R,
-# which matches the SIZE-ADJUSTED budget curve c |-> pm(log1p(Y/c)) of the
-# real pancreas counts, with MU profiled so the mean count matches exactly.
+# The knobs (pi0, mu, sigma, cap) are calibrated PER c_true against the SAME
+# target -- the size-adjusted budget curve c |-> pm(log1p(Y/c)) of the real
+# pancreas counts, plus the real mean count (profiled, matched exactly in
+# expectation). One shared target is the principled version of "the datasets
+# are comparable across c_true". See calibrate_approx_sim.R.
 #
-# HONEST LIMITS of the calibration at n = p = 500, K = 5 (it was much tighter
-# at K = 10: see sim_design.Rmd): with only 5 factors and Dirichlet-peaked
-# rows, entry rates are nearly single-factor draws, and the knobs cannot feed
-# the zero fraction, the mean, and the extreme tail all at once. Realized
-# match on held-out seeds: mean count median 0.62 (real 0.674); zero fraction
-# ~0.89 (real 0.822); budget curve within ~1.5x at the small-c end, 0.3-0.8x
-# at the large-c end (median max ~2100 vs size-adjusted target 8820). Richer
-# variants (free tail df, two-component magnitudes) fixed one end of the
-# curve only by sacrificing the other, and were rejected.
+# HONEST LIMITS at n = p = 500, K = 5 (much tighter at K = 10: see
+# sim_design.Rmd): with five factors and Dirichlet-peaked rows the knobs
+# cannot feed the zero fraction, the mean, and the extreme tail all at once.
+# Realized match: mean centered in expectation; zero fraction ~0.89 vs real
+# 0.822; budget curve ~1.4-1.5x at the small-c end, ~0.3-0.8x at the large-c
+# end. Richer variants (free tail df, two-component magnitudes) fixed one
+# end only by sacrificing the other, and were rejected.
 
 ## ---- configuration ---------------------------------------------------------
 N_ROWS  <- 500L
@@ -57,7 +62,10 @@ N_COLS  <- 500L
 K_TRUE  <- 5L
 K_FIT   <- 5L
 
-## the c grid the previous approximation-quality experiments used
+## the sweep over the c used to generate the data
+C_TRUE_GRID <- c(1e-3, 1, Inf)
+
+## the c grid for FITTING (the previous approximation experiments' grid)
 CC_GRID <- c(1e-4, 1e-3, 1e-2, 1e-1, 1, 10, 100, 1e3, 1e4)
 N_SEEDS <- 10L
 
@@ -65,26 +73,39 @@ N_SEEDS <- 10L
 ## paper's approximation-quality figure
 METHODS <- c("exact", "taylor", "chebyshev")
 
-## calibrated generator knobs -- output of calibrate_approx_sim.R
-## (approx_sim_calibration.rds holds the same values plus the target curve).
-## Provenance: pancreas counts (7606 x 18195), curve-matched with profiled
-## mean at n = p = 500, K = 5, C_TRUE = 1, with the >= 1 factor conditioning.
-A_SIG  <- 0.3
-PI0    <- 0.7738
-MU     <- -1.2512
-SIGMA  <- 0.7067
-CAP    <- 7.7587
-FLOOR  <- 0.05    # fixed by design, not calibrated (see header)
-T_DF   <- 4
-C_TRUE <- 1
+## calibrated generator knobs, one row per c_true -- output of
+## calibrate_approx_sim.R (approx_sim_calibration.rds holds the same values
+## plus the shared target curve). Provenance: pancreas counts (7606 x 18195),
+## curve-matched with profiled mean at n = p = 500, K = 5. The floor is
+## RATE_FLOOR = 0.05 expected counts mapped through each link.
+A_SIG <- 0.3
+T_DF  <- 4
+
+## The knobs are read from the calibration file in this script's directory
+## (the worker cd's there), so they cannot drift from what
+## calibrate_approx_sim.R produced. Fail loudly if it is missing or stale.
+cal_path <- "approx_sim_calibration.rds"
+stopifnot(file.exists(cal_path))
+CAL <- readRDS(cal_path)
+stopifnot(identical(format(CAL$c_true_grid), format(C_TRUE_GRID)))
+KNOBS <- do.call(rbind, lapply(CAL$per_c_true, function(r)
+  data.frame(c_true = r$c_true, t(r$knobs))))
+rownames(KNOBS) <- NULL
+
+knobs_for <- function(cc) {
+  i <- which(sapply(KNOBS$c_true, function(x) identical(x, cc) ||
+                     (is.infinite(x) && is.infinite(cc)) ||
+                     (is.finite(x) && is.finite(cc) && abs(x - cc) < 1e-12)))
+  stopifnot(length(i) == 1)
+  KNOBS[i, ]
+}
 
 ## fitting: run to convergence at TOL = 1e-6 (absolute change in the fit's own
 ## objective between successive iterations), rank-1 initialization always.
-## MAXITER is a safety cap only (250k: far above anything the c-grid round
-## needed), and there is deliberately NO optimization-time cap -- the SLURM
-## wall clock (24h; see run_approx_sim.sbatch) is the sole backstop. See
-## c_grid_sim_common.R for why a time cap is worse than none: it leaves fits
-## stopped mid-descent, indistinguishable from a plateau.
+## MAXITER is a safety cap only (250k), and there is deliberately NO
+## optimization-time cap -- the SLURM wall clock (24h; see
+## run_approx_sim.sbatch) is the sole backstop. See c_grid_sim_common.R for
+## why a time cap is worse than none.
 MAXITER <- 250000L
 TOL     <- 1e-6
 THREADS <- 1L
@@ -94,37 +115,50 @@ OUT_DIR <- Sys.getenv("APPROX_SIM_OUT",
 
 ## ---- generative model ------------------------------------------------------
 
-#' Nonzero pattern for F: entries survive with probability 1 - PI0, and any
+#' Nonzero pattern for F: entries survive with probability 1 - pi0, and any
 #' feature that would end up with no factor keeps its largest-u one.
-nz_of <- function(u, pi0 = PI0) {
+nz_of <- function(u, pi0) {
   nz <- u > pi0
   dead <- rowSums(nz) == 0
   if (any(dead)) nz[cbind(which(dead), max.col(u[dead, , drop = FALSE]))] <- TRUE
   nz
 }
 
-#' The truth and counts for one seed. Deterministic given the seed, so every
-#' array task sharing a seed rebuilds byte-identical data. The count draw is
-#' retried (up to 50 sub-seeds) until no row or column of Y is entirely zero;
-#' with the >= 1 factor conditioning this virtually always succeeds first try.
-sim_dataset <- function(seed, n = N_ROWS, p = N_COLS, K = K_TRUE) {
+#' The truth and counts for one (seed, c_true). Deterministic, so every array
+#' task sharing (seed, c_true) rebuilds byte-identical data. L and the raw
+#' draws behind F depend only on the seed, so the SAME L (and the same
+#' uniforms/t-draws behind F) underlie every c_true; only the calibrated
+#' magnitude law changes. The count draw is retried (up to 50 sub-seeds)
+#' until no row or column of Y is entirely zero.
+sim_dataset <- function(seed, c_true, n = N_ROWS, p = N_COLS, K = K_TRUE) {
+  kb <- knobs_for(c_true)
+
   set.seed(seed)
   L  <- matrix(stats::rgamma(n * K, shape = A_SIG), n, K)
   L  <- L / rowSums(L)
+  tm <- matrix(stats::rt(p * K, df = T_DF), p, K)
   u  <- matrix(stats::runif(p * K), p, K)
-  FF <- pmin(pmax(exp(MU + SIGMA * stats::rt(p * K, df = T_DF)), FLOOR), CAP) * nz_of(u)
-  lam <- C_TRUE * expm1(tcrossprod(L, FF))
+  FF <- pmin(pmax(exp(kb$mu + kb$sigma * tm), kb$floor), kb$cap) *
+        nz_of(u, kb$pi0)
 
+  th  <- tcrossprod(L, FF)
+  lam <- if (is.infinite(c_true)) th else c_true * expm1(th)
+
+  ci <- which(sapply(C_TRUE_GRID, function(x)
+    (is.infinite(x) && is.infinite(c_true)) ||
+    (is.finite(x) && is.finite(c_true) && abs(x - c_true) < 1e-12)))
   for (try in 1:50) {
-    set.seed(seed * 1000L + try)
+    set.seed(seed * 1000L + 100L * ci + try)
     Y <- matrix(stats::rpois(n * p, lam), n, p)
     if (all(rowSums(Y) > 0) && all(colSums(Y) > 0)) break
   }
   if (any(rowSums(Y) == 0) || any(colSums(Y) == 0))
-    stop("all-zero row/column after 50 redraws; seed ", seed)
+    stop("all-zero row/column after 50 redraws; seed ", seed,
+         ", c_true ", format(c_true))
 
   colnames(L) <- colnames(FF) <- paste0("k", seq_len(K))
-  list(seed = seed, L = L, FF = FF, lambda = lam, Y = Y, y_draw = try)
+  list(seed = seed, c_true = c_true, L = L, FF = FF, lambda = lam, Y = Y,
+       y_draw = try)
 }
 
 pois_loglik <- function(Y, lam) {
@@ -132,24 +166,29 @@ pois_loglik <- function(Y, lam) {
   sum(Y * log(lam) - lam - lgamma(Y + 1))
 }
 
-## ---- task id <-> (seed, cc, method) ----------------------------------------
-## 0-based SLURM_ARRAY_TASK_ID over seeds x cc x method, method fastest. One
-## task = ONE fit, so every fit is checkpointed independently and a hung node
-## costs exactly one fit. 10 x 9 x 3 = 270 tasks, well under MaxArraySize.
-N_TASKS <- N_SEEDS * length(CC_GRID) * length(METHODS)
+## ---- task id <-> (seed, c_true, cc, method) --------------------------------
+## 0-based SLURM_ARRAY_TASK_ID over seeds x c_true x cc x method, method
+## fastest, then cc, then c_true. One task = ONE fit, so every fit is
+## checkpointed independently. 10 x 3 x 9 x 3 = 810 tasks, under the Slurm
+## MaxArraySize default of 1001.
+N_TASKS <- N_SEEDS * length(C_TRUE_GRID) * length(CC_GRID) * length(METHODS)
 
 task_spec <- function(id) {
-  nm <- length(METHODS); nc <- length(CC_GRID)
+  nm <- length(METHODS); nc <- length(CC_GRID); nt <- length(C_TRUE_GRID)
   stopifnot(id >= 0, id < N_TASKS)
   meth_i <- id %% nm;  rest <- id %/% nm
-  cc_i   <- rest %% nc
-  seed_i <- rest %/% nc
+  cc_i   <- rest %% nc; rest <- rest %/% nc
+  ctru_i <- rest %% nt
+  seed_i <- rest %/% nt
   list(seed   = seed_i + 1L,
+       c_true = C_TRUE_GRID[ctru_i + 1L],
        cc     = CC_GRID[cc_i + 1L],
        method = METHODS[meth_i + 1L])
 }
 
+fmtc <- function(x) if (is.infinite(x)) "Inf" else
+  format(x, scientific = FALSE, trim = TRUE, drop0trailing = TRUE)
+
 tag_of <- function(spec)
-  sprintf("approxsim_seed%02d_c%s_%s", spec$seed,
-          format(spec$cc, scientific = FALSE, trim = TRUE, drop0trailing = TRUE),
-          spec$method)
+  sprintf("approxsim_seed%02d_ctrue%s_cfit%s_%s", spec$seed,
+          fmtc(spec$c_true), fmtc(spec$cc), spec$method)

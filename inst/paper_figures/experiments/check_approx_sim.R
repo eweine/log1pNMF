@@ -22,7 +22,8 @@ if (any(!have)) {
   cat(paste(miss, collapse = ","), "\n")
   for (i in miss) {
     s <- task_spec(i)
-    cat(sprintf("  %4d  seed %2d  cc %-6s  %s\n", i, s$seed, format(s$cc), s$method))
+    cat(sprintf("  %4d  seed %2d  c_true %-5s  c_fit %-6s  %s\n",
+                i, s$seed, fmtc(s$c_true), fmtc(s$cc), s$method))
   }
 }
 
@@ -32,7 +33,7 @@ if (any(have)) {
   cat("\n", nrow(rows), "fits read;", sum(!rows$converged), "did not converge\n")
   if (nrow(bad) > 0) {
     cat("UNCONVERGED (hit MAXITER):\n")
-    print(bad[, c("task", "seed", "cc", "method", "n_iter", "seconds")],
+    print(bad[, c("task", "seed", "c_true", "cc", "method", "n_iter", "seconds")],
           row.names = FALSE)
   }
   cat("\nseconds per fit by method (median [max]):\n")
