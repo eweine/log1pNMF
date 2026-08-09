@@ -3,6 +3,8 @@ dat <- readr::read_csv("../data/raw_data/bbc_news_text_complexity_summarization.
 
 set.seed(1)
 library(fastTopics)
+library(ggplot2)
+library(ggpubr)
 library(tm)
 library(SnowballC)
 
