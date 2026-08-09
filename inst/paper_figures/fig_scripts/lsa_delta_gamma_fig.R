@@ -54,10 +54,14 @@ tm_k13 <- res_list$pancreas$`Inf`
 F_tm <- tm_k13$F
 L_tm <- tm_k13$L
 L_tm <- Matrix::Diagonal(x = 1/s) %*% L_tm
-colnames(F_tm) <- paste0(
-  "k", 
-  c(11,12, 7, 6, 5, 1, 9, 4, 3, 2, 10, 13, 8)
-)
+## match to the log1p c = 1 reference (same procedure and reference as every
+## other pancreas figure; see factor_matching.R). Labels k3/k13 -- the two
+## used below -- are identical under the old manual vector and the matcher.
+source("factor_matching.R")
+tm_labels <- match_display_labels(
+  res_list$pancreas[["1"]]$FF, tm_k13$F,
+  c(11, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1, 12, 13))
+colnames(F_tm) <- paste0("k", tm_labels)
 d_tm <- apply(L_tm,2,max)
 F_tm <- scale_cols(F_tm,d_tm)
 
