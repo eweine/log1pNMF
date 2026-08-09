@@ -67,7 +67,7 @@ ga <- ggplot(data = o_df, aes(x = n, y = o, color = Calculation)) +
   ylab("Relative Computational Complexity") +
   xlab("n") +
   cowplot::theme_cowplot() +
-  ggtitle("m = 10,000, K = 25, Sparsity = 95%") +
+  ggtitle("p = 10,000, K = 25, Sparsity = 95%") +
   geom_hline(yintercept = 1, linetype = "dashed") +
   scale_color_manual(values=c("blue", "red")) +
   theme(
@@ -119,7 +119,7 @@ gb <- ggplot(data = o_df, aes(x = K, y = o, color = Calculation)) +
   ) +
   ylab("Relative Computational Complexity") +
   cowplot::theme_cowplot() +
-  ggtitle("n = 10,000, m = 10,000, Sparsity = 95%") +
+  ggtitle("n = 10,000, p = 10,000, Sparsity = 95%") +
   geom_hline(yintercept = 1, linetype = "dashed") +
   scale_color_manual(values=c("blue", "red")) +
   theme(
@@ -175,7 +175,7 @@ gc <- ggplot(data = o_df, aes(x = pct_0, y = o, color = Calculation)) +
   ylab("Relative Computational Complexity") +
   xlab("Sparsity") +
   cowplot::theme_cowplot() +
-  ggtitle("n = 10,000, m = 10,000, K = 25") +
+  ggtitle("n = 10,000, p = 10,000, K = 25") +
   geom_hline(yintercept = 1, linetype = "dashed") +
   scale_color_manual(values=c("blue", "red")) +
   theme(
