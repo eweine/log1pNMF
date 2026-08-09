@@ -127,21 +127,16 @@ p2 <- sp2 +
 
 log1p_cheb <- res_list$pancreas$`c = 1, cheby`
 
-L <- log1p_cheb$LL
-FF_log1p_cheb <- log1p_cheb$FF
-colnames(L) <- paste0(
-  "k", 
-  c(11,2,13,3,5,6,7,9,8,10,1,12,4)
-)
-L <- L[,paste0("k", 1:13)]
+## Match to the exact c = 1 reference (see factor_matching.R), which keeps
+## the same display order as every other pancreas figure.
+source("factor_matching.R")
+ref_labels_pancreas <- c(11, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1, 12, 13)
+cheb_labels <- match_display_labels(log1p_k13$FF, log1p_cheb$FF,
+                                    ref_labels_pancreas)
+L <- relabel_and_sort(log1p_cheb$LL, cheb_labels)
 d <- apply(L,2,max)
 L <- scale_cols(L,1/d)
-
-colnames(FF_log1p_cheb) <- paste0(
-  "k", 
-  c(11,2,13,3,5,6,7,9,8,10,1,12,4)
-)
-FF_log1p_cheb <- FF_log1p_cheb[,paste0("k", 1:13)]
+FF_log1p_cheb <- relabel_and_sort(log1p_cheb$FF, cheb_labels)
 
 sparsity_cheb_L <- apply(
   L, 2, hoyer_sparsity
@@ -204,21 +199,12 @@ p4 <- sp4 +
 
 log1p_frob <- res_list$pancreas$`c = 1, frob`
 
-L <- log1p_frob$W
-FF_log1p_frob <- t(log1p_frob$H)
-colnames(L) <- paste0(
-  "k", 
-  c(11,6,2,4,5,12,1,3,8,10,13,9,7)
-)
-L <- L[,paste0("k", 1:13)]
+frob_labels <- match_display_labels(log1p_k13$FF, t(log1p_frob$H),
+                                    ref_labels_pancreas)
+L <- relabel_and_sort(log1p_frob$W, frob_labels)
 d <- apply(L,2,max)
 L <- scale_cols(L,1/d)
-
-colnames(FF_log1p_frob) <- paste0(
-  "k", 
-  c(11,6,2,4,5,12,1,3,8,10,13,9,7)
-)
-FF_log1p_frob <- FF_log1p_frob[,paste0("k", 1:13)]
+FF_log1p_frob <- relabel_and_sort(t(log1p_frob$H), frob_labels)
 
 other_topics_frob <- c(
   4, 7, 10, 13
