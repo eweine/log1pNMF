@@ -67,32 +67,26 @@ for (cc in cc_vec) {
 
 fit_list[["Inf"]] <- res_list$mcf7$`Inf`
 
-log1p_loadings_order <- 1:3
-tm_loadings_order <- c(1,3,2)
+## Factor matching for display (see factor_matching.R): the c = 1 fit is the
+## reference (labels 1:3, as in the main-text figure); every other panel and
+## the topic model are matched to it on Spearman correlations of F.
+source("factor_matching.R")
+ref_FF_mcf7 <- res_list$mcf7[["1"]]$FF
 
-colnames(fit_list[[as.character(1)]]$LL) <- paste0(
-  "k", log1p_loadings_order
-)
+for (cc in cc_vec) {
+  if (cc == 1) next
+  lab <- match_display_labels(ref_FF_mcf7, fit_list[[as.character(cc)]]$FF)
+  fit_list[[as.character(cc)]]$LL <-
+    relabel_and_sort(fit_list[[as.character(cc)]]$LL, lab)
+  fit_list[[as.character(cc)]]$FF <-
+    relabel_and_sort(fit_list[[as.character(cc)]]$FF, lab)
+}
 
-fit_list[[as.character(1)]]$LL <- fit_list[[as.character(1)]]$LL[,paste0("k", 1:3)]
-
-colnames(fit_list[[as.character(1e-3)]]$FF) <- paste0(
-  "k", log1p_loadings_order
-)
-
-fit_list[[as.character(1e-3)]]$FF <- fit_list[[as.character(1e-3)]]$FF[,paste0("k", 1:3)]
-
-colnames(fit_list[[as.character(Inf)]]$L) <- paste0(
-  "k", tm_loadings_order
-)
-
-fit_list[[as.character(Inf)]]$L <- fit_list[[as.character(Inf)]]$L[,paste0("k", 1:3)]
-
-colnames(fit_list[[as.character(Inf)]]$F) <- paste0(
-  "k", tm_loadings_order
-)
-
-fit_list[[as.character(Inf)]]$F <- fit_list[[as.character(Inf)]]$F[,paste0("k", 1:3)]
+tm_labels <- match_display_labels(ref_FF_mcf7, fit_list[[as.character(Inf)]]$F)
+fit_list[[as.character(Inf)]]$L <-
+  relabel_and_sort(fit_list[[as.character(Inf)]]$L, tm_labels)
+fit_list[[as.character(Inf)]]$F <-
+  relabel_and_sort(fit_list[[as.character(Inf)]]$F, tm_labels)
 
 plot_list <- list()
 

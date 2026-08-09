@@ -17,6 +17,11 @@ s <- s / mean(s)
 
 barcodes   <- as.data.frame(barcodes)
 
+## the raw Rdata spells this cell type "Endothelial/Mesnchymal";
+## fix it so the factor level below matches (otherwise those cells
+## silently become NA and vanish from the plots)
+barcodes$celltype[barcodes$celltype == "Endothelial/Mesnchymal"] <-
+  "Endothelial/Mesenchymal"
 clusters   <- factor(barcodes$celltype,
                      c("Acinar","Ductal","Endothelial/Mesenchymal","Macrophage",
                        "Alpha","Beta","Delta","Gamma"))
@@ -119,19 +124,17 @@ p3 <- sp3 +
 
 tm_k13 <- res_list$pancreas$`Inf`
 
-L <- tm_k13$L
-FF_tm <- poisson2multinom(tm_k13)$F
-colnames(L) <- paste0(
-  "k", 
-  c(11,12, 7, 6, 5, 1, 9, 4, 3, 2, 10, 13, 8)
-)
-L <- L[,paste0("k", 1:13)]
+## Match the topic model's factors to the log1p (c = 1) reference fit:
+## Hungarian assignment maximizing summed Spearman correlation between the
+## paired columns of F (see factor_matching.R). The reference keeps the
+## manually chosen display order (the k1/k11 swap above), and the matched
+## labels propagate it to the topic model.
+source("factor_matching.R")
+ref_labels_pancreas <- c(11, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1, 12, 13)
+tm_labels <- match_display_labels(log1p_k13$FF, tm_k13$F, ref_labels_pancreas)
 
-colnames(FF_tm) <- paste0(
-  "k", 
-  c(11,12, 7, 6, 5, 1, 9, 4, 3, 2, 10, 13, 8)
-)
-FF_tm <- FF_tm[,paste0("k", 1:13)]
+L <- relabel_and_sort(tm_k13$L, tm_labels)
+FF_tm <- relabel_and_sort(poisson2multinom(tm_k13)$F, tm_labels)
 
 
 #sp34_loadings_order_call <- structure_plot(

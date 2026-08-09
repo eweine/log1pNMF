@@ -80,8 +80,15 @@ for (cc in cc_vec) {
 
 fit_list[["Inf"]] <- res_list$bbc$`Inf`
 
+## Factor matching for display (see factor_matching.R): the c = 1e-3 fit is
+## the reference, in the manually chosen semantic order below; other fits are
+## matched to it on Spearman correlations of F. (Validated: this reproduces
+## the previous manual topic-model alignment exactly for this dataset.)
+source("factor_matching.R")
 log1p_loadings_order <- c(1, 2, 5, 4, 3, 8, 7, 6, 9, 10)
-tm_loadings_order <- c(1, 8, 3, 9, 5, 10, 7, 2, 4, 6)
+ref_FF_bbc <- res_list$bbc[["0.001"]]$FF
+tm_loadings_order <- match_display_labels(
+  ref_FF_bbc, res_list$bbc[["Inf"]]$F, log1p_loadings_order)
 
 
 colnames(fit_list[[as.character(1e-3)]]$LL) <- paste0(
@@ -109,6 +116,16 @@ colnames(fit_list[[as.character(Inf)]]$F) <- paste0(
 )
 
 fit_list[[as.character(Inf)]]$F <- fit_list[[as.character(Inf)]]$F[,paste0("k", 1:10)]
+
+## match every intermediate-c panel to the reference as well
+for (cc in setdiff(cc_vec, 1e-3)) {
+  lab <- match_display_labels(ref_FF_bbc, fit_list[[as.character(cc)]]$FF,
+                              log1p_loadings_order)
+  fit_list[[as.character(cc)]]$LL <-
+    relabel_and_sort(fit_list[[as.character(cc)]]$LL, lab)
+  fit_list[[as.character(cc)]]$FF <-
+    relabel_and_sort(fit_list[[as.character(cc)]]$FF, lab)
+}
 
 plot_list <- list()
 

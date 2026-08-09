@@ -1,3 +1,4 @@
+library(ggpubr)
 library(dplyr)
 library(fastTopics)
 library(log1pNMF)
@@ -23,6 +24,11 @@ barcodes <- barcodes %>%
     )
   )
 
+## the raw Rdata spells this cell type "Endothelial/Mesnchymal";
+## fix it so the factor level below matches (otherwise those cells
+## silently become NA and vanish from the plots)
+barcodes$celltype[barcodes$celltype == "Endothelial/Mesnchymal"] <-
+  "Endothelial/Mesenchymal"
 clusters   <- factor(barcodes$celltype,
                      c("Acinar","Ductal","Endothelial/Mesenchymal","Macrophage",
                        "Alpha","Beta","Delta","Gamma"))
@@ -46,35 +52,31 @@ for (cc in cc_vec) {
 
 fit_list[["Inf"]] <- res_list$pancreas$`Inf`
 
-log1p_loadings_order <- c(11, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1, 12, 13)
-tm_loadings_order <- c(11,12, 7, 6, 5, 1, 9, 4, 3, 2, 10, 13, 8)
+## Factor matching for display (see factor_matching.R): the c = 1 fit is the
+## reference, shown in the manually chosen semantic order below (identical to
+## the main-text figure). Every other panel -- each c and the topic model --
+## is matched to it by Hungarian assignment on Spearman correlations between
+## the paired columns of F, so a factor keeps one color everywhere.
+source("factor_matching.R")
+ref_labels_pancreas <- c(11, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1, 12, 13)
+ref_FF <- res_list$pancreas[["1"]]$FF
 
+for (cc in cc_vec) {
+  lab <- if (cc == 1) ref_labels_pancreas else
+    match_display_labels(ref_FF, fit_list[[as.character(cc)]]$FF,
+                         ref_labels_pancreas)
+  fit_list[[as.character(cc)]]$LL <-
+    relabel_and_sort(fit_list[[as.character(cc)]]$LL, lab)
+  fit_list[[as.character(cc)]]$FF <-
+    relabel_and_sort(fit_list[[as.character(cc)]]$FF, lab)
+}
 
-colnames(fit_list[[as.character(1)]]$LL) <- paste0(
-  "k", log1p_loadings_order
-)
-
-fit_list[[as.character(1)]]$LL <- fit_list[[as.character(1)]]$LL[,paste0("k", 1:13)]
-
-colnames(fit_list[[as.character(1)]]$FF) <- paste0(
-  "k", log1p_loadings_order
-)
-
-fit_list[[as.character(1)]]$FF <- fit_list[[as.character(1)]]$FF[,paste0("k", 1:13)]
-
-
-
-colnames(fit_list[[as.character(Inf)]]$L) <- paste0(
-  "k", tm_loadings_order
-)
-
-fit_list[[as.character(Inf)]]$L <- fit_list[[as.character(Inf)]]$L[,paste0("k", 1:13)]
-
-colnames(fit_list[[as.character(Inf)]]$F) <- paste0(
-  "k", tm_loadings_order
-)
-
-fit_list[[as.character(Inf)]]$F <- fit_list[[as.character(Inf)]]$F[,paste0("k", 1:13)]
+tm_labels <- match_display_labels(ref_FF, fit_list[[as.character(Inf)]]$F,
+                                  ref_labels_pancreas)
+fit_list[[as.character(Inf)]]$L <-
+  relabel_and_sort(fit_list[[as.character(Inf)]]$L, tm_labels)
+fit_list[[as.character(Inf)]]$F <-
+  relabel_and_sort(fit_list[[as.character(Inf)]]$F, tm_labels)
 
 plot_list <- list()
 

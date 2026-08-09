@@ -126,10 +126,12 @@ g1 <- normalized_structure_plot(
   guides(colour = "none")
 
 
-L0 <- tm3_r1_init$L
-L <- L0
-L0[,2] <- L[,3]
-L0[,3] <- L[,2]
+## Match the topic model's factors to the log1p (c = 1) reference fit
+## (Hungarian assignment on Spearman correlations of the columns of F;
+## see factor_matching.R).
+source("factor_matching.R")
+tm_labels_mcf7 <- match_display_labels(log1p_fit3$FF, tm3_r1_init$F)
+L0 <- relabel_and_sort(tm3_r1_init$L, tm_labels_mcf7)
 g2 <- structure_plot(
   log1pNMF:::normalize_bars(diag(1 / log1p_fit3$s) %*% L0),
   grouping = samples$label,topics = rev(1:3),
@@ -181,15 +183,8 @@ g3 <- ggplot(data = log1p_df, aes(x = k2, y = k3)) +
   theme(plot.title = element_text(hjust = 0.5))
 
 
-F0 <- tm3_r1_init$F
-FF <- F0
-F0[,2] <- FF[,3]
-F0[,3] <- FF[,2]
-
-L0 <- tm3_r1_init$L
-LL <- L0
-L0[,2] <- LL[,3]
-L0[,3] <- LL[,2]
+F0 <- relabel_and_sort(tm3_r1_init$F, tm_labels_mcf7)
+L0 <- relabel_and_sort(tm3_r1_init$L, tm_labels_mcf7)
 L0_norm <- diag(1 / log1p_fit3$s) %*% L0
 
 col_maxima <- apply(L0, 2, max)
