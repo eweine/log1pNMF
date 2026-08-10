@@ -19,12 +19,6 @@
 #
 # APPROX_SIM_MAXITER overrides MAXITER, for local smoke tests only.
 
-suppressMessages({
-  library(log1pNMF)
-  library(fastTopics)
-  library(Matrix)
-})
-
 source("approx_sim_common.R")
 
 ## ---- task id ---------------------------------------------------------------
@@ -47,11 +41,19 @@ out_file <- file.path(OUT_DIR, paste0(tag, ".rds"))
 
 ## The grid includes the 810 round-one fits (identical generator, grid and
 ## tags), which are reused, not refit: skip any task whose output exists.
+## This check runs BEFORE the libraries load, so a skipped task costs only
+## R startup (~2s), not the 10-15s of package loading.
 ## APPROX_SIM_OVERWRITE=1 forces a refit (for deliberate reruns only).
 if (file.exists(out_file) && Sys.getenv("APPROX_SIM_OVERWRITE", "0") != "1") {
   message("output exists, skipping: ", out_file)
   quit(save = "no")
 }
+
+suppressMessages({
+  library(log1pNMF)
+  library(fastTopics)
+  library(Matrix)
+})
 
 ## ---- data ------------------------------------------------------------------
 t0 <- proc.time()[["elapsed"]]
