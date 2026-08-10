@@ -6,6 +6,15 @@
 # Prints the missing task ids in sbatch --array form, so a resubmission is
 #
 #   sbatch --array=<printed list> run_approx_sim.sbatch
+#
+# Safe to run while the array is still going; "missing" then includes tasks
+# that are simply still running. Each output .rds carries the fit's whole
+# objective trace, so reading one is slow; the one-row summaries are cached
+# in OUT_DIR and repeated checks only read outputs that appeared (or were
+# rewritten) since the last run. Set CHECK_CORES > 1 to read new outputs in
+# parallel, e.g.
+#
+#   CHECK_CORES=8 Rscript check_approx_sim.R
 
 source("approx_sim_common.R")
 
@@ -28,8 +37,56 @@ if (any(!have)) {
 }
 
 if (any(have)) {
-  rows <- do.call(rbind, lapply(files[have], function(f) readRDS(f)$row))
-  bad  <- rows[!rows$converged, , drop = FALSE]
+  have_files <- files[have]
+  have_mtime <- as.numeric(file.mtime(have_files))
+
+  ## cache of already-read summary rows, keyed by (file, mtime)
+  cache_file <- file.path(OUT_DIR, "approx_sim_rows_cache.rds")
+  cache <- if (file.exists(cache_file)) readRDS(cache_file) else NULL
+  if (is.null(cache)) {
+    ci  <- rep(NA_integer_, length(have_files))
+    hit <- rep(FALSE, length(have_files))
+  } else {
+    ci  <- match(have_files, cache$file)
+    hit <- !is.na(ci) & cache$mtime[ci] == have_mtime
+  }
+
+  new_files <- have_files[!hit]
+  new_rows  <- NULL
+  if (length(new_files) > 0) {
+    n_cores <- max(1L, as.integer(Sys.getenv("CHECK_CORES", "1")))
+    cat(sprintf("\nreading %d new outputs (%d cached, %d cores)...\n",
+                length(new_files), sum(hit), n_cores))
+    ## a file being saved by a worker right now can fail to read; skip it
+    ## this run and it will be picked up (with a fresh mtime) next time
+    read_row <- function(f) tryCatch(cbind(readRDS(f)$row, file = f),
+                                     error = function(e) NULL)
+    t0 <- proc.time()[["elapsed"]]
+    chunks <- split(new_files, ceiling(seq_along(new_files) / 25))
+    got <- list(); done <- 0L
+    for (ch in chunks) {
+      rs <- if (n_cores > 1L) parallel::mclapply(ch, read_row, mc.cores = n_cores)
+            else lapply(ch, read_row)
+      got <- c(got, rs); done <- done + length(ch)
+      el <- proc.time()[["elapsed"]] - t0
+      cat(sprintf("  %3d / %d  (%.0fs elapsed, ~%.0fs left)\n", done,
+                  length(new_files), el,
+                  el / done * (length(new_files) - done)))
+    }
+    unreadable <- sum(vapply(got, is.null, logical(1)))
+    if (unreadable > 0)
+      cat(unreadable, "output(s) unreadable (probably mid-write); skipped\n")
+    new_rows <- do.call(rbind, got)
+    if (!is.null(new_rows))
+      new_rows$mtime <- have_mtime[!hit][match(new_rows$file, new_files)]
+  }
+
+  cache <- rbind(if (any(hit)) cache[ci[hit], , drop = FALSE], new_rows)
+  saveRDS(cache, cache_file)
+  rows <- cache
+  if (is.null(rows)) { cat("no outputs readable yet\n"); quit(save = "no") }
+
+  bad <- rows[!rows$converged, , drop = FALSE]
   cat("\n", nrow(rows), "fits read;", sum(!rows$converged), "did not converge\n")
   if (nrow(bad) > 0) {
     cat("UNCONVERGED (hit MAXITER):\n")
