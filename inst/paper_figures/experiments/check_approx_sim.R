@@ -27,19 +27,18 @@ cat(sum(have), "of", N_TASKS, "outputs present in", OUT_DIR, "\n")
 
 if (any(!have)) {
   miss <- ids[!have]
-  lo <- miss[miss < 990L]; hi <- miss[miss >= 990L]
   cat("\nMISSING task ids. Resubmit (the worker adds APPROX_SIM_TASK_OFFSET):\n")
-  if (length(lo))
-    cat("  sbatch --array=", paste(lo, collapse = ","),
-        " run_approx_sim.sbatch\n", sep = "")
-  if (length(hi))
-    cat("  sbatch --export=ALL,APPROX_SIM_TASK_OFFSET=990 --array=",
-        paste(hi - 990L, collapse = ","), " run_approx_sim.sbatch\n", sep = "")
-  for (i in miss) {
+  for (off in seq(0L, N_TASKS - 1L, by = 990L)) {
+    m <- miss[miss >= off & miss < off + 990L]
+    if (!length(m)) next
+    cat("  sbatch --export=ALL,APPROX_SIM_TASK_OFFSET=", off, " --array=",
+        paste(m - off, collapse = ","), " run_approx_sim.sbatch\n", sep = "")
+  }
+  if (length(miss) <= 60L) for (i in miss) {
     s <- task_spec(i)
     cat(sprintf("  %4d  seed %2d  c_true %-5s  c_fit %-6s  %s\n",
                 i, s$seed, fmtc(s$c_true), fmtc(s$cc), s$method))
-  }
+  } else cat("  (", length(miss), "tasks; per-task detail suppressed )\n")
 }
 
 if (any(have)) {

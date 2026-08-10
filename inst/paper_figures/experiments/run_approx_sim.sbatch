@@ -1,16 +1,22 @@
 #!/bin/bash
-# Exact-vs-approx simulation (round two: balanced factors): one array task
-# per (seed, cc, method) fit.
+# Exact-vs-approx simulation, extended round: one array task per
+# (seed, cc, method) fit.
 #
-#   30 seeds x 3 c_true x (7 finite c_fit x 3 methods + c_fit = Inf, exact
-#   only) = 1980 tasks, indexed 0..1979 with method varying fastest, then
+#   30 seeds x 3 c_true x (9 finite c_fit x 3 methods + c_fit = Inf, exact
+#   only) = 2520 tasks, indexed 0..2519 with method varying fastest, then
 #   c_fit, then c_true (see the SPEC table in approx_sim_common.R).
 #
-# 1980 exceeds the Slurm MaxArraySize default of 1001, so submit TWO halves;
-# the worker adds APPROX_SIM_TASK_OFFSET to its array id:
+# The generator and finite grid are IDENTICAL to round one, so the 810
+# round-one outputs in OUT_DIR are seeds 1-10 of this grid; the worker
+# skips any task whose output already exists (a skipped task costs ~2s of
+# R startup). Only the 20 new seeds and the c = Inf topic-model fits run.
+#
+# 2520 exceeds the Slurm MaxArraySize default of 1001, so submit THREE
+# slices; the worker adds APPROX_SIM_TASK_OFFSET to its array id:
 #
 #   sbatch run_approx_sim.sbatch
-#   sbatch --export=ALL,APPROX_SIM_TASK_OFFSET=990 run_approx_sim.sbatch
+#   sbatch --export=ALL,APPROX_SIM_TASK_OFFSET=990  run_approx_sim.sbatch
+#   sbatch --export=ALL,APPROX_SIM_TASK_OFFSET=1980 --array=0-539 run_approx_sim.sbatch
 #   Rscript check_approx_sim.R             # afterward: what is missing/unconverged
 #
 # Each task is single-threaded on purpose: the 500 x 500 problem is small

@@ -34,30 +34,15 @@
 #          additionally CONDITIONED to load on at least one factor, since
 #          dead features (probability pi0^K, ~1/3 at K = 5) produce all-zero
 #          columns deterministically.
-#          FINALLY, at the FINITE c_true regimes the columns of F are
-#          BALANCED: rescaled (and re-clamped, iterating to a joint fixed
-#          point) so that every factor contributes an equal share of
-#          mean(theta), i.e. w_k = mean(l_k) mean(f_k) / mean(L F') = 1/K
-#          for all k, making the sum-form sparsity allowance of the Hoyer
-#          appendix a single per-fit curve with no per-factor
-#          heterogeneity. Balance holds to 0.1% (BAL_TOL); the clamps are
-#          re-applied inside the iteration so the floor/cap guarantees
-#          survive. The finite regimes were already nearly balanced
-#          (w_k ~ 0.2 +/- 0.03), so this costs their calibration nothing.
-#
-#          c_true = Inf is NOT balanced, deliberately. With the identity
-#          link, balance pins every factor column's mean to
-#          mean(rates)/(K mean(l_k)) ~ 0.67, so no entry of F can exceed
-#          p x 0.67 ~ 337 and max(Y) is structurally capped near ~300 --
-#          an order of magnitude under the size-adjusted pancreas target
-#          (8820) -- while the mass concentrates on rare cap-sized draws,
-#          making the realized mean count swing ~70x across seeds
-#          (calibration attempts: curve loss ~16.5 from every start, one
-#          held-out seed at mean 0.016). Concentrated factor mass is HOW
-#          the identity link produces a heavy tail (the log link gets it
-#          from exponential amplification instead), so the Inf regime
-#          keeps the unbalanced round-one law: real tail, stable mass,
-#          w_k spread ~0.03-0.51 as before.
+#          NOTE: balancing the F columns so w_k = mean(l_k)mean(f_k)/
+#          mean(LF') = 1/K was implemented and then ABANDONED (see git
+#          history around f4f1492): at c_true = Inf the identity link pins
+#          every balanced column's mean to ~mean(rates)/(K mean(l_k)), so
+#          max(Y) is structurally capped near ~300 vs the 8820 tail target
+#          -- concentrated factor mass is how the identity link produces a
+#          heavy tail. Rather than balance some regimes and not others,
+#          the generator stays exactly the round-one law, so the round-one
+#          outputs (seeds 1-10) remain valid and are NOT refit.
 #   theta  = L F'
 #   lambda = c_true * expm1(theta)   for finite c_true
 #          = theta                   for c_true = Inf (plain Poisson NMF)
@@ -89,13 +74,14 @@ K_FIT   <- 5L
 ## the sweep over the c used to generate the data
 C_TRUE_GRID <- c(1e-3, 1, Inf)
 
-## the c grid for FITTING. The extreme decades 1e-4 and 1e4 of the first
-## round were dropped (they added little beyond 1e-3 / 1e3 and carried the
-## slowest fits); c = Inf (plain Poisson NMF via fastTopics) joined the grid
-## and is fit with the EXACT objective only -- the quadratic zero-term
-## approximations are constructions for the log1p objective and have no
-## c = Inf analogue.
-CC_GRID <- c(1e-3, 1e-2, 1e-1, 1, 10, 100, 1e3, Inf)
+## the c grid for FITTING: the round-one grid, PLUS c = Inf (plain Poisson
+## NMF, i.e. the topic model, via fastTopics), fit with the EXACT objective
+## only -- the quadratic zero-term approximations are constructions for the
+## log1p objective and have no c = Inf analogue. Keeping the finite grid
+## and the generator identical to round one means the 810 round-one fits
+## (seeds 1-10) are reused as-is; only the 20 new seeds and the Inf fits
+## run.
+CC_GRID <- c(1e-4, 1e-3, 1e-2, 1e-1, 1, 10, 100, 1e3, 1e4, Inf)
 N_SEEDS <- 30L
 
 ## methods: the exact objective and both approximation techniques used in the
@@ -143,11 +129,11 @@ MAXITER_INF <- 100000L
 TOL     <- 1e-6
 THREADS <- 1L
 
-## fresh directory: round one (unbalanced truth, 250k cap, 10 seeds, the
-## 1e-4..1e4 grid) lives in .../approx_sim and its outputs must not mix with
-## this round's.
+## SAME directory as round one, on purpose: the generator and finite grid
+## are unchanged, so the 810 existing outputs are this experiment's seeds
+## 1-10 and the worker skips any task whose output already exists.
 OUT_DIR <- Sys.getenv("APPROX_SIM_OUT",
-                      "/rafalab/eweine/log1p_experiments/approx_sim_bal")
+                      "/rafalab/eweine/log1p_experiments/approx_sim")
 
 ## ---- generative model ------------------------------------------------------
 
@@ -158,25 +144,6 @@ nz_of <- function(u, pi0) {
   dead <- rowSums(nz) == 0
   if (any(dead)) nz[cbind(which(dead), max.col(u[dead, , drop = FALSE]))] <- TRUE
   nz
-}
-
-#' Rescale the columns of F (re-clamping each pass) until every factor
-#' contributes an equal share of mean(L F'): w_k = 1/K to within BAL_TOL.
-#' The rescale and the clamps are competing constraints on the same
-#' entries, so one pass of each does not satisfy both; the iteration finds
-#' the joint fixed point (a handful of passes in practice).
-BAL_TOL  <- 1e-3
-BAL_ITER <- 200L
-balance_F <- function(L, FF, nz, floor, cap) {
-  K  <- ncol(FF)
-  Lm <- colMeans(L)
-  for (i in seq_len(BAL_ITER)) {
-    w <- Lm * colMeans(FF); w <- w / sum(w)
-    if (max(abs(K * w - 1)) < BAL_TOL) break
-    FF <- sweep(FF, 2, (1 / K) / w, "*")
-    FF <- pmin(pmax(FF, floor), cap) * nz
-  }
-  FF
 }
 
 #' The truth and counts for one (seed, c_true). Deterministic, so every array
@@ -193,10 +160,8 @@ sim_dataset <- function(seed, c_true, n = N_ROWS, p = N_COLS, K = K_TRUE) {
   L  <- L / rowSums(L)
   tm <- matrix(stats::rt(p * K, df = T_DF), p, K)
   u  <- matrix(stats::runif(p * K), p, K)
-  nz <- nz_of(u, kb$pi0)
-  FF <- pmin(pmax(exp(kb$mu + kb$sigma * tm), kb$floor), kb$cap) * nz
-  if (is.finite(c_true))                    # Inf stays unbalanced; see header
-    FF <- balance_F(L, FF, nz, kb$floor, kb$cap)
+  FF <- pmin(pmax(exp(kb$mu + kb$sigma * tm), kb$floor), kb$cap) *
+        nz_of(u, kb$pi0)
 
   th  <- tcrossprod(L, FF)
   lam <- if (is.infinite(c_true)) th else c_true * expm1(th)
@@ -227,9 +192,10 @@ pois_loglik <- function(Y, lam) {
 ## The grid is no longer a full product (c = Inf is exact-only), so tasks are
 ## rows of an explicit spec table: method fastest, then cc, then c_true, then
 ## seed. One task = ONE fit, so every fit is checkpointed independently.
-## 30 seeds x 3 c_true x (7 finite cc x 3 methods + Inf x exact) = 1980
-## tasks. That EXCEEDS the Slurm MaxArraySize default of 1001, so the array
-## is submitted in two halves via APPROX_SIM_TASK_OFFSET (see
+## 30 seeds x 3 c_true x (9 finite cc x 3 methods + Inf x exact) = 2520
+## tasks, of which the 810 round-one fits already exist (the worker skips
+## them). 2520 EXCEEDS the Slurm MaxArraySize default of 1001, so the grid
+## is submitted in three slices via APPROX_SIM_TASK_OFFSET (see
 ## run_approx_sim.sbatch).
 SPEC <- do.call(rbind, lapply(seq_len(N_SEEDS), function(si)
   do.call(rbind, lapply(C_TRUE_GRID, function(ct)

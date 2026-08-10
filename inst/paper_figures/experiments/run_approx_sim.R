@@ -45,6 +45,14 @@ message(sprintf("=== task %d: %s  (seed %d, c_true %s, c_fit %s, method %s) on %
 dir.create(OUT_DIR, showWarnings = FALSE, recursive = TRUE)
 out_file <- file.path(OUT_DIR, paste0(tag, ".rds"))
 
+## The grid includes the 810 round-one fits (identical generator, grid and
+## tags), which are reused, not refit: skip any task whose output exists.
+## APPROX_SIM_OVERWRITE=1 forces a refit (for deliberate reruns only).
+if (file.exists(out_file) && Sys.getenv("APPROX_SIM_OVERWRITE", "0") != "1") {
+  message("output exists, skipping: ", out_file)
+  quit(save = "no")
+}
+
 ## ---- data ------------------------------------------------------------------
 t0 <- proc.time()[["elapsed"]]
 d  <- sim_dataset(spec$seed, spec$c_true)

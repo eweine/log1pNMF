@@ -5,8 +5,8 @@
 #   Rscript analyze_approx_sim.R [out_basename]
 #
 # Default output: <OUT_DIR>/approx_sim_metrics.{rds,csv} -- one row per fit,
-# i.e. per (seed, c_true, c_fit, method); N_TASKS rows (1980 in the balanced
-# round: 30 seeds x 3 c_true x (7 finite c_fit x 3 methods + Inf, exact
+# i.e. per (seed, c_true, c_fit, method); N_TASKS rows (2520 in the extended
+# round: 30 seeds x 3 c_true x (9 finite c_fit x 3 methods + Inf, exact
 # only)). Small enough to scp home; the full fits (factors, objective
 # traces) stay on the server.
 #
