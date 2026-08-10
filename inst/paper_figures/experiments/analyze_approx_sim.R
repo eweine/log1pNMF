@@ -43,6 +43,25 @@
 #
 # Hoyer is scale-invariant per column and Spearman is monotone-invariant, so
 # none of this depends on the arbitrary column scalings of L and F.
+#
+# ---------------------------------------------------------------------------
+# SECOND OUTPUT: <OUT_DIR>/approx_sim_bounds.{rds,csv} -- one row per
+# (fit, factor k), 810 x K rows, for studying the appendix sparsity bounds
+# against the fitted matrices. Per row, with B = L F^t of that fit:
+#
+#   d_L, d_F         column densities d(x) = ||x||_1 / (sqrt(m) ||x||_2);
+#                    H(x) = kappa_m (1 - d(x)), so Hoyer is an affine map of
+#                    these (kappa_m = sqrt(m)/(sqrt(m)-1))
+#   H_L, H_F         the same columns' Hoyer sparsities, for convenience
+#   w                w_k = mean(l_k) mean(f_k) / mean(B); sums to 1 over k
+#   pm_L, pm_F       max/mean of the column
+#   pm_B             max/mean of B (repeated across the fit's K rows)
+#   slack_pm         pm(B) / (pm_L * pm_F * w)      >= 1  (Lemma pm-budget)
+#   slack_hyper      d_L * d_F / sqrt(w / pm_B)     >= 1  (Theorem hyperbola)
+#
+# slack_* near 1 means the corresponding bound is ACTIVE for that column;
+# large values mean the fit sits well inside the constraint. The main table
+# also gains a pm_B column.
 
 source("approx_sim_common.R")
 
@@ -95,6 +114,25 @@ match_factors <- function(truth, fit) {
   pp[[which.max(sc)]]
 }
 
+dens  <- function(x) sum(x) / (sqrt(length(x)) * sqrt(sum(x^2)))
+pmr   <- function(x) max(x) / mean(x)
+kap   <- function(m) sqrt(m) / (sqrt(m) - 1)
+
+#' Per-column bound quantities for one fit (columns in the fit's own order;
+#' these are per-column summaries, so no matching to the truth is involved).
+bound_rows <- function(LL, FF) {
+  B    <- tcrossprod(LL, FF)
+  pm_B <- pmr(B)
+  mB   <- mean(B)
+  data.frame(
+    k    = seq_len(ncol(LL)),
+    d_L  = apply(LL, 2, dens),  d_F  = apply(FF, 2, dens),
+    H_L  = apply(LL, 2, hoyer), H_F  = apply(FF, 2, hoyer),
+    w    = colMeans(LL) * colMeans(FF) / mB,
+    pm_L = apply(LL, 2, pmr),   pm_F = apply(FF, 2, pmr),
+    pm_B = pm_B)
+}
+
 ## ---- walk the tasks --------------------------------------------------------
 
 specs <- lapply(0:(N_TASKS - 1L), task_spec)
@@ -104,6 +142,7 @@ files <- file.path(OUT_DIR, paste0(tags, ".rds"))
 message("reading ", N_TASKS, " fits from ", OUT_DIR)
 
 out         <- vector("list", N_TASKS)
+bnd         <- vector("list", N_TASKS)
 missing     <- character(0)
 truth_cache <- list()          # keyed by "seed|c_true"
 
@@ -126,7 +165,11 @@ for (i in seq_len(N_TASKS)) {
   Lc <- diag(spearman_xcor(x$L_true, LL[, perm, drop = FALSE]))
   Fc <- diag(spearman_xcor(x$F_true, FF[, perm, drop = FALSE]))
 
-  out[[i]] <- cbind(x$row, data.frame(
+  br <- bound_rows(LL, FF)
+  bnd[[i]] <- cbind(x$row[c("task", "seed", "c_true", "cc", "method")], br,
+                    row.names = NULL)
+
+  out[[i]] <- cbind(x$row, pm_B = br$pm_B[1], data.frame(
     hoyer_L    = mean_hoyer(LL),
     hoyer_F    = mean_hoyer(FF),
     rankcor_L  = mean_rank_cor(LL),
@@ -154,6 +197,17 @@ utils::write.csv(res, paste0(base, ".csv"), row.names = FALSE)
 message("Wrote ", base, ".rds and ", base, ".csv  (", nrow(res), " fits, ",
         ncol(res), " columns)")
 
+## the per-(fit, k) bound table, with the slack of each appendix inequality
+bounds <- do.call(rbind, bnd[!vapply(bnd, is.null, logical(1))])
+rownames(bounds) <- NULL
+bounds$slack_pm    <- bounds$pm_B / (bounds$pm_L * bounds$pm_F * bounds$w)
+bounds$slack_hyper <- bounds$d_L * bounds$d_F / sqrt(bounds$w / bounds$pm_B)
+bbase <- file.path(dirname(base), "approx_sim_bounds")
+saveRDS(bounds, paste0(bbase, ".rds"))
+utils::write.csv(bounds, paste0(bbase, ".csv"), row.names = FALSE)
+message("Wrote ", bbase, ".rds and ", bbase, ".csv  (", nrow(bounds),
+        " rows = fits x K)")
+
 ## ---- a quick look so problems surface before you download ------------------
 
 cat("\nfits per (c_true, c_fit) -- should be 30 (10 seeds x 3 methods):\n")
@@ -177,6 +231,13 @@ for (m in setdiff(METHODS, "exact")) {
                       list(res$c_true[res$method == m], res$cc[res$method == m]),
                       mean), 3))
 }
+
+cat("\nbound slack sanity: both must be >= 1 everywhere\n")
+cat(sprintf("  min slack_pm    = %.4f\n  min slack_hyper = %.4f\n",
+            min(bounds$slack_pm), min(bounds$slack_hyper)))
+cat("\nmedian slack_hyper, EXACT fits (rows = c_true, cols = c_fit):\n")
+be <- bounds[bounds$method == "exact", ]
+print(round(tapply(be$slack_hyper, list(be$c_true, be$cc), median), 2))
 
 cat("\nany non-finite metric values?\n")
 num <- setdiff(names(res)[vapply(res, is.numeric, logical(1))], c("c_true", "cc"))
