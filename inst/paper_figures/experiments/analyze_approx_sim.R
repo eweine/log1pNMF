@@ -5,8 +5,10 @@
 #   Rscript analyze_approx_sim.R [out_basename]
 #
 # Default output: <OUT_DIR>/approx_sim_metrics.{rds,csv} -- one row per fit,
-# i.e. per (seed, c_true, c_fit, method), 810 rows. Small enough to scp home;
-# the full fits (factors, objective traces) stay on the server.
+# i.e. per (seed, c_true, c_fit, method); N_TASKS rows (1980 in the balanced
+# round: 30 seeds x 3 c_true x (7 finite c_fit x 3 methods + Inf, exact
+# only)). Small enough to scp home; the full fits (factors, objective
+# traces) stay on the server.
 #
 # Every column the worker stored on `row` is carried through unchanged --
 # notably loglik_exact (the EXACT Poisson log-likelihood of the fitted rates,
@@ -46,8 +48,10 @@
 #
 # ---------------------------------------------------------------------------
 # SECOND OUTPUT: <OUT_DIR>/approx_sim_bounds.{rds,csv} -- one row per
-# (fit, factor k), 810 x K rows, for studying the appendix sparsity bounds
-# against the fitted matrices. Per row, with B = L F^t of that fit:
+# (fit, factor k), N_TASKS x K rows, for studying the appendix sparsity
+# bounds against the fitted matrices. Per row, with B = L F^t of that fit
+# (at c_fit = Inf, B is the fitted rate matrix itself -- the identity-link
+# case of the same bounds):
 #
 #   d_L, d_F         column densities d(x) = ||x||_1 / (sqrt(m) ||x||_2);
 #                    H(x) = kappa_m (1 - d(x)), so Hoyer is an affine map of
@@ -210,7 +214,8 @@ message("Wrote ", bbase, ".rds and ", bbase, ".csv  (", nrow(bounds),
 
 ## ---- a quick look so problems surface before you download ------------------
 
-cat("\nfits per (c_true, c_fit) -- should be 30 (10 seeds x 3 methods):\n")
+cat("\nfits per (c_true, c_fit) -- N_SEEDS x 3 methods at finite c_fit,",
+    "N_SEEDS at Inf:\n")
 print(table(c_true = res$c_true, c_fit = res$cc))
 
 cat("\nEXACT method, mean over seeds (rows = c_true, cols = c_fit):\n")

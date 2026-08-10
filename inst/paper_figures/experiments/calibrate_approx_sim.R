@@ -66,27 +66,50 @@ nz_of <- function(u, PI0) {
   if (any(dead)) nz[cbind(which(dead), max.col(u[dead, , drop = FALSE]))] <- TRUE
   nz
 }
+BAL_TOL  <- 1e-3
+BAL_ITER <- 200L
+balance_F <- function(L, FF, nz, FLOOR, CAP) {
+  KK <- ncol(FF)
+  Lm <- colMeans(L)
+  for (i in seq_len(BAL_ITER)) {
+    w <- Lm * colMeans(FF); w <- w / sum(w)
+    if (max(abs(KK * w - 1)) < BAL_TOL) break
+    FF <- sweep(FF, 2, (1 / KK) / w, "*")
+    FF <- pmin(pmax(FF, FLOOR), CAP) * nz
+  }
+  FF
+}
 make_parts <- function(seeds) lapply(seeds, function(s) {
   set.seed(s)
   L <- matrix(rgamma(N_S * K, A_SIG), N_S, K); L <- L / rowSums(L)
   list(L = L, tmat = matrix(rt(P_S * K, df = T_DF), P_S, K),
        u = matrix(runif(P_S * K), P_S, K))
 })
-Fm_of <- function(pp, mu, sig, CAP, PI0, FLOOR)
-  pmin(pmax(exp(mu + sig * pp$tmat), FLOOR), CAP) * nz_of(pp$u, PI0)
+## BAL: balance only at finite c_true. At the identity link, balance caps
+## max(F) at p * mean(f_k) ~ 337 (tail unmatchable, curve loss ~16.5 from
+## every start) and pushes the mass onto rare cap-sized draws (held-out
+## mean counts 0.016-1.1) -- concentrated factor mass is how the identity
+## link produces a heavy tail, so c_true = Inf keeps the unbalanced law.
+Fm_of <- function(pp, mu, sig, CAP, PI0, FLOOR, BAL) {
+  nz <- nz_of(pp$u, PI0)
+  F0 <- pmin(pmax(exp(mu + sig * pp$tmat), FLOOR), CAP) * nz
+  if (BAL) F0 <- balance_F(pp$L, F0, nz, FLOOR, CAP)
+  F0
+}
 curve_of <- function(Y) sapply(CS, function(cc) {
   g <- log1p(Y / cc); max(g) / mean(g) })
 
 calibrate_one <- function(cc) {
   FLOOR <- th_of(RATE_FLOOR, cc)
+  BAL   <- is.finite(cc)
   mean_rate <- function(mu, sig, CAP, PI0, parts)
     mean(sapply(parts, function(pp)
-      mean(lam_of(tcrossprod(pp$L, Fm_of(pp, mu, sig, CAP, PI0, FLOOR)), cc))))
+      mean(lam_of(tcrossprod(pp$L, Fm_of(pp, mu, sig, CAP, PI0, FLOOR, BAL)), cc))))
   solve_mu <- function(sig, CAP, PI0, parts)
     uniroot(function(m) mean_rate(m, sig, CAP, PI0, parts) - M_REAL,
             c(log(FLOOR) - 10, log(CAP) + 0.5), tol = 1e-4)$root
   Y_from <- function(pp, mu, sig, CAP, PI0, pseed) {
-    lam <- lam_of(tcrossprod(pp$L, Fm_of(pp, mu, sig, CAP, PI0, FLOOR)), cc)
+    lam <- lam_of(tcrossprod(pp$L, Fm_of(pp, mu, sig, CAP, PI0, FLOOR, BAL)), cc)
     set.seed(pseed)
     matrix(rpois(NP_S, lam), N_S, P_S)
   }
@@ -108,28 +131,64 @@ calibrate_one <- function(cc) {
   ## scale of the previous round's realized maximum (~2000).
   init <- c(qlogis(0.77), log(0.7), log(th_of(2000, cc)))
   init[3] <- max(init[3], log(FLOOR * 3))   # keep cap > floor at small c_true
-  opt <- optim(init, loss, method = "Nelder-Mead",
-               control = list(maxit = 800, reltol = 1e-6))
-  if (opt$convergence != 0)
-    message("  optim exit ", opt$convergence, " (loss ",
-            round(opt$value, 3), "); accepting")
+  ## MULTI-START: balancing the factor columns reshaped the loss surface,
+  ## and from the generic start alone Nelder-Mead degenerated at
+  ## c_true = Inf (mu ~ -13, all mass at the clamps). The knobs of the
+  ## UNBALANCED round-one calibration are a second start; keep the better
+  ## solution.
+  hints <- list("0.001" = c(0.9592, 0.0994, 15.5685),   # (pi0, sigma, cap)
+                "1"     = c(0.8379, 0.6652, 7.8197),
+                "Inf"   = c(0.9011, 1.4668, 911.2182))
+  h <- hints[[format(cc)]]
+  starts <- list(init, c(qlogis(h[1]), log(h[2]), log(h[3])))
+  opts <- lapply(starts, function(s)
+    optim(s, loss, method = "Nelder-Mead",
+          control = list(maxit = 800, reltol = 1e-6)))
+  vals <- sapply(opts, function(o) o$value)
+  message("  start losses: ", paste(round(vals, 3), collapse = " / "))
 
-  PI0 <- plogis(opt$par[1]); SIG <- exp(opt$par[2]); CAP <- exp(opt$par[3])
-  MU  <- solve_mu(SIG, CAP, PI0, make_parts(1:20))
-  knobs <- c(pi0 = PI0, mu = MU, sigma = SIG, cap = CAP, floor = FLOOR)
-
-  ## acceptance on held-out seeds
-  sim_full <- function(seed) {
+  ## acceptance on held-out seeds, per candidate
+  sim_full <- function(seed, MU, SIG, CAP, PI0) {
     set.seed(seed)
     L  <- matrix(rgamma(N_S * K, A_SIG), N_S, K); L <- L / rowSums(L)
     tm <- matrix(rt(P_S * K, T_DF), P_S, K)
     u  <- matrix(runif(P_S * K), P_S, K)
-    Fm <- pmin(pmax(exp(MU + SIG * tm), FLOOR), CAP) * nz_of(u, PI0)
+    nz <- nz_of(u, PI0)
+    Fm <- pmin(pmax(exp(MU + SIG * tm), FLOOR), CAP) * nz
+    if (BAL) Fm <- balance_F(L, Fm, nz, FLOOR, CAP)
     matrix(rpois(NP_S, lam_of(tcrossprod(L, Fm), cc)), N_S, P_S)
   }
-  fresh <- lapply(101:110, sim_full)
+  sols <- lapply(opts, function(o) {
+    PI0 <- plogis(o$par[1]); SIG <- exp(o$par[2]); CAP <- exp(o$par[3])
+    MU  <- solve_mu(SIG, CAP, PI0, make_parts(1:20))
+    fresh <- lapply(101:110, sim_full, MU = MU, SIG = SIG, CAP = CAP, PI0 = PI0)
+    mns <- sapply(fresh, mean)
+    list(value = o$value, convergence = o$convergence,
+         knobs = c(pi0 = PI0, mu = MU, sigma = SIG, cap = CAP, floor = FLOOR),
+         fresh = fresh, mns = mns, spread = diff(range(mns)))
+  })
+
+  ## Pick by loss, BUT near-tied losses go to the stabler generator: the
+  ## balanced c_true = Inf surface has near-tied optima whose realized mean
+  ## counts differ 10x in seed-to-seed spread, and a 30-seed experiment
+  ## cannot afford datasets whose total mass swings by a factor of 70.
+  pick <- which.min(vals)
+  for (j in seq_along(sols))
+    if (j != pick && sols[[j]]$value <= 1.05 * sols[[pick]]$value &&
+        sols[[j]]$spread < 0.5 * sols[[pick]]$spread) pick <- j
+  message("  candidate mean-count spreads: ",
+          paste(round(sapply(sols, `[[`, "spread"), 3), collapse = " / "),
+          "; picked start ", pick)
+  sol <- sols[[pick]]
+  if (sol$convergence != 0)
+    message("  optim exit ", sol$convergence, " (loss ",
+            round(sol$value, 3), "); accepting")
+
+  knobs <- sol$knobs
+  fresh <- sol$fresh
   cvs <- sapply(fresh, curve_of)
-  mns <- sapply(fresh, mean)
+  mns <- sol$mns
+  opt <- list(value = sol$value)
 
   cat(sprintf("\n===== c_true = %s   (loss %.3f)\n", format(cc), opt$value))
   print(round(knobs, 4))
