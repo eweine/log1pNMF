@@ -18,6 +18,17 @@
 # ---------------------------------------------------------------------------
 # WHAT IS COMPUTED, per fit
 #
+#   rmse, rmse_log1p      sqrt(mean((lambda_fit - lambda_true)^2)) over all
+#                         n*p entries, on the RATE scale and on the log1p
+#                         rate scale. lambda_fit is reconstructed from the
+#                         stored factors exactly as fitted() would return it
+#                         (verified to machine precision):
+#                         cc*expm1(L F' / max(1, cc)) at finite cc, L F' at
+#                         cc = Inf; lambda_true comes from the stored truth.
+#                         The raw-scale RMSE is dominated by the largest
+#                         rates; the log1p scale weights the low-rate
+#                         structure. Use whichever answers the question.
+#
 #   hoyer_L, hoyer_F      mean Hoyer (2004) sparsity over the K fitted
 #                         columns: (sqrt(n) - ||x||_1/||x||_2)/(sqrt(n) - 1);
 #                         0 = flat, 1 = single nonzero. All-zero columns are
@@ -121,6 +132,15 @@ match_factors <- function(truth, fit) {
 dens  <- function(x) sum(x) / (sqrt(length(x)) * sqrt(sum(x^2)))
 pmr   <- function(x) max(x) / mean(x)
 kap   <- function(m) sqrt(m) / (sqrt(m) - 1)
+rmse  <- function(a, b) sqrt(mean((a - b)^2))
+
+#' Rates implied by (LL, FF) at a given cc; mirrors fitted.log1p_nmf_fit
+#' with s == 1 (verified identical to machine precision), and the plain
+#' product at cc = Inf (fastTopics).
+lambda_from_fit <- function(LL, FF, cc) {
+  th <- tcrossprod(LL, FF)
+  if (is.infinite(cc)) th else cc * expm1(th / max(1, cc))
+}
 
 #' Per-column bound quantities for one fit (columns in the fit's own order;
 #' these are per-column summaries, so no matching to the truth is involved).
@@ -158,6 +178,13 @@ for (i in seq_len(N_TASKS)) {
   key <- paste(x$row$seed, format(x$row$c_true), sep = "|")
   if (is.null(truth_cache[[key]]))
     truth_cache[[key]] <- list(
+      ## the GENERATOR uses lambda = c_true * expm1(theta) with no alpha_c
+      ## scaling (identical to lambda_from_fit at this experiment's c_true
+      ## values, but written explicitly to stay correct for any c_true)
+      lambda_true    = local({
+        th <- tcrossprod(as.matrix(x$L_true), as.matrix(x$F_true))
+        if (is.infinite(x$row$c_true)) th else x$row$c_true * expm1(th)
+      }),
       hoyer_L_true   = mean_hoyer(x$L_true),
       hoyer_F_true   = mean_hoyer(x$F_true),
       rankcor_L_true = mean_rank_cor(x$L_true),
@@ -173,7 +200,11 @@ for (i in seq_len(N_TASKS)) {
   bnd[[i]] <- cbind(x$row[c("task", "seed", "c_true", "cc", "method")], br,
                     row.names = NULL)
 
+  lam_fit <- lambda_from_fit(LL, FF, x$row$cc)
+
   out[[i]] <- cbind(x$row, pm_B = br$pm_B[1], data.frame(
+    rmse       = rmse(lam_fit, tc$lambda_true),
+    rmse_log1p = rmse(log1p(pmax(lam_fit, 0)), log1p(tc$lambda_true)),
     hoyer_L    = mean_hoyer(LL),
     hoyer_F    = mean_hoyer(FF),
     rankcor_L  = mean_rank_cor(LL),
