@@ -5,9 +5,11 @@
 # the fitted pm(B) closely tracks the prediction from Lambda even when
 # Lambda was generated at a different c_true.
 #
-# Top row: fitted pm(B) (thin lines: replicates; thick: mean) with the
-# mean prediction dashed. Bottom row: the ratio fitted / predicted, per
-# replicate, with the mean; dashed line at 1.
+# One row: fitted pm(B) (thin lines: replicates; thick: mean) with the
+# mean prediction from Lambda dashed, and -- as a contrast -- the DATA
+# budget pm(log(1 + Y/c)) (pm(Y) at c = Inf) dot-dashed: the version
+# computable without knowing the truth, which the zeros inflate at small
+# c.
 #
 # Reads approx_sim_metrics.rds and regenerates the true rates from the
 # deterministic simulation generator (approx_sim_common.R), so it needs no
@@ -38,60 +40,43 @@ pred <- do.call(rbind, lapply(sort(unique(ex$c_true)), function(ct) {
     (is.finite(ex$c_true) & ex$c_true == ct) |
     (is.infinite(ex$c_true) & is.infinite(ct))]))
   do.call(rbind, lapply(seeds, function(s) {
-    lam <- sim_dataset(s, ct)$lambda
+    d <- sim_dataset(s, ct)
     data.frame(seed = s, c_true = ct, cc = CC,
-               pm_pred = sapply(CC, pm_of, M = lam))
+               pm_pred = sapply(CC, pm_of, M = d$lambda),
+               pm_data = sapply(CC, pm_of, M = d$Y))
   }))
 }))
 message("predictions computed for ", nrow(pred), " (seed, c_true, c) triples")
 
 key <- function(d) paste(d$seed, format(d$c_true), format(d$cc))
 ex$pm_pred <- pred$pm_pred[match(key(ex), key(pred))]
-stopifnot(!anyNA(ex$pm_pred))
-ex$ratio <- ex$pm_B / ex$pm_pred
+ex$pm_data <- pred$pm_data[match(key(ex), key(pred))]
+stopifnot(!anyNA(ex$pm_pred), !anyNA(ex$pm_data))
 
-SEED_COL <- "#9BB7BD"; MEAN_COL <- "#0E5C6B"; REF_COL <- "#C2410C"
+SEED_COL <- "#9BB7BD"; MEAN_COL <- "#0E5C6B"
+PRED_COL <- "#C2410C"; DATA_COL <- "#B45309"
 
-theme_row <- function(strips) theme(
-  strip.background = element_blank(),
-  panel.border = element_rect(colour = "grey80", fill = NA),
-  axis.title.y = element_text(size = 10.5),
-  axis.text.x = element_text(size = 8, angle = 45, hjust = 1),
-  strip.text = if (strips) element_text(face = "bold", size = 10.5)
-               else element_blank())
-
-avg <- aggregate(cbind(pm_B, pm_pred) ~ cf + ct, ex, mean)
-pA <- ggplot(ex, aes(cf, pm_B)) +
+avg <- aggregate(cbind(pm_B, pm_pred, pm_data) ~ cf + ct, ex, mean)
+g <- ggplot(ex, aes(cf, pm_B)) +
   geom_line(aes(group = seed), colour = SEED_COL,
             linewidth = 0.3, alpha = 0.6) +
   geom_line(data = avg, aes(group = 1), colour = MEAN_COL, linewidth = 0.9) +
   geom_point(data = avg, colour = MEAN_COL, size = 1.3) +
-  geom_line(data = avg, aes(y = pm_pred, group = 1), colour = REF_COL,
+  geom_line(data = avg, aes(y = pm_pred, group = 1), colour = PRED_COL,
             linetype = "dashed", linewidth = 0.7) +
+  geom_line(data = avg, aes(y = pm_data, group = 1), colour = DATA_COL,
+            linetype = "dotdash", linewidth = 0.7) +
   scale_y_log10(labels = function(x)
     format(x, scientific = FALSE, big.mark = ",", trim = TRUE)) +
   facet_grid(. ~ ct) +
-  labs(x = NULL, y = "pm(B) of Fitted Model") +
-  theme_cowplot(font_size = 11) + theme_row(strips = TRUE)
-
-ravg <- aggregate(ratio ~ cf + ct, ex, mean)
-pB <- ggplot(ex, aes(cf, ratio)) +
-  geom_hline(yintercept = 1, linetype = "dashed", colour = REF_COL,
-             linewidth = 0.4) +
-  geom_line(aes(group = seed), colour = SEED_COL,
-            linewidth = 0.3, alpha = 0.6) +
-  geom_line(data = ravg, aes(group = 1), colour = MEAN_COL, linewidth = 0.9) +
-  geom_point(data = ravg, colour = MEAN_COL, size = 1.3) +
-  scale_y_log10(breaks = c(0.5, 0.707, 1, 1.414),
-                labels = c("0.5", "0.71", "1", "1.41")) +
-  facet_grid(. ~ ct) +
-  labs(x = "c Used for Fitting", y = "Fitted / Predicted") +
-  theme_cowplot(font_size = 11) + theme_row(strips = FALSE)
-
-g <- plot_grid(pA, pB, ncol = 1, align = "v", axis = "lr",
-               labels = c("A", "B"), label_size = 13,
-               rel_heights = c(1.16, 1))
+  labs(x = "c Used for Fitting", y = "pm(B) of Fitted Model") +
+  theme_cowplot(font_size = 11) +
+  theme(strip.background = element_blank(),
+        panel.border = element_rect(colour = "grey80", fill = NA),
+        axis.title.y = element_text(size = 10.5),
+        axis.text.x = element_text(size = 8, angle = 45, hjust = 1),
+        strip.text = element_text(face = "bold", size = 10.5))
 
 ggsave("../images/sim2_pm_budget.png", g, device = "png",
-       width = 8, height = 5.4, dpi = 300, bg = "white")
+       width = 8.5, height = 3.4, dpi = 300, bg = "white")
 message("Wrote ../images/sim2_pm_budget.png")
