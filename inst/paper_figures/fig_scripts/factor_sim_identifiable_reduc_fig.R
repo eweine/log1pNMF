@@ -110,7 +110,7 @@ panelA <- ggplot(segA, aes(xmin = gene - 0.5, xmax = gene + 0.5,
   scale_y_continuous(trans = "log1p", breaks = c(0, 2, 20, 1000), limits = c(0, 1100)) +
   labs(x = "Feature", y = "True Rate") +
   theme(legend.position = "none", strip.background = element_blank(),
-        strip.text = element_text(size = 11, face = "bold"))
+        strip.text = element_text(size = 13, face = "bold"))
 
 ## ---- Panel B: structure plots of sample scores (baseline on the bottom)
 grp <- factor(rep(1:4, each = npop))
@@ -119,7 +119,7 @@ SP <- function(L, title, ylab = FALSE) {
                       loadings_order = seq_len(nrow(L)), grouping = grp, gap = 24,
                       topics = c("B", "A", "Baseline"), colors = FACCOL) +
     ggtitle(title) + labs(x = "Group", y = if (ylab) "Membership" else NULL) +
-    theme(plot.title = element_text(size = 11, hjust = 0.5), legend.position = "none",
+    theme(plot.title = element_text(size = 13, hjust = 0.5), legend.position = "none",
           axis.title.y = element_text(size = 14),
           axis.title.x = element_text(size = 15),
           axis.text.x = element_text(angle = 0, hjust = 0.5, size = 13))
