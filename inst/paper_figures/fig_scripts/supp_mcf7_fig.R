@@ -146,6 +146,6 @@ ggsave(
   g,
   device = "png",
   width = 10,
-  height = 12
+  height = 8.5
 )
 
