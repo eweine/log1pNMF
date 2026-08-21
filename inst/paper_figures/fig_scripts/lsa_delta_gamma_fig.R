@@ -111,12 +111,12 @@ g3 <- ggplot(data = gene_means_df, aes(x = delta, y = gamma)) +
     ) +
   xlab("Mean Expression in Delta Cells") +
   ylab("Mean Expression in Gamma Cells") +
-  theme_cowplot() +
+  theme_cowplot(font_size = 13) +
   ggtitle("Raw Data") +
   theme(
-    plot.title = element_text(hjust = 0.5, size = 12),
-    axis.title.x = element_text(size = 10),
-    axis.title.y = element_text(size = 10)
+    plot.title = element_text(hjust = 0.5, size = 16),
+    axis.title.x = element_text(size = 15),
+    axis.title.y = element_text(size = 15)
     )  
 
 g1 <- ggplot(data = gene_means_df, aes(x = log1p_delta, y = log1p_gamma)) +
@@ -139,12 +139,12 @@ g1 <- ggplot(data = gene_means_df, aes(x = log1p_delta, y = log1p_gamma)) +
     nudge_x = 0.5, 
     nudge_y = 0.75
   ) +
-  theme_cowplot(font_size = 12) +
+  theme_cowplot(font_size = 13) +
   ggtitle("c = 1 Gene Scores") +
   theme(
-    plot.title = element_text(hjust = 0.5, size = 12),
-    axis.title.x = element_text(size = 11),
-    axis.title.y = element_text(size = 11)
+    plot.title = element_text(hjust = 0.5, size = 16),
+    axis.title.x = element_text(size = 15),
+    axis.title.y = element_text(size = 15)
   ) +
   xlab("k3") +
   ylab("k13") +
@@ -183,12 +183,12 @@ g2 <- ggplot(data = gene_means_df, aes(x = tm_delta, y = tm_gamma)) +
     trans = "log1p", 
     breaks = c(0, 10, 500, 2000, 5000, 10000)
   ) +
-  theme_cowplot() +
+  theme_cowplot(font_size = 13) +
   ggtitle("c = \u221E Gene Scores") +
   theme(
-    plot.title = element_text(hjust = 0.5, size = 12),
-    axis.title.x = element_text(size = 11),
-    axis.title.y = element_text(size = 11)
+    plot.title = element_text(hjust = 0.5, size = 16),
+    axis.title.x = element_text(size = 15),
+    axis.title.y = element_text(size = 15)
   ) +
   xlab("k3") +
   ylab("k13")  +
@@ -203,7 +203,8 @@ g2 <- ggplot(data = gene_means_df, aes(x = tm_delta, y = tm_gamma)) +
 g <- ggarrange(
   g1, g2, g3,
   nrow = 1, ncol = 3,
-  labels = c("A", "B", "C")
+  labels = c("A", "B", "C"),
+  align = "hv"
 )
 
 ggsave(
