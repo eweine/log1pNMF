@@ -121,7 +121,8 @@ SP <- function(L, title, ylab = FALSE) {
     ggtitle(title) + labs(x = "Group", y = if (ylab) "Membership" else NULL) +
     theme(plot.title = element_text(size = 11, hjust = 0.5), legend.position = "none",
           axis.title.y = element_text(size = 14),
-          axis.text.x = element_text(angle = 0, hjust = 0.5))
+          axis.title.x = element_text(size = 15),
+          axis.text.x = element_text(angle = 0, hjust = 0.5, size = 13))
   if (!ylab) g <- g + theme(axis.text.y = element_blank(), axis.ticks.y = element_blank())
   g
 }
