@@ -199,31 +199,17 @@ g2 <- ggplot(data = gene_means_df, aes(x = tm_delta, y = tm_gamma)) +
     color = "red"
   )
 
-g_scores <- ggarrange(
-  g1, g2,
-  nrow = 1,
-  ncol = 2,
-  labels = c("A", "B"),
-  widths = c(1, 1)
-)
-
-g_raw <- ggarrange(
-  NULL, g3, NULL,
-  nrow = 1,
-  ncol = 3,
-  widths = c(0.5, 1, 0.5),
-  labels = c("", "C", "")
-)
-
+## one-row layout (A, B, C side by side) to halve the figure's page height
 g <- ggarrange(
-  g_scores, g_raw,
-  nrow = 2, ncol = 1
+  g1, g2, g3,
+  nrow = 1, ncol = 3,
+  labels = c("A", "B", "C")
 )
 
 ggsave(
   plot = g,
   device = "png",
   filename = "../images/lsa_delta_gamma.png",
-  width = 7,
-  height = 6
+  width = 11.5,
+  height = 4
 )

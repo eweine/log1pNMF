@@ -187,20 +187,21 @@ gc <- ggplot(data = o_df, aes(x = pct_0, y = o, color = Calculation)) +
 
 library(ggpubr)
 
-blank <- ggplot() + theme_void()
+## one-row layout with a shared legend below, so the figure takes half the
+## page height it used to; dimensions follow approx_quality.png so the
+## text renders at a comparable size after scaling to \linewidth
 f1 <- ggarrange(
-  ggarrange(ga, gb, blank, nrow = 1,
-            widths = c(1, 1, 0), legend = "none", labels = c("A", "B")),
-  ggarrange(blank, gc, blank, nrow = 1,
-            widths = c(0.25, 1.5, 0.25), legend = "right", labels = c("", "C", "")),
-  nrow = 2
+  ga, gb, gc,
+  nrow = 1, ncol = 3,
+  labels = c("A", "B", "C"),
+  common.legend = TRUE, legend = "bottom"
 )
 
 ggsave(
   "../images/computational_complexity.png",
   f1,
   device = "png",
-  width = 8.75,
-  height = 8
+  width = 12.25,
+  height = 3.9
 )
 
