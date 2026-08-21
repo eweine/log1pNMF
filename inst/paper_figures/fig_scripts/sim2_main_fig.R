@@ -87,7 +87,7 @@ pA <- row_panel(long("hoyer_L"), "Mean Loading Sparsity",
 pB <- row_panel(long("hoyer_F"), "Mean Factor Sparsity",
                 truth_df = truth_of("hoyer_F_true"))
 pC <- row_panel(long("lr_pe"), "Likelihood Ratio", ref1 = TRUE)
-pD <- row_panel(long("rel_rmse"), "Relative RMSE of Rates", ref1 = TRUE,
+pD <- row_panel(long("rel_rmse"), "Rel. RMSE of Rates", ref1 = TRUE,
                 logy = TRUE, xaxis = TRUE)
 
 g <- plot_grid(pA, pB, pC, pD, ncol = 1, align = "v", axis = "lr",
