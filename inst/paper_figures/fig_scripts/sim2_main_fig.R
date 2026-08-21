@@ -64,7 +64,7 @@ row_panel <- function(d, ylab, truth_df = NULL, ref1 = FALSE, logy = FALSE,
     geom_point(data = dg, shape = 21, size = 3, stroke = 1,
                fill = NA, colour = REF_COL) +
     facet_grid(. ~ ct) +
-    labs(x = if (xaxis) "c used for fitting" else NULL, y = ylab) +
+    labs(x = if (xaxis) "c Used for Fitting" else NULL, y = ylab) +
     theme_cowplot(font_size = 11) +
     theme(strip.background = element_blank(),
           panel.border = element_rect(colour = "grey80", fill = NA),
