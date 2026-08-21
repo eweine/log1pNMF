@@ -84,6 +84,13 @@ C_TRUE_GRID <- c(1e-3, 1, Inf)
 CC_GRID <- c(1e-4, 1e-3, 1e-2, 1e-1, 1, 10, 100, 1e3, 1e4, Inf)
 N_SEEDS <- 30L
 
+## The c_true = 1e-3 regime runs EXTRA seeds (31..N_SEEDS_SMALLC): its
+## heavy-tailed local-optimum variation dominates the standard errors of
+## the approximation-quality comparison, so it gets 60 seeds where the
+## other regimes keep 30. The extra tasks are APPENDED to the spec table,
+## so the first 2520 task ids (and all existing outputs) are unchanged.
+N_SEEDS_SMALLC <- 60L
+
 ## methods: the exact objective and both approximation techniques used in the
 ## paper's approximation-quality figure (finite c only; Inf is exact-only)
 METHODS <- c("exact", "taylor", "chebyshev")
@@ -203,6 +210,14 @@ SPEC <- do.call(rbind, lapply(seq_len(N_SEEDS), function(si)
       data.frame(seed = si, c_true = ct, cc = cc,
                  method = if (is.infinite(cc)) "exact" else METHODS,
                  stringsAsFactors = FALSE)))))))
+## extra small-c seeds, appended AFTER the original 2520 ids
+if (N_SEEDS_SMALLC > N_SEEDS)
+  SPEC <- rbind(SPEC, do.call(rbind,
+    lapply((N_SEEDS + 1L):N_SEEDS_SMALLC, function(si)
+      do.call(rbind, lapply(CC_GRID, function(cc)
+        data.frame(seed = si, c_true = 1e-3, cc = cc,
+                   method = if (is.infinite(cc)) "exact" else METHODS,
+                   stringsAsFactors = FALSE))))))
 rownames(SPEC) <- NULL
 N_TASKS <- nrow(SPEC)
 

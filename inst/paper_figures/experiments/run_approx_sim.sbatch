@@ -11,13 +11,20 @@
 # skips any task whose output already exists (a skipped task costs ~2s of
 # R startup). Only the 20 new seeds and the c = Inf topic-model fits run.
 #
-# 2520 exceeds the Slurm MaxArraySize default of 1001, so submit THREE
-# slices; the worker adds APPROX_SIM_TASK_OFFSET to its array id:
+# The grid exceeds the Slurm MaxArraySize default of 1001, so submit in
+# slices; the worker adds APPROX_SIM_TASK_OFFSET to its array id. Full
+# grid (ids 0-3359; completed slices are skipped in seconds):
 #
 #   sbatch run_approx_sim.sbatch
 #   sbatch --export=ALL,APPROX_SIM_TASK_OFFSET=990  run_approx_sim.sbatch
 #   sbatch --export=ALL,APPROX_SIM_TASK_OFFSET=1980 --array=0-539 run_approx_sim.sbatch
-#   Rscript check_approx_sim.R             # afterward: what is missing/unconverged
+#   sbatch --export=ALL,APPROX_SIM_TASK_OFFSET=2520 --array=0-839 run_approx_sim.sbatch
+#
+# The last slice alone covers the EXTRA c_true = 1e-3 seeds 31-60 (ids
+# 2520-3359), which is all that needs submitting if the first 2520 are
+# already done. Afterward:
+#
+#   Rscript check_approx_sim.R             # what is missing/unconverged
 #
 # Each task is single-threaded on purpose: the 500 x 500 problem is small
 # enough that one core beats thread-level parallelism, and one-core tasks
