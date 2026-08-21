@@ -72,12 +72,7 @@ row_panel <- function(d, ylab, truth_df = NULL, ref1 = FALSE, logy = FALSE,
           strip.text = if (strips) element_text(face = "bold", size = 10.5)
                        else element_blank())
   if (logy) p <- p + scale_y_log10()
-  if (xaxis) {
-    p <- p + theme(axis.text.x = element_text(size = 8, angle = 45, hjust = 1))
-  } else {
-    p <- p + theme(axis.text.x = element_blank(),
-                   axis.ticks.x = element_blank())
-  }
+  p <- p + theme(axis.text.x = element_text(size = 8, angle = 45, hjust = 1))
   p
 }
 
@@ -87,18 +82,18 @@ truth_of <- function(v) {
   names(td)[2] <- "value"; td
 }
 
-pA <- row_panel(long("hoyer_L"), "Loadings Sparsity",
+pA <- row_panel(long("hoyer_L"), "Mean Loading Sparsity",
                 truth_df = truth_of("hoyer_L_true"), strips = TRUE)
-pB <- row_panel(long("hoyer_F"), "Factors Sparsity",
+pB <- row_panel(long("hoyer_F"), "Mean Factor Sparsity",
                 truth_df = truth_of("hoyer_F_true"))
-pC <- row_panel(long("lr_pe"), "Per-Entry Likelihood Ratio", ref1 = TRUE)
+pC <- row_panel(long("lr_pe"), "Likelihood Ratio", ref1 = TRUE)
 pD <- row_panel(long("rel_rmse"), "Relative RMSE of Rates", ref1 = TRUE,
                 logy = TRUE, xaxis = TRUE)
 
 g <- plot_grid(pA, pB, pC, pD, ncol = 1, align = "v", axis = "lr",
                labels = c("A", "B", "C", "D"), label_size = 13,
-               rel_heights = c(1.14, 1, 1, 1.28))
+               rel_heights = c(1.1, 1, 1, 1.04))
 
 ggsave("../images/sim2_main.png", g, device = "png",
-       width = 8, height = 9.2, dpi = 300, bg = "white")
+       width = 8, height = 10, dpi = 300, bg = "white")
 message("Wrote ../images/sim2_main.png")
