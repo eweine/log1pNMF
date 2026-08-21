@@ -115,8 +115,8 @@ g3 <- ggplot(data = gene_means_df, aes(x = delta, y = gamma)) +
   ggtitle("Raw Data") +
   theme(
     plot.title = element_text(hjust = 0.5, size = 16),
-    axis.title.x = element_text(size = 15),
-    axis.title.y = element_text(size = 15)
+    axis.title.x = element_text(size = 14),
+    axis.title.y = element_text(size = 14)
     )  
 
 g1 <- ggplot(data = gene_means_df, aes(x = log1p_delta, y = log1p_gamma)) +
@@ -143,8 +143,8 @@ g1 <- ggplot(data = gene_means_df, aes(x = log1p_delta, y = log1p_gamma)) +
   ggtitle("c = 1 Gene Scores") +
   theme(
     plot.title = element_text(hjust = 0.5, size = 16),
-    axis.title.x = element_text(size = 15),
-    axis.title.y = element_text(size = 15)
+    axis.title.x = element_text(size = 14),
+    axis.title.y = element_text(size = 14)
   ) +
   xlab("k3") +
   ylab("k13") +
@@ -187,8 +187,8 @@ g2 <- ggplot(data = gene_means_df, aes(x = tm_delta, y = tm_gamma)) +
   ggtitle("c = \u221E Gene Scores") +
   theme(
     plot.title = element_text(hjust = 0.5, size = 16),
-    axis.title.x = element_text(size = 15),
-    axis.title.y = element_text(size = 15)
+    axis.title.x = element_text(size = 14),
+    axis.title.y = element_text(size = 14)
   ) +
   xlab("k3") +
   ylab("k13")  +
