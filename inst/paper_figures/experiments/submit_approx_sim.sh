@@ -19,9 +19,11 @@
 
 cd "$(dirname "$0")"
 
-OFFSETS="${@:-0 990 1980}"
+TOTAL=4480     # keep in sync with N_TASKS in approx_sim_common.R
+OFFSETS="${@:-0 990 1980 2970 3960}"
 for OFF in $OFFSETS; do
-  if [ "$OFF" -eq 1980 ]; then RANGE=0-539; else RANGE=0-989; fi
+  N=$((TOTAL - OFF)); [ $N -gt 990 ] && N=990
+  RANGE=0-$((N - 1))
   echo "$(date '+%F %T')  submitting slice: offset $OFF, array $RANGE"
   tries=0
   until sbatch --export=ALL,APPROX_SIM_TASK_OFFSET=$OFF --array=$RANGE \

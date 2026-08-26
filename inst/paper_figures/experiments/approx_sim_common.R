@@ -86,10 +86,11 @@ N_SEEDS <- 30L
 
 ## The c_true = 1e-3 regime runs EXTRA seeds (31..N_SEEDS_SMALLC): its
 ## heavy-tailed local-optimum variation dominates the standard errors of
-## the approximation-quality comparison, so it gets 60 seeds where the
-## other regimes keep 30. The extra tasks are APPENDED to the spec table,
-## so the first 2520 task ids (and all existing outputs) are unchanged.
-N_SEEDS_SMALLC <- 60L
+## the approximation-quality comparison, so it gets 100 seeds where the
+## other regimes keep 30. The extra tasks are APPENDED to the spec table
+## in seed order (31-60 first, then 61-100), so every previously assigned
+## task id (and all existing outputs) is unchanged.
+N_SEEDS_SMALLC <- 100L
 
 ## methods: the exact objective and both approximation techniques used in the
 ## paper's approximation-quality figure (finite c only; Inf is exact-only)
