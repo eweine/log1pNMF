@@ -19,7 +19,7 @@
 # Fits run to convergence (TOL = 1e-6) or MAXITER = 1M (finite c; 100k for
 # the c = Inf SCD fits), whichever comes first. There is deliberately no
 # optimization-time cap: the point is to compare CONVERGED fits from
-# different starting points, so nothing may stop mid-descent. The 96h wall
+# different starting points, so nothing may stop mid-descent. The 36h wall
 # clock below is the backstop; if the partition rejects it, lower it and
 # any TIMEOUT task is found by check_bbc_init.R and resubmitted.
 #
@@ -28,7 +28,7 @@
 #
 #SBATCH --job-name=bbcinit
 #SBATCH --output=/rafalab/eweine/log1pNMF/inst/paper_figures/experiments/logs/bbcinit_%A_%a.out
-#SBATCH --time=96:00:00
+#SBATCH --time=36:00:00
 #SBATCH --cpus-per-task=1
 #SBATCH --mem=16G
 #SBATCH --partition=defq
