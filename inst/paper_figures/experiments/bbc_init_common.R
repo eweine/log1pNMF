@@ -28,7 +28,7 @@ library(Matrix)
 CSV_PATH <- Sys.getenv("BBC_INIT_CSV",
   "/rafalab/eweine/log1pNMF/inst/paper_figures/data/bbc_news_text_complexity_summarization.csv")
 OUT_DIR  <- Sys.getenv("BBC_INIT_OUT",
-                       "/rafalab/eweine/log1p_experiments/bbc_init")
+                       "/rafalab/eweine/log1p_experiments/bbc_init_matched")
 
 K_FIT       <- 10L
 CC_GRID     <- c(0.001, 1, Inf)
@@ -96,4 +96,39 @@ build_bbc <- function(csv_path = CSV_PATH) {
 pois_loglik <- function(Y, lam) {
   lam <- pmax(lam, 1e-300)
   sum(Y * log(lam) - lam - lgamma(as.matrix(Y) + 1))
+}
+
+## ---- matched random initialization -----------------------------------------
+## One random factorization per seed, mapped into each model's parameter
+## space: L_raw and F_raw have iid Uniform(0, 1) entries and depend ONLY on
+## the seed (identical matrices for every c), and both are scaled by
+## sqrt(tau_c), with the scalar tau_c solved so that the model's implied
+## MEAN RATE at the initial point equals the mean observed count. Every
+## model therefore starts from the same random direction, at rates on the
+## data's scale; across-c differences cannot come from the init
+## distribution. (For finite c the implied rates are s_i * c *
+## (exp(tau * m_ij / alpha_c) - 1); for c = Inf they are tau * m_ij.)
+matched_random_init <- function(Y, s, cc, K, seed) {
+  set.seed(seed)                       # seed alone determines the draws
+  L_raw <- matrix(stats::runif(nrow(Y) * K), nrow(Y), K)
+  F_raw <- matrix(stats::runif(ncol(Y) * K), ncol(Y), K)
+  M     <- tcrossprod(L_raw, F_raw)
+  ybar  <- sum(Y) / prod(dim(Y))
+  if (is.infinite(cc)) {
+    tau <- ybar / mean(M)
+  } else {
+    alpha <- max(1, cc)
+    ## clamped so overflow cannot produce non-finite values; the clamp is
+    ## far above any plausible root and preserves monotonicity
+    f <- function(tau)
+      mean(s * cc * expm1(pmin(tau * M / alpha, 700))) - ybar
+    upper <- 1
+    while (f(upper) < 0) upper <- 2 * upper
+    tau <- stats::uniroot(f, c(0, upper), tol = 1e-10)$root
+  }
+  L0 <- sqrt(tau) * L_raw
+  F0 <- sqrt(tau) * F_raw
+  rownames(L0) <- rownames(Y); rownames(F0) <- colnames(Y)
+  colnames(L0) <- colnames(F0) <- paste0("k", seq_len(K))
+  list(L = L0, F = F0, tau = tau)
 }

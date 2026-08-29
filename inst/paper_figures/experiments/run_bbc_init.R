@@ -57,10 +57,17 @@ s   <- dat$s
 message(sprintf("DTM built in %.1fs", proc.time()[["elapsed"]] - t0))
 
 ## ---- fit -------------------------------------------------------------------
-## Seed convention: random inits use set.seed(seed) so each task draws its
-## own starting point; the rank-1 init is deterministic but gets set.seed(1)
-## anyway (matching the paper's fits) in case any step is stochastic.
-set.seed(if (spec$init == "random") spec$seed else 1L)
+## "random" uses the MATCHED random initialization (see bbc_init_common.R):
+## the seed alone determines the random factorization, which is identical
+## across values of c and scaled per model so the implied mean rate equals
+## the mean observed count. "rank1" is the deterministic initialization
+## used for the paper's fits (set.seed(1) in case any step is stochastic).
+if (spec$init == "random") {
+  ini <- matched_random_init(Y, s, spec$cc, K_FIT, spec$seed)
+  message(sprintf("matched random init: tau = %.6g", ini$tau))
+} else {
+  set.seed(1L)
+}
 t1 <- proc.time()[["elapsed"]]
 
 if (is.infinite(spec$cc)) {
@@ -71,13 +78,12 @@ if (is.infinite(spec$cc)) {
     F0 <- cbind(r1$F, matrix(RANK1_PAD, ncol(Y), K_FIT - 1L))
     rownames(L0) <- rownames(Y); rownames(F0) <- colnames(Y)
     colnames(L0) <- colnames(F0) <- paste0("k", seq_len(K_FIT))
-    fit0 <- fastTopics::init_poisson_nmf(Y, F = F0, L = L0)
   } else {
-    fit0 <- fastTopics::init_poisson_nmf(Y, k = K_FIT,
-                                         init.method = "random")
+    L0 <- ini$L; F0 <- ini$F
   }
   ft <- fastTopics::fit_poisson_nmf(
-    Y, fit0 = fit0, numiter = maxiter, method = "scd",
+    Y, fit0 = fastTopics::init_poisson_nmf(Y, F = F0, L = L0),
+    numiter = maxiter, method = "scd",
     control = list(nc = THREADS, min.delta.loglik = TOL), verbose = "none")
   fit <- list(LL = ft$L, FF = ft$F,
               objective_trace = as.numeric(ft$progress$loglik))
@@ -85,11 +91,18 @@ if (is.infinite(spec$cc)) {
   converged <- n_iter < maxiter
   lam_fit   <- tcrossprod(ft$L, ft$F)
 } else {
-  fit <- fit_poisson_log1p_nmf(
-    Y = Y, K = K_FIT, s = s, cc = spec$cc,
-    loglik = "exact", init_method = spec$init,
+  fit_args <- list(
+    Y = Y, s = s, cc = spec$cc, loglik = "exact",
     control = list(maxiter = maxiter, tol = TOL, max_time = Inf,
                    verbose = FALSE, threads = THREADS))
+  if (spec$init == "random") {
+    fit_args$init_LL <- ini$L
+    fit_args$init_FF <- ini$F
+  } else {
+    fit_args$K <- K_FIT
+    fit_args$init_method <- "rank1"
+  }
+  fit <- do.call(fit_poisson_log1p_nmf, fit_args)
   n_iter    <- length(fit$objective_trace) - 1L
   converged <- isTRUE(fit$converged)
   lam_fit   <- stats::fitted(fit)   # includes the size factors s
