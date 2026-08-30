@@ -63,10 +63,11 @@ EXPDIR=/rafalab/eweine/log1pNMF/inst/paper_figures/experiments
 cd "$EXPDIR"
 mkdir -p logs      # belt and braces; must already exist for --output to open
 
-## keep the math libraries single-threaded too, so one task really is one core
-export OMP_NUM_THREADS=1
-export OPENBLAS_NUM_THREADS=1
-export MKL_NUM_THREADS=1
+## keep the math libraries in step with the Slurm allocation (1 core unless
+## the submission grants more via --cpus-per-task)
+export OMP_NUM_THREADS=${SLURM_CPUS_PER_TASK:-1}
+export OPENBLAS_NUM_THREADS=${SLURM_CPUS_PER_TASK:-1}
+export MKL_NUM_THREADS=${SLURM_CPUS_PER_TASK:-1}
 
 echo "approxsim task $SLURM_ARRAY_TASK_ID on $(hostname) at $(date)"
 Rscript run_approx_sim.R "$SLURM_ARRAY_TASK_ID"

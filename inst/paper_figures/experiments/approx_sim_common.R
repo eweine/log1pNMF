@@ -136,7 +136,9 @@ knobs_for <- function(cc) {
 MAXITER     <- 2000000L
 MAXITER_INF <- 100000L
 TOL     <- 1e-6
-THREADS <- 1L
+## 1 thread unless the submission grants more (e.g. --cpus-per-task=32 for
+## a handful of straggler fits); the packed 1-core default is unchanged.
+THREADS <- as.integer(Sys.getenv("SLURM_CPUS_PER_TASK", "1"))
 
 ## SAME directory as round one, on purpose: the generator and finite grid
 ## are unchanged, so the 810 existing outputs are this experiment's seeds
