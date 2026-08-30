@@ -32,10 +32,10 @@
 # its own data and writes its own .rds, so tasks share no state and a failure
 # costs one fit.
 #
-# Fits run to convergence (TOL = 1e-6) or to MAXITER = 1M, whichever comes
-# first (round one showed taylor at small c needs up to ~850k iterations;
-# its slowest 250k fits took ~5h, so 1M projects to ~20h against the 24h
-# wall clock below -- close, and any TIMEOUT is caught by the checker).
+# Fits run to convergence (TOL = 1e-6) or to MAXITER = 2M, whichever comes
+# first (the extended run's slowest fit spent ~10h reaching 1M iterations,
+# so 2M projects to ~20h against the 24h wall clock below -- close, and
+# any TIMEOUT is caught by the checker).
 # There is deliberately NO optimization-time cap -- the point of this
 # experiment is to compare the CONVERGED fits, so nothing may stop
 # mid-descent.

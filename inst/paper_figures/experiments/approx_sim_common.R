@@ -125,14 +125,15 @@ knobs_for <- function(cc) {
 
 ## fitting: run to convergence at TOL = 1e-6 (absolute change in the fit's own
 ## objective between successive iterations), rank-1 initialization always.
-## MAXITER is a safety cap only (1M -- round one showed taylor at small c
-## needs up to ~850k), and there is deliberately NO optimization-time cap --
-## the SLURM wall clock (24h; see run_approx_sim.sbatch) is the sole
-## backstop. See c_grid_sim_common.R for why a time cap is worse than none.
+## MAXITER is a safety cap only (2M -- the extended run showed one taylor
+## fit at c = 1e-4 still unconverged at 1M, so the cap was doubled), and
+## there is deliberately NO optimization-time cap -- the SLURM wall clock
+## (24h; see run_approx_sim.sbatch) is the sole backstop. See
+## c_grid_sim_common.R for why a time cap is worse than none.
 ## The c = Inf fits (fastTopics SCD) are capped at MAXITER_INF instead: SCD
 ## converges in thousands of iterations and its progress frame grows with
-## the cap, so 1M would be pure waste there.
-MAXITER     <- 1000000L
+## the cap, so a cap in the millions would be pure waste there.
+MAXITER     <- 2000000L
 MAXITER_INF <- 100000L
 TOL     <- 1e-6
 THREADS <- 1L
