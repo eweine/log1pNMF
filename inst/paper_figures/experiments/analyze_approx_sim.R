@@ -38,6 +38,10 @@
 #                         of fitted columns -- the redundancy / separation
 #                         measure (high = factors carry near-duplicate
 #                         rankings).
+#   rankcor_L_abs, rankcor_F_abs
+#                         the same with ABSOLUTE correlations before
+#                         averaging, matching the real-data fit-summary
+#                         figure's convention.
 #
 #   L_cor_mean, L_cor_min the recovery measure: fitted columns are matched to
 #   F_cor_mean, F_cor_min the stored truth by the column permutation
@@ -95,10 +99,11 @@ hoyer <- function(x) {
 
 mean_hoyer <- function(M) mean(apply(M, 2, hoyer), na.rm = TRUE)
 
-mean_rank_cor <- function(M) {
+mean_rank_cor <- function(M, absolute = FALSE) {
   if (ncol(M) < 2L) return(NA_real_)
   C <- suppressWarnings(stats::cor(M, method = "spearman"))
   v <- C[upper.tri(C)]
+  if (absolute) v <- abs(v)
   if (!any(is.finite(v))) return(NA_real_)
   mean(v, na.rm = TRUE)
 }
@@ -188,7 +193,9 @@ for (i in seq_len(N_TASKS)) {
       hoyer_L_true   = mean_hoyer(x$L_true),
       hoyer_F_true   = mean_hoyer(x$F_true),
       rankcor_L_true = mean_rank_cor(x$L_true),
-      rankcor_F_true = mean_rank_cor(x$F_true))
+      rankcor_F_true = mean_rank_cor(x$F_true),
+      rankcor_L_abs_true = mean_rank_cor(x$L_true, absolute = TRUE),
+      rankcor_F_abs_true = mean_rank_cor(x$F_true, absolute = TRUE))
   tc <- truth_cache[[key]]
 
   LL <- as.matrix(x$LL); FF <- as.matrix(x$FF)
@@ -209,13 +216,17 @@ for (i in seq_len(N_TASKS)) {
     hoyer_F    = mean_hoyer(FF),
     rankcor_L  = mean_rank_cor(LL),
     rankcor_F  = mean_rank_cor(FF),
+    rankcor_L_abs = mean_rank_cor(LL, absolute = TRUE),
+    rankcor_F_abs = mean_rank_cor(FF, absolute = TRUE),
     L_cor_mean = mean(Lc), L_cor_min = min(Lc),
     F_cor_mean = mean(Fc), F_cor_min = min(Fc),
     perm       = paste(perm, collapse = "-"),
     hoyer_L_true   = tc$hoyer_L_true,
     hoyer_F_true   = tc$hoyer_F_true,
     rankcor_L_true = tc$rankcor_L_true,
-    rankcor_F_true = tc$rankcor_F_true))
+    rankcor_F_true = tc$rankcor_F_true,
+    rankcor_L_abs_true = tc$rankcor_L_abs_true,
+    rankcor_F_abs_true = tc$rankcor_F_abs_true))
 
   if (i %% 80L == 0L) message("  ", i, " / ", N_TASKS)
 }
