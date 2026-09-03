@@ -42,11 +42,27 @@ res <- rbind(run_one(F1, "c = 1"), run_one(Ft, "c = Inf"))
 write.csv(res, "mcf7_gsea.csv", row.names = FALSE)
 message("Wrote mcf7_gsea.csv (", nrow(res), " rows)")
 
-## console summary: top terms per (model, factor)
-for (m in unique(res$model)) for (k in unique(res$factor[res$model == m])) {
-  d <- res[res$model == m & res$factor == k, ]
-  cat(sprintf("\n%s  %s  (%d terms at FDR < 0.05)\n", m, k, nrow(d)))
-  for (i in seq_len(min(4, nrow(d))))
-    cat(sprintf("  %-55s p_adj=%.2g  [%s]\n",
-                substr(d$term[i], 1, 55), d$p_adj[i], d$genes[i]))
+## ranked GSEA on the full gene-score vectors, for comparison
+run_ranked <- function(FF, model) {
+  message("=== ranked, ", model, " ===")
+  set.seed(1)
+  d <- factor_gsea_ranked(FF, id_type = "entrez", symbols = sym)
+  if (nrow(d) > 0) d <- cbind(model = model, d)
+  d
 }
+resr <- rbind(run_ranked(F1, "c = 1"), run_ranked(Ft, "c = Inf"))
+write.csv(resr, "mcf7_gsea_ranked.csv", row.names = FALSE)
+message("Wrote mcf7_gsea_ranked.csv (", nrow(resr), " rows)")
+
+## console summary: top terms per (model, factor), both methods
+show <- function(res, gene_col) {
+  for (m in unique(res$model)) for (k in unique(res$factor[res$model == m])) {
+    d <- res[res$model == m & res$factor == k, ]
+    cat(sprintf("\n%s  %s  (%d terms at FDR < 0.05)\n", m, k, nrow(d)))
+    for (i in seq_len(min(4, nrow(d))))
+      cat(sprintf("  %-55s p_adj=%.2g  [%s]\n",
+                  substr(d$term[i], 1, 55), d$p_adj[i], d[[gene_col]][i]))
+  }
+}
+cat("\n================ TOP-10 ORA ================\n"); show(res, "genes")
+cat("\n================ RANKED GSEA ===============\n"); show(resr, "leading_edge")

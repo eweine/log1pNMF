@@ -132,3 +132,68 @@ factor_ora <- function(FF, n_top = 10, universe = rownames(FF),
   res[, c("factor", "go_id", "term", "k", "K", "m", "N",
           "p", "p_adj", "genes")]
 }
+
+#' Ranked GSEA of each factor's FULL gene-score vector against GO BP.
+#'
+#' Instead of testing a top-N cutoff, ranks every gene by its factor
+#' score and asks (via fgsea) whether each GO term's genes concentrate
+#' near the top of the ranking. Factor scores are non-negative, so the
+#' test is one-sided (scoreType = "pos"); the many zero/near-zero scores
+#' of sparse factors form ties at the bottom, which fgsea breaks
+#' arbitrarily (harmless for the top of the ranking, where the signal
+#' lives). Same id conventions as factor_ora().
+#'
+#' @return data.frame: factor, go_id, term, size, ES, NES, p, p_adj,
+#'   leading_edge (the leading-edge genes, as display symbols).
+factor_gsea_ranked <- function(FF, universe = rownames(FF),
+                               id_type = c("symbol", "entrez"),
+                               symbols = NULL, fdr = 0.05, max_terms = 10,
+                               min_size = 5, max_size = 500) {
+  stopifnot(!is.null(rownames(FF)), !is.null(colnames(FF)))
+  id_type <- match.arg(id_type)
+  universe <- unique(universe)
+  if (id_type == "symbol") {
+    uni_eg <- symbols_to_entrez(universe)
+  } else {
+    uni_eg <- structure(universe, names = if (is.null(symbols)) universe
+                        else ifelse(is.na(symbols[universe]) |
+                                    symbols[universe] == "",
+                                    universe, symbols[universe]))
+    uni_eg[!uni_eg %in% AnnotationDbi::keys(org.Hs.eg.db)] <- NA
+  }
+  uni_eg <- uni_eg[!is.na(uni_eg)]
+  sets <- go_bp_sets(uni_eg, min_size, max_size)
+  message(sprintf("ranked GSEA: %d genes, %d GO BP sets",
+                  length(uni_eg), length(sets)))
+  sym_of <- setNames(names(uni_eg), uni_eg)    # entrez -> display symbol
+
+  out <- list()
+  for (kname in colnames(FF)) {
+    v <- FF[, kname]
+    ids <- if (id_type == "symbol") uni_eg[names(uni_eg) %in% names(v)] else
+             uni_eg[uni_eg %in% names(v)]
+    stats <- v[if (id_type == "symbol") names(ids) else ids]
+    names(stats) <- ids
+    fr <- suppressWarnings(fgsea::fgsea(
+      pathways = sets, stats = stats, scoreType = "pos",
+      minSize = min_size, maxSize = max_size, eps = 0))
+    fr <- fr[fr$padj < fdr, ]
+    fr <- fr[order(fr$pval), ]
+    if (nrow(fr) > max_terms) fr <- fr[seq_len(max_terms), ]
+    if (nrow(fr) > 0)
+      out[[kname]] <- data.frame(
+        factor = kname, go_id = fr$pathway,
+        term = suppressMessages(mapIds(GO.db, keys = fr$pathway,
+                                       column = "TERM", keytype = "GOID")),
+        size = fr$size, ES = fr$ES, NES = fr$NES,
+        p = fr$pval, p_adj = fr$padj,
+        leading_edge = vapply(fr$leadingEdge, function(g)
+          paste(sym_of[utils::head(g, 10)], collapse = ", "), ""),
+        row.names = NULL)
+    else message("  ", kname, ": no GO BP terms at FDR < ", fdr)
+  }
+  res <- do.call(rbind, out)
+  if (is.null(res)) return(data.frame())
+  rownames(res) <- NULL
+  res
+}
