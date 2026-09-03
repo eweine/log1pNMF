@@ -24,13 +24,13 @@ suppressMessages({
 
 ## symbols -> Entrez ids: exact symbol match first, alias fallback for the
 ## rest; unmapped genes are dropped (reported via attr "n_unmapped").
-symbols_to_entrez <- function(symbols) {
-  eg <- suppressMessages(mapIds(org.Hs.eg.db, keys = symbols,
+symbols_to_entrez <- function(symbols, orgdb = org.Hs.eg.db) {
+  eg <- suppressMessages(mapIds(orgdb, keys = symbols,
                                 column = "ENTREZID", keytype = "SYMBOL",
                                 multiVals = "first"))
   miss <- names(eg)[is.na(eg)]
   if (length(miss) > 0) {
-    ali <- suppressMessages(mapIds(org.Hs.eg.db, keys = miss,
+    ali <- suppressMessages(mapIds(orgdb, keys = miss,
                                    column = "ENTREZID", keytype = "ALIAS",
                                    multiVals = "first"))
     eg[names(ali)] <- ali
@@ -40,15 +40,15 @@ symbols_to_entrez <- function(symbols) {
 
 ## GO BP term -> Entrez gene sets (GO2ALLEGS includes descendant terms),
 ## restricted to a universe of Entrez ids and to sets of a sensible size.
-go_bp_sets <- function(universe_eg, min_size = 5, max_size = 500) {
-  go2eg <- as.list(org.Hs.egGO2ALLEGS)
-  onts  <- suppressMessages(AnnotationDbi::select(
-    GO.db, keys = names(go2eg), columns = "ONTOLOGY", keytype = "GOID"))
-  bp    <- onts$GOID[onts$ONTOLOGY == "BP"]
-  sets  <- lapply(go2eg[names(go2eg) %in% bp],
-                  function(g) unique(g[g %in% universe_eg]))
-  sets  <- sets[lengths(sets) >= min_size & lengths(sets) <= max_size]
-  sets
+go_bp_sets <- function(universe_eg, min_size = 5, max_size = 500,
+                       orgdb = org.Hs.eg.db) {
+  m <- suppressMessages(AnnotationDbi::select(
+    orgdb, keys = unique(unname(universe_eg)),
+    columns = c("GOALL", "ONTOLOGYALL"), keytype = "ENTREZID"))
+  m <- unique(m[!is.na(m$GOALL) & m$ONTOLOGYALL == "BP",
+                c("ENTREZID", "GOALL")])
+  sets <- split(m$ENTREZID, m$GOALL)
+  sets[lengths(sets) >= min_size & lengths(sets) <= max_size]
 }
 
 #' ORA of each factor's top genes against GO Biological Process.
@@ -73,24 +73,25 @@ go_bp_sets <- function(universe_eg, min_size = 5, max_size = 500) {
 factor_ora <- function(FF, n_top = 10, universe = rownames(FF),
                        id_type = c("symbol", "entrez"), symbols = NULL,
                        fdr = 0.05, max_terms = 10,
-                       min_size = 5, max_size = 500) {
+                       min_size = 5, max_size = 500,
+                       orgdb = org.Hs.eg.db) {
   stopifnot(!is.null(rownames(FF)), !is.null(colnames(FF)))
   id_type <- match.arg(id_type)
   universe <- unique(universe)
   if (id_type == "symbol") {
-    uni_eg <- symbols_to_entrez(universe)      # values Entrez, names = symbol
+    uni_eg <- symbols_to_entrez(universe, orgdb) # values Entrez, names = symbol
   } else {
     uni_eg <- structure(universe, names = if (is.null(symbols)) universe
                         else ifelse(is.na(symbols[universe]) |
                                     symbols[universe] == "",
                                     universe, symbols[universe]))
-    uni_eg[!uni_eg %in% AnnotationDbi::keys(org.Hs.eg.db)] <- NA
+    uni_eg[!uni_eg %in% AnnotationDbi::keys(orgdb)] <- NA
   }
   n_unmapped <- sum(is.na(uni_eg))
   uni_eg <- uni_eg[!is.na(uni_eg)]
   message(sprintf("universe: %d ids, %d usable Entrez (%d unmapped)",
                   length(universe), length(uni_eg), n_unmapped))
-  sets <- go_bp_sets(uni_eg, min_size, max_size)
+  sets <- go_bp_sets(uni_eg, min_size, max_size, orgdb)
   message(sprintf("GO BP sets of size %d-%d in universe: %d",
                   min_size, max_size, length(sets)))
   N <- length(uni_eg)
@@ -148,21 +149,22 @@ factor_ora <- function(FF, n_top = 10, universe = rownames(FF),
 factor_gsea_ranked <- function(FF, universe = rownames(FF),
                                id_type = c("symbol", "entrez"),
                                symbols = NULL, fdr = 0.05, max_terms = 10,
-                               min_size = 5, max_size = 500) {
+                               min_size = 5, max_size = 500,
+                               orgdb = org.Hs.eg.db) {
   stopifnot(!is.null(rownames(FF)), !is.null(colnames(FF)))
   id_type <- match.arg(id_type)
   universe <- unique(universe)
   if (id_type == "symbol") {
-    uni_eg <- symbols_to_entrez(universe)
+    uni_eg <- symbols_to_entrez(universe, orgdb)
   } else {
     uni_eg <- structure(universe, names = if (is.null(symbols)) universe
                         else ifelse(is.na(symbols[universe]) |
                                     symbols[universe] == "",
                                     universe, symbols[universe]))
-    uni_eg[!uni_eg %in% AnnotationDbi::keys(org.Hs.eg.db)] <- NA
+    uni_eg[!uni_eg %in% AnnotationDbi::keys(orgdb)] <- NA
   }
   uni_eg <- uni_eg[!is.na(uni_eg)]
-  sets <- go_bp_sets(uni_eg, min_size, max_size)
+  sets <- go_bp_sets(uni_eg, min_size, max_size, orgdb)
   message(sprintf("ranked GSEA: %d genes, %d GO BP sets",
                   length(uni_eg), length(sets)))
   sym_of <- setNames(names(uni_eg), uni_eg)    # entrez -> display symbol
