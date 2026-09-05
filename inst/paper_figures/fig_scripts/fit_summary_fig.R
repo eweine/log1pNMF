@@ -60,6 +60,30 @@ hoyer_sparsity <- function(x) {
   
 }
 
+## Discrete c axis matching the Simulation 2 figure: every value of c is a
+## category, with "Inf" plotted as its own rightmost tick instead of a
+## dashed reference line. `vals` is a named vector whose names are the c
+## values (including "Inf").
+panel_of <- function(vals, ylab) {
+  fmt_c <- function(x) ifelse(is.infinite(x), "∞",
+    format(x, scientific = FALSE, trim = TRUE, drop0trailing = TRUE))
+  cc <- as.numeric(names(vals))
+  d  <- data.frame(cf = factor(fmt_c(cc), levels = fmt_c(sort(cc))),
+                   value = as.numeric(vals))
+  ggplot2::ggplot(d, ggplot2::aes(cf, value, group = 1)) +
+    ggplot2::geom_line() +
+    ggplot2::geom_point() +
+    cowplot::theme_cowplot() +
+    ggplot2::scale_y_continuous(limits = c(0, 1), expand = c(0, 0)) +
+    ggplot2::xlab("c Used for Fitting") +
+    ggplot2::ylab(ylab) +
+    ggplot2::theme(
+      axis.title.x = ggplot2::element_text(size = 14.5),
+      axis.title.y = ggplot2::element_text(size = 14.5),
+      axis.text.x  = ggplot2::element_text(angle = 45, hjust = 1)
+    )
+}
+
 fit_list <- list()
 cc_vec <- c(1e-3, 1e-2, 1e-1, 1, 1e1, 1e2, 1e3)
 
@@ -126,61 +150,13 @@ df_cor <- data.frame(
 library(ggpubr)
 library(ggplot2)
 
-g1 <- ggplot(data = df_cor, aes(x = cc, y = correlation)) +
-  geom_point() +
-  geom_line() +
-  cowplot::theme_cowplot() +
-  scale_y_continuous(limits = c(0, 1), expand = c(0, 0)) +
-  scale_x_continuous(breaks = c(1e-3, 1, 1e3), transform = "log10") +
-  xlab("c") +
-  ylab("Mean Abs. Factor Correlation") +
-  geom_hline(yintercept = cor_vec["Inf"], color = "red", linetype = "dashed") +
-  ggplot2::annotate(
-    geom="text", x=0.008, y=cor_vec["Inf"] + 0.05, label="c = \u221E", color="red",
-    size = 5
-  ) +
-  theme(
-    axis.title.x = element_text(size = 14.5),
-    axis.title.y = element_text(size = 14.5)
-  )
+g1 <- panel_of(cor_vec, "Mean Abs. Factor Correlation")
 
-g2 <- ggplot(data = df_sparsity_l, aes(x = cc, y = sparsity)) +
-  geom_point() +
-  geom_line() +
-  cowplot::theme_cowplot() +
-  scale_y_continuous(limits = c(0, 1), expand = c(0, 0)) +
-  scale_x_continuous(breaks = c(1e-3, 1, 1e3), transform = "log10") +
-  xlab("c") +
-  ylab("Mean Loading Sparsity") +
-  geom_hline(yintercept = l_sparsity_vec["Inf"], color = "red", linetype = "dashed") +
-  ggplot2::annotate(
-    geom="text", x=0.008, y=l_sparsity_vec["Inf"] + 0.05, label="c = \u221E", color="red",
-    size = 5
-  ) +
-  theme(
-    axis.title.x = element_text(size = 14.5),
-    axis.title.y = element_text(size = 14.5)
-  )
+g2 <- panel_of(l_sparsity_vec, "Mean Loading Sparsity")
 
-g3 <- ggplot(data = df_sparsity_f, aes(x = cc, y = sparsity)) +
-  geom_point() +
-  geom_line() +
-  cowplot::theme_cowplot() +
-  scale_y_continuous(limits = c(0, 1), expand = c(0, 0)) +
-  scale_x_continuous(breaks = c(1e-3, 1, 1e3), transform = "log10") +
-  xlab("c") +
-  ylab("Mean Factor Sparsity") +
-  geom_hline(yintercept = f_sparsity_vec["Inf"], color = "red", linetype = "dashed") +
-  ggplot2::annotate(
-    geom="text", x=0.008, y=f_sparsity_vec["Inf"] + 0.05, label="c = \u221E", color="red",
-    size = 5
-  ) +
-  theme(
-    axis.title.x = element_text(size = 14.5),
-    axis.title.y = element_text(size = 14.5)
-  )
+g3 <- panel_of(f_sparsity_vec, "Mean Factor Sparsity")
 
-rm(list = setdiff(ls(), c("g1", "g2", "g3", "hoyer_sparsity", "res_list")))
+rm(list = setdiff(ls(), c("g1", "g2", "g3", "hoyer_sparsity", "panel_of", "res_list")))
 
 library(rsvd)
 library(fastglmpca)
@@ -307,62 +283,14 @@ df_cor <- data.frame(
 library(ggpubr)
 library(ggplot2)
 
-g4 <- ggplot(data = df_cor, aes(x = cc, y = correlation)) +
-  geom_point() +
-  geom_line() +
-  cowplot::theme_cowplot() +
-  scale_y_continuous(limits = c(0, 1), expand = c(0, 0)) +
-  scale_x_continuous(breaks = c(1e-4, 1e-2, 1, 1e2, 1e4), transform = "log10") +
-  xlab("c") +
-  ylab("Mean Abs. Factor Correlation") +
-  geom_hline(yintercept = cor_vec["Inf"], color = "red", linetype = "dashed") +
-  ggplot2::annotate(
-    geom="text", x=0.003, y=cor_vec["Inf"] + 0.05, label="c = \u221E", color="red",
-    size = 5
-  ) +
-  theme(
-    axis.title.x = element_text(size = 14.5),
-    axis.title.y = element_text(size = 14.5)
-  )
+g4 <- panel_of(cor_vec, "Mean Abs. Factor Correlation")
 
-g5 <- ggplot(data = df_sparsity_l, aes(x = cc, y = sparsity)) +
-  geom_point() +
-  geom_line() +
-  cowplot::theme_cowplot() +
-  scale_y_continuous(limits = c(0, 1), expand = c(0, 0)) +
-  scale_x_continuous(breaks = c(1e-4, 1e-2, 1, 1e2, 1e4), transform = "log10") +
-  xlab("c") +
-  ylab("Mean Loading Sparsity") +
-  geom_hline(yintercept = l_sparsity_vec["Inf"], color = "red", linetype = "dashed") +
-  ggplot2::annotate(
-    geom="text", x=0.003, y=l_sparsity_vec["Inf"] + 0.05, label="c = \u221E", color="red",
-    size = 5
-  ) +
-  theme(
-    axis.title.x = element_text(size = 14.5),
-    axis.title.y = element_text(size = 14.5)
-  )
+g5 <- panel_of(l_sparsity_vec, "Mean Loading Sparsity")
 
-g6 <- ggplot(data = df_sparsity_f, aes(x = cc, y = sparsity)) +
-  geom_point() +
-  geom_line() +
-  cowplot::theme_cowplot() +
-  scale_y_continuous(limits = c(0, 1), expand = c(0, 0)) +
-  scale_x_continuous(breaks = c(1e-4, 1e-2, 1, 1e2, 1e4), transform = "log10") +
-  xlab("c") +
-  ylab("Mean Factor Sparsity") +
-  geom_hline(yintercept = f_sparsity_vec["Inf"], color = "red", linetype = "dashed") +
-  ggplot2::annotate(
-    geom="text", x=0.003, y=f_sparsity_vec["Inf"] + 0.05, label="c = \u221E", color="red",
-    size = 5
-  ) +
-  theme(
-    axis.title.x = element_text(size = 14.5),
-    axis.title.y = element_text(size = 14.5)
-  )
+g6 <- panel_of(f_sparsity_vec, "Mean Factor Sparsity")
 
 rm(list = setdiff(ls(), c(
-  "g1", "g2", "g3", "g4", "g5", "g6", "hoyer_sparsity", "res_list"
+  "g1", "g2", "g3", "g4", "g5", "g6", "hoyer_sparsity", "panel_of", "res_list"
   )))
 
 load("../data/raw_data/pancreas_cytokine_lsa.Rdata")
@@ -451,59 +379,11 @@ df_cor <- data.frame(
   correlation = cor_vec
 ) %>% filter(is.finite(cc))
 
-g7 <- ggplot(data = df_cor, aes(x = cc, y = correlation)) +
-  geom_point() +
-  geom_line() +
-  cowplot::theme_cowplot() +
-  scale_y_continuous(limits = c(0, 1), expand = c(0, 0)) +
-  scale_x_continuous(breaks = c(1e-3, 1, 1e3), transform = "log10") +
-  xlab("c") +
-  ylab("Mean Abs. Factor Correlation") +
-  geom_hline(yintercept = cor_vec["Inf"], color = "red", linetype = "dashed") +
-  ggplot2::annotate(
-    geom="text", x=0.008, y=cor_vec["Inf"] + 0.05, label="c = \u221E", color="red",
-    size = 5
-  ) +
-  theme(
-    axis.title.x = element_text(size = 14.5),
-    axis.title.y = element_text(size = 14.5)
-  )
+g7 <- panel_of(cor_vec, "Mean Abs. Factor Correlation")
 
-g8 <- ggplot(data = df_sparsity_l, aes(x = cc, y = sparsity)) +
-  geom_point() +
-  geom_line() +
-  cowplot::theme_cowplot() +
-  scale_y_continuous(limits = c(0, 1), expand = c(0, 0)) +
-  scale_x_continuous(breaks = c(1e-3, 1, 1e3), transform = "log10") +
-  xlab("c") +
-  ylab("Mean Loading Sparsity") +
-  geom_hline(yintercept = l_sparsity_vec["Inf"], color = "red", linetype = "dashed") +
-  ggplot2::annotate(
-    geom="text", x=0.008, y=l_sparsity_vec["Inf"] + 0.05, label="c = \u221E", color="red",
-    size = 5
-  ) +
-  theme(
-    axis.title.x = element_text(size = 14.5),
-    axis.title.y = element_text(size = 14.5)
-  )
+g8 <- panel_of(l_sparsity_vec, "Mean Loading Sparsity")
 
-g9 <- ggplot(data = df_sparsity_f, aes(x = cc, y = sparsity)) +
-  geom_point() +
-  geom_line() +
-  cowplot::theme_cowplot() +
-  scale_y_continuous(limits = c(0, 1), expand = c(0, 0)) +
-  scale_x_continuous(breaks = c(1e-3, 1, 1e3), transform = "log10") +
-  xlab("c") +
-  ylab("Mean Factor Sparsity") +
-  geom_hline(yintercept = f_sparsity_vec["Inf"], color = "red", linetype = "dashed") +
-  ggplot2::annotate(
-    geom="text", x=0.008, y=f_sparsity_vec["Inf"] - 0.05, label="c = \u221E", color="red",
-    size = 5
-  ) +
-  theme(
-    axis.title.x = element_text(size = 14.5),
-    axis.title.y = element_text(size = 14.5)
-  )
+g9 <- panel_of(f_sparsity_vec, "Mean Factor Sparsity")
 
 mcf7_sum_fig <- ggarrange(g4,g5,g6, nrow = 1, labels = c("A", "B", "C"))
 mcf7_sum_fig <- annotate_figure(mcf7_sum_fig,
