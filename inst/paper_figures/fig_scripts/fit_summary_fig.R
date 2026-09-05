@@ -385,18 +385,23 @@ g8 <- panel_of(l_sparsity_vec, "Mean Loading Sparsity")
 
 g9 <- panel_of(f_sparsity_vec, "Mean Factor Sparsity")
 
-mcf7_sum_fig <- ggarrange(g4,g5,g6, nrow = 1, labels = c("A", "B", "C"))
+## one letter per row, drawn at the very top left of the row (above the
+## panels, clear of the y-axis titles)
+mcf7_sum_fig <- ggarrange(g4,g5,g6, nrow = 1)
 mcf7_sum_fig <- annotate_figure(mcf7_sum_fig,
-                     top = text_grob("MCF-7 K = 3", size = 25, face = "bold"))
+                     top = text_grob("MCF-7 K = 3", size = 25, face = "bold"),
+                     fig.lab = "A", fig.lab.face = "bold", fig.lab.size = 20)
 
-bbc_sum_fig <- ggarrange(g1,g2,g3, nrow = 1, labels = c("G", "H", "I"))
+bbc_sum_fig <- ggarrange(g1,g2,g3, nrow = 1)
 bbc_sum_fig <- annotate_figure(bbc_sum_fig,
-                                top = text_grob("BBC K = 10", size = 25, face = "bold"))
+                                top = text_grob("BBC K = 10", size = 25, face = "bold"),
+                                fig.lab = "C", fig.lab.face = "bold", fig.lab.size = 20)
 
 
-lsa_sum_fig <- ggarrange(g7,g8,g9, nrow = 1, labels = c("D", "E", "F"))
+lsa_sum_fig <- ggarrange(g7,g8,g9, nrow = 1)
 lsa_sum_fig <- annotate_figure(lsa_sum_fig,
-                               top = text_grob("Pancreas K = 13", size = 25, face = "bold"))
+                               top = text_grob("Pancreas K = 13", size = 25, face = "bold"),
+                               fig.lab = "B", fig.lab.face = "bold", fig.lab.size = 20)
 
 all_dataset_sum_fig <- ggarrange(mcf7_sum_fig, lsa_sum_fig, bbc_sum_fig, nrow = 3, ncol = 1)
 
