@@ -55,14 +55,14 @@ out_png <- "../images/exact_vs_approx_all_datasets.png"
 ## time axis is log1p-transformed
 DATASETS <- list(
   list(key = "moca",     tag = "exact_vs_approx_moca_K25_c1",
-       title = "MOCA — 1.33M cells × 26,182 genes (K = 25)",
-       tdiv = 3600, tlab = "Wall-clock time (hours)",   xlog1p = FALSE),
+       title = "MOCA K = 25",
+       tdiv = 3600, tlab = "Wall-Clock Time (Hours)",   xlog1p = FALSE),
   list(key = "pancreas", tag = "exact_vs_approx_pancreas_K13_c1",
-       title = "Pancreas cytokine (K = 13)",
-       tdiv = 1,    tlab = "Wall-clock time (seconds)", xlog1p = TRUE),
+       title = "Pancreas K = 13",
+       tdiv = 60,   tlab = "Wall-Clock Time (Minutes)", xlog1p = TRUE),
   list(key = "bbc",      tag = "exact_vs_approx_bbc_K10_c1",
-       title = "BBC news — documents × terms (K = 10)",
-       tdiv = 1,    tlab = "Wall-clock time (seconds)", xlog1p = TRUE)
+       title = "BBC K = 10",
+       tdiv = 1,    tlab = "Wall-Clock Time (Seconds)", xlog1p = TRUE)
 )
 
 ## plain decimal labels ("0", "1", "10", "1000") rather than scientific notation
@@ -96,7 +96,7 @@ sci_lab <- function(x) ifelse(is.na(x), "",
 
 SCHEME_LABS <- c(random = "Random init", rank1 = "Rank-1 init")
 ## approx vs exact -- validated colorblind-safe pair (matches the other timing figs)
-MCOL <- c("Approximate" = "#E69F00", "Exact" = "#0072B2")
+MCOL <- c("Approximate" = "red", "Exact" = "blue")   # match computational_complexity_fig.R
 
 load_dataset <- function(tag) {
   d <- do.call(rbind, lapply(c("approx", "exact"), function(m) {
@@ -124,8 +124,9 @@ panel_for <- function(ds) {
     geom_line(linewidth = 0.8) +
     scale_color_manual(values = MCOL, name = "Optimization") +
     scale_y_continuous(trans = "log1p", breaks = log1p_y_breaks, labels = sci_lab) +
-    labs(x = ds$tlab, y = NULL, title = ds$title) +
-    theme(plot.title = element_text(size = 11.5, face = "plain", hjust = 0.5),
+    labs(x = ds$tlab, y = "Distance from Best Log-Likelihood",
+         title = ds$title) +
+    theme(plot.title = element_text(size = 14, face = "bold", hjust = 0.5),
           legend.position = "none")
   if (ds$xlog1p)
     g <- g + scale_x_continuous(trans = "log1p", breaks = log1p_breaks,
@@ -135,16 +136,15 @@ panel_for <- function(ds) {
 
 panels <- lapply(DATASETS, panel_for)
 
-## shared legend (pull from a throwaway plot that has one)
-legend <- get_legend(panels[[1]] + theme(legend.position = "top"))
+## shared horizontal legend below the panels, left-aligned (as in the
+## computational-complexity figure)
+legend <- get_legend(panels[[1]] +
+                       theme(legend.position = "bottom",
+                             legend.justification = "left"))
 
 grid  <- plot_grid(plotlist = panels, nrow = 1, align = "h", axis = "tb",
                    labels = c("A", "B", "C"), label_size = 13)
-## a single rotated y-axis label shared by all panels
-ylab  <- ggdraw() + draw_label("Distance from best log-likelihood",
-                               angle = 90, size = 12)
-body  <- plot_grid(ylab, grid, ncol = 2, rel_widths = c(0.03, 1))
-final <- plot_grid(legend, body, ncol = 1, rel_heights = c(0.1, 1))
+final <- plot_grid(grid, legend, ncol = 1, rel_heights = c(1, 0.09))
 
-ggsave(out_png, final, width = 12.5, height = 4, dpi = 150, bg = "white")
+ggsave(out_png, final, width = 12.5, height = 4.3, dpi = 150, bg = "white")
 message("Wrote ", normalizePath(out_png, mustWork = FALSE))
