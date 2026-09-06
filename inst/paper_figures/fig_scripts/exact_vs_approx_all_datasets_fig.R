@@ -59,7 +59,7 @@ DATASETS <- list(
        tdiv = 3600, tlab = "Wall-Clock Time (Hours)",   xlog1p = FALSE),
   list(key = "pancreas", tag = "exact_vs_approx_pancreas_K13_c1",
        title = "Pancreas K = 13",
-       tdiv = 3600, tlab = "Wall-Clock Time (Hours)",   xlog1p = FALSE),
+       tdiv = 3600, tlab = "Wall-Clock Time (Hours)",   xlog1p = TRUE),
   list(key = "bbc",      tag = "exact_vs_approx_bbc_K10_c1",
        title = "BBC K = 10",
        tdiv = 1,    tlab = "Wall-Clock Time (Seconds)", xlog1p = TRUE)
