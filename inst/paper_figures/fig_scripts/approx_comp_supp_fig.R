@@ -33,12 +33,12 @@ barcodes <- barcodes %>%
 
 barcodes$celltype <- if_else(
   barcodes$celltype == "Endothelial/Mesnchymal",
-  "Endothelial/Mesenchymal",
+  "Endo/Mes",
   barcodes$celltype
 )
 
 clusters   <- factor(barcodes$celltype,
-                     c("Acinar","Ductal","Endothelial/Mesenchymal","Macrophage",
+                     c("Acinar","Ductal","Endo/Mes","Macrophage",
                        "Alpha","Beta","Delta","Gamma"))
 
 conditions <- factor(barcodes$condition,

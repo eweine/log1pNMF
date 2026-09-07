@@ -21,9 +21,9 @@ barcodes   <- as.data.frame(barcodes)
 ## fix it so the factor level below matches (otherwise those cells
 ## silently become NA and vanish from the plots)
 barcodes$celltype[barcodes$celltype == "Endothelial/Mesnchymal"] <-
-  "Endothelial/Mesenchymal"
+  "Endo/Mes"
 clusters   <- factor(barcodes$celltype,
-                     c("Acinar","Ductal","Endothelial/Mesenchymal","Macrophage",
+                     c("Acinar","Ductal","Endo/Mes","Macrophage",
                        "Alpha","Beta","Delta","Gamma"))
 
 barcodes <- barcodes %>%
