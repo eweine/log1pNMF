@@ -53,7 +53,8 @@ ui <- fluidPage(
         tags$tr(tags$td("j = 2"), tags$td(num("f21", 2)),   tags$td(num("f22", 2))),
         tags$tr(tags$td("j = 3"), tags$td(num("f31", 0.5)), tags$td(num("f32", 3)))
       ),
-      sliderInput("Tmax", "Structural loading budget T (log1p region shows ||l|| ≤ T)",
+      checkboxInput("Tinf", "T = ∞: draw the FULL achievable set (exact boundary)", TRUE),
+      sliderInput("Tmax", "Structural loading budget T (log1p cloud shows ||l|| ≤ T)",
                   min = 0.5, max = 40, value = 8, step = 0.5),
       checkboxInput("show_frontier", "Show c → 0⁺ frontier (theorem's sparse set)", TRUE),
       checkboxInput("show_additive", "Show additive model, two factors (segment)", TRUE),
@@ -95,12 +96,29 @@ server <- function(input, output, session) {
     text(V[2, 1] + 0.04, V[2, 2] - 0.03, expression(e[2]))
     text(V[3, 1],        V[3, 2] + 0.04, expression(e[3]))
 
-    ## log1p c -> 0 region with intercept: loading box [0, T]^2 (grid warped
-    ## toward the corners so the frontier approach is visible)
+    ## T = infinity: the full achievable set, drawn exactly. Its boundary is
+    ## the single-factor curve sigma(t f1) (uniform -> e_argmax f1), the
+    ## frontier edges through the upper-right-hull vertices, and the
+    ## single-factor curve sigma(t f2) reversed (e_argmax f2 -> uniform).
+    if (input$Tinf) {
+      tt <- seq(0, 1, length.out = 300)^2 * 80
+      c1 <- t(sapply(tt, function(t) proj(softmax(t * F[, 1]))))
+      c2 <- t(sapply(tt, function(t) proj(softmax(t * F[, 2]))))
+      fp <- frontier_pairs(F)
+      mid <- V[fp$vertices, , drop = FALSE]
+      poly <- rbind(c1, mid, c2[rev(seq_len(nrow(c2))), ])
+      polygon(poly[, 1], poly[, 2], border = NA,
+              col = adjustcolor("#9BB7BD", 0.45))
+      lines(c1, col = "#0E5C6B", lwd = 2)
+      lines(c2, col = "#0E5C6B", lwd = 2)
+    }
+
+    ## finite-T cloud: loading box [0, T]^2 (grid warped toward the corners
+    ## so the frontier approach is visible)
     g  <- seq(0, 1, length.out = 90)^2 * T
     ll <- expand.grid(l1 = g, l2 = g)
     pts <- t(apply(ll, 1, function(l) proj(softmax(F %*% as.numeric(l)))))
-    points(pts, pch = 16, cex = 0.35, col = adjustcolor("#9BB7BD", 0.35))
+    points(pts, pch = 16, cex = 0.35, col = adjustcolor("#5F8790", 0.35))
     u <- proj(rep(1, 3))
     points(u[1], u[2], pch = 16, cex = 1.1)
     text(u[1] - 0.09, u[2], "uniform", cex = 0.9)
@@ -131,7 +149,7 @@ server <- function(input, output, session) {
     }
 
     legend("topleft", bty = "n", cex = 0.85,
-           legend = c("log1p, c → 0⁺, intercept + 2 factors (||l|| ≤ T)",
+           legend = c("log1p, c → 0⁺: cloud = ||l|| ≤ T; light fill = T = ∞",
                       "c → 0⁺ frontier (theorem)",
                       "additive, 2 factors",
                       if (input$add_const) "additive + intercept"),
