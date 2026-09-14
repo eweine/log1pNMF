@@ -141,11 +141,13 @@ CE <- list(
 ce_panels <- lapply(CE, function(cf) {
   M <- length(unique(frontier_verts(cf$F)))
   a <- area_frac(cf$F)
-  panel_simplex(cf$F, Tmax = 300,
-                title = sprintf("M = %d:  area = %.3f |Δ|", M, a))
+  plot_grid(panel_factor(cf$F, "factor space"),
+            panel_simplex(cf$F, Tmax = 300,
+                          title = sprintf("M = %d:  area = %.3f |Δ|", M, a)),
+            nrow = 1, rel_widths = c(0.72, 1))
 })
 g3 <- plot_grid(plotlist = ce_panels, nrow = 2, labels = c("A", "", "B", ""),
                 label_size = 12)
-ggsave("../images/note_c0_counterex_fig.png", g3, width = 7.6, height = 7,
+ggsave("../images/note_c0_counterex_fig.png", g3, width = 12.4, height = 6.8,
        dpi = 300, bg = "white")
 message("Wrote ../images/note_c0_counterex_fig.png")
