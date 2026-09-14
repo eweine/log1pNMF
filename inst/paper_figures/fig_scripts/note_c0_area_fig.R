@@ -116,3 +116,36 @@ g2 <- plot_grid(plotlist = panels, nrow = 1)
 ggsave("../images/note_c0_area_fill_fig.png", g2, width = 10.2, height = 3.4,
        dpi = 300, bg = "white")
 message("Wrote ../images/note_c0_area_fill_fig.png")
+
+## Figure 3: the two dominance counterexamples, pairwise
+## (note_c0_counterex_fig.png). Top pair: an M = 1 configuration whose
+## area exceeds an M = 2 configuration's. Bottom pair: an M = 2
+## configuration whose area exceeds an M = 3 configuration's (found by
+## random search; areas computed exactly via the softmax-diffeomorphism
+## rejection sampler).
+area_frac <- function(F, n = 6e5) {
+  set.seed(1)
+  E <- matrix(rexp(3 * n), ncol = 3); L <- E / rowSums(E)
+  eta <- log(L); eta <- eta - rowMeans(eta)
+  B <- cbind(F[, 1] - mean(F[, 1]), F[, 2] - mean(F[, 2]))
+  cf <- t(qr.solve(B, t(eta)))
+  mean(cf[, 1] >= -1e-9 & cf[, 2] >= -1e-9)
+}
+
+CE <- list(
+  list(F = cbind(c(4, 2, 1), c(4, 1, 2))),                    # M = 1
+  list(F = cbind(c(1, 2, 2.1), c(1, 2.2, 2.1))),              # M = 2 thin
+  list(F = cbind(c(0.12, 0.19, 2.50), c(3.47, 3.48, 0.09))),  # M = 2 wide
+  list(F = cbind(c(3.07, 2.08, 3.05), c(1.29, 3.96, 3.89)))   # M = 3
+)
+ce_panels <- lapply(CE, function(cf) {
+  M <- length(unique(frontier_verts(cf$F)))
+  a <- area_frac(cf$F)
+  panel_simplex(cf$F, Tmax = 300,
+                title = sprintf("M = %d:  area = %.3f |Δ|", M, a))
+})
+g3 <- plot_grid(plotlist = ce_panels, nrow = 2, labels = c("A", "", "B", ""),
+                label_size = 12)
+ggsave("../images/note_c0_counterex_fig.png", g3, width = 7.6, height = 7,
+       dpi = 300, bg = "white")
+message("Wrote ../images/note_c0_counterex_fig.png")
