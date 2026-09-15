@@ -87,3 +87,32 @@ for (dth in c(2, 1, 0.5, 0.2, 0.1, 0.05, 0.02)) {
 }
 cat(sprintf("limit-complex value 0.4561 + sqrt(3)/4 = %.4f\n",
             0.4561 + sqrt(3)/4))
+
+## ---- (4) general p: double-crawl joins (Theorem, free-F section) ----------
+## Apex e_p over the log-line with facet direction
+## d = (1+delta, 1, -1, -1-delta, 0, ...): as delta -> 0 the curve
+## crawls along edges e1e2 and e3e4, and the apex half gains the two
+## half-2-faces conv(e_p, mid12, e1) and conv(e_p, mid34, e4)
+## (2 * sqrt(3)/4 = 0.866) plus a positive middle piece -- exceeding
+## the additive K = 3 ceiling sqrt(3)/2 = 0.866 at every p >= 5.
+join_areas_p <- function(d, n = 120000) {
+  q <- length(d)
+  d <- d - mean(d)
+  x <- (seq_len(n) - 0.5) / n * pi - pi/2
+  s <- tan(x); jac <- 1/cos(x)^2 * (pi/n)
+  eta <- outer(s, d); m <- apply(eta, 1, max)
+  E <- exp(eta - m); Zr <- rowSums(E); G <- E / Zr
+  logZ <- m + log(Zr)
+  Gd <- c(G %*% d)
+  Gp <- G * (matrix(d, n, q, byrow = TRUE) - Gd)
+  A <- cbind(Gp, 0); B <- cbind(-G, 1)
+  w <- sqrt(pmax(rowSums(A^2) * rowSums(B^2) - rowSums(A*B)^2, 0))
+  t0 <- plogis(-logZ)
+  c(full = sum(w * jac)/2, apex_half = sum(w * (1 - t0)^2/2 * jac))
+}
+cat(sprintf("\nadditive K = 3 ceiling at every p: sqrt(3)/2 = %.4f\n", sqrt(3)/2))
+for (p in c(5, 6, 8)) {
+  del <- 0.02
+  a <- join_areas_p(c(1 + del, 1, -1, -1 - del, rep(0, p - 5)))
+  cat(sprintf("p = %d, delta = %g: apex half = %.4f\n", p, del, a["apex_half"]))
+}
