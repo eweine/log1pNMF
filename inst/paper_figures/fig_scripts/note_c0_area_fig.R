@@ -151,3 +151,93 @@ g3 <- plot_grid(plotlist = ce_panels, nrow = 2, labels = c("A", "", "B", ""),
 ggsave("../images/note_c0_counterex_fig.png", g3, width = 12.4, height = 6.8,
        dpi = 300, bg = "white")
 message("Wrote ../images/note_c0_counterex_fig.png")
+
+## Figure 4: the area-maximizing family (note_c0_maxarea_fig.png).
+## Centered columns g1 = (1,-1,0) + s*v, g2 = (-1,1,0) + s*v with
+## v = (-1,-1,2); shifted nonnegative this is rows (2.05, 0.05),
+## (0.05, 2.05) fixed and the balanced row (1.05+3s, 1.05+3s) sliding
+## toward the midpoint of their segment as s -> 0. The loading cone
+## opens toward the half-plane {eta centered : eta_3 >= 0}, whose
+## sigma-image is the exact limit region {lam3^2 >= lam1*lam2} (feature
+## 3 above the geometric mean), area 0.5272 |Delta| -- the supremum
+## over all F, approached but not attained.
+max_family_F <- function(s) {
+  g1 <- c(1, -1, 0) + s * c(-1, -1, 2)
+  g2 <- c(-1, 1, 0) + s * c(-1, -1, 2)
+  b  <- -min(c(g1, g2)) + 0.05
+  cbind(g1 + b, g2 + b)
+}
+
+panel_family_factor <- function(svals) {
+  Fs   <- lapply(svals, max_family_F)
+  fixd <- data.frame(x = c(2.05, 0.05), y = c(0.05, 2.05),
+                     lab = c("j=1", "j=2"))
+  bal  <- data.frame(x = sapply(Fs, function(F) F[3, 1]),
+                     y = sapply(Fs, function(F) F[3, 2]),
+                     lab = paste0("s=", svals))
+  seg  <- data.frame(x = 2.05, y = 0.05, xend = 0.05, yend = 2.05)
+  lim  <- c(0, 2.6)
+  ggplot() +
+    geom_segment(data = seg, aes(x, y, xend = xend, yend = yend),
+                 colour = "grey60", linetype = "dashed") +
+    geom_point(data = fixd, aes(x, y), size = 2.4) +
+    geom_text(data = fixd, aes(x, y, label = lab), nudge_x = 0.18,
+              nudge_y = 0.14, size = 3.4) +
+    geom_point(data = bal, aes(x, y), colour = "#C2410C", size = 2.2) +
+    geom_text(data = bal, aes(x, y, label = lab), nudge_x = 0.3,
+              nudge_y = 0.1, size = 3, colour = "#C2410C") +
+    geom_point(aes(x = 1.05, y = 1.05), shape = 4, size = 2.6,
+               stroke = 1.1) +
+    coord_equal(xlim = lim, ylim = lim) +
+    labs(x = expression(f[j1]), y = expression(f[j2]),
+         title = "j=3 slides to the midpoint") +
+    theme(plot.title = element_text(size = 11, hjust = 0.5))
+}
+
+panel_limit_region <- function() {
+  ## exact sigma-image of the half-plane {eta_3 >= 0}: boundary is
+  ## lam3^2 = lam1*lam2; on the simplex, for lam3 = t in [0, 1/3] the
+  ## two branches lam1 = ((1-t) +/- sqrt((1-t)^2 - 4 t^2))/2 run from
+  ## e1 and e2 to the uniform vector.
+  tt <- seq(0, 1/3, length.out = 400)
+  dsc <- sqrt(pmax((1 - tt)^2 - 4 * tt^2, 0))
+  brA <- cbind(((1 - tt) + dsc) / 2, ((1 - tt) - dsc) / 2, tt)
+  brB <- cbind(((1 - tt) - dsc) / 2, ((1 - tt) + dsc) / 2, tt)
+  poly <- proj_mat(rbind(brA, brB[rev(seq_len(nrow(brB))), ], c(0, 1, 0),
+                         c(0, 0, 1), c(1, 0, 0)))
+  tri <- data.frame(x = V[c(1, 2, 3, 1), 1], y = V[c(1, 2, 3, 1), 2])
+  u <- proj_mat(matrix(1/3, 1, 3))
+  ggplot() +
+    geom_polygon(data = data.frame(x = poly[, 1], y = poly[, 2]),
+                 aes(x, y), fill = "#9BB7BD", alpha = 0.55) +
+    geom_path(data = data.frame(x = proj_mat(brA)[, 1],
+                                y = proj_mat(brA)[, 2]),
+              aes(x, y), colour = "#0E5C6B", linewidth = 0.8) +
+    geom_path(data = data.frame(x = proj_mat(brB)[, 1],
+                                y = proj_mat(brB)[, 2]),
+              aes(x, y), colour = "#0E5C6B", linewidth = 0.8) +
+    geom_path(data = tri, aes(x, y), colour = "grey55", linewidth = 0.4) +
+    geom_point(aes(x = u[1], y = u[2]), size = 1.6) +
+    annotate("text", x = V[1,1] - 0.05, y = V[1,2] - 0.03,
+             label = "e[1]", parse = TRUE, size = 3.2) +
+    annotate("text", x = V[2,1] + 0.05, y = V[2,2] - 0.03,
+             label = "e[2]", parse = TRUE, size = 3.2) +
+    annotate("text", x = V[3,1], y = V[3,2] + 0.04,
+             label = "e[3]", parse = TRUE, size = 3.2) +
+    coord_equal(xlim = c(-0.09, 1.09), ylim = c(-0.07, 0.94)) +
+    labs(title = "limit s = 0: area = 0.527 |Δ|") + theme_void() +
+    theme(plot.title = element_text(size = 11, hjust = 0.5))
+}
+
+sf_panels <- lapply(c(0.2, 0.05), function(s) {
+  F <- max_family_F(s)
+  panel_simplex(F, Tmax = 300,
+                title = sprintf("s = %.2f:  area = %.3f |Δ|",
+                                s, area_frac(F)))
+})
+g4 <- plot_grid(panel_family_factor(c(0.2, 0.1, 0.05, 0.02)),
+                sf_panels[[1]], sf_panels[[2]], panel_limit_region(),
+                nrow = 1, rel_widths = c(0.86, 1, 1, 1))
+ggsave("../images/note_c0_maxarea_fig.png", g4, width = 13.6, height = 3.6,
+       dpi = 300, bg = "white")
+message("Wrote ../images/note_c0_maxarea_fig.png")
