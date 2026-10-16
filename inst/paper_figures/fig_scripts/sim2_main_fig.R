@@ -14,7 +14,7 @@
 #
 # Thin lines: individual seeds; thick line: mean over seeds; dashed: the
 # truth's own value (A-B), the Lambda-prediction (C), or the reference
-# ratio 1 (D); open circle: c_fit = c_true. Reads approx_sim_metrics.rds
+# ratio 1 (D); open circle: c_fit = c_true. Reads res_list$approx_sim_metrics (experiment_results.Rdata)
 # (analyze_approx_sim.R) and regenerates the true rates from the
 # deterministic generator (approx_sim_common.R) for row C's prediction.
 
@@ -23,7 +23,8 @@ library(cowplot)
 
 N_SEEDS_SHOW <- 30
 
-res <- readRDS("../experiments/approx_sim_metrics.rds")
+load("../data/experiment_results.Rdata")
+res <- res_list$approx_sim_metrics
 ex  <- subset(res, method == "exact" & seed <= N_SEEDS_SHOW)
 
 NP <- unique(res$n * res$p)

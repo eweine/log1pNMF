@@ -11,11 +11,13 @@
 # c_true = 1e-3) with 95% t-based confidence intervals computed on the
 # log scale (iteration counts are heavy-tailed and the y-axis is
 # logarithmic, so the multiplicative summary is the natural one).
-# Reads approx_sim_metrics.rds (analyze_approx_sim.R).
+# Reads res_list$approx_sim_metrics from ../data/experiment_results.Rdata
+# (produced by analyze_approx_sim.R, collected by utils/collect_data.R).
 
 library(ggplot2)
 
-res <- readRDS("../experiments/approx_sim_metrics.rds")
+load("../data/experiment_results.Rdata")
+res <- res_list$approx_sim_metrics
 res <- subset(res, is.finite(cc))
 res$Optimization <- factor(
   c(exact = "Exact", chebyshev = "Chebyshev", taylor = "Taylor")[res$method],

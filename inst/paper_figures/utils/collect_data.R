@@ -59,6 +59,29 @@ res_list$pancreas <- pancreas_fit_list
 
 res_list$mcf7 <- readr::read_rds("~/Documents/data/mcf7_fit_list.rds")
 
+
+
+# Cluster-experiment summary tables (small, read directly from the
+# experiment outputs in ../experiments; see the README there):
+#   - approx_sim_metrics: per-fit metrics of the approx-sim pipeline
+#     (analyze_approx_sim.R) -- Figs 3, 5, K.1, K.3
+#   - exact_vs_approx_traces: rank-1 trace tables of the exact-vs-approx
+#     timing experiment (run_experiment.R) -- Fig F.1
+#   - bbc_init_stability: summary rows of the BBC initialization
+#     experiment (run_bbc_init.R; extracted from the per-task outputs
+#     into bbc_init_metrics.rds) -- Fig K.2
+
+res_list$approx_sim_metrics <- readRDS("../experiments/approx_sim_metrics.rds")
+
+tags <- c(moca = "exact_vs_approx_moca_K25_c1",
+          pancreas = "exact_vs_approx_pancreas_K13_c1",
+          bbc = "exact_vs_approx_bbc_K10_c1")
+res_list$exact_vs_approx_traces <- lapply(tags, function(tag)
+  sapply(c("exact", "approx"), function(m)
+    readRDS(file.path("../experiments",
+                      sprintf("%s_rank1_%s_traces.rds", tag, m))),
+    simplify = FALSE))
+
+res_list$bbc_init_stability <- readRDS("../experiments/bbc_init_metrics.rds")
+
 save(res_list, file = "../data/experiment_results.Rdata")
-
-

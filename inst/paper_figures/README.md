@@ -8,16 +8,17 @@ revision of the manuscript.
 Layout:
 
 - `experiments/` — code to run the experiments (model fitting, simulations,
-  and post-processing), plus the small result files the figure scripts read.
-  Scripts with `.sbatch`/`.sh` extensions run the heavier experiments on a
-  Slurm cluster.
+  and post-processing), plus their small summary outputs. Scripts with
+  `.sbatch`/`.sh` extensions run the heavier experiments on a Slurm cluster.
 - `fig_scripts/` — code to make the plots. Each script writes its figure to
   `images/`. Run from inside `fig_scripts/` (paths are relative).
 - `images/` — the rendered figures, as included in the manuscript.
-- `data/` — fitted-model results (`experiment_results.Rdata`, assembled by
-  `utils/collect_data.R`) and, in `data/raw_data/`, the raw datasets.
-- `utils/` — `collect_data.R`, which gathers the real-data fits into
-  `data/experiment_results.Rdata`.
+- `data/` — `experiment_results.Rdata` (assembled by `utils/collect_data.R`),
+  which bundles everything the figure scripts read — the real-data fits and
+  the summary tables of the cluster experiments — so the figures can be
+  regenerated from a fresh clone; and, in `data/raw_data/`, the raw datasets.
+- `utils/` — `collect_data.R`, which gathers the real-data fits and the
+  experiment summary tables into `data/experiment_results.Rdata`.
 
 ## Figures
 
@@ -66,7 +67,8 @@ misspecification figures. In order:
    combination; submitted on the cluster via `submit_approx_sim.sh` /
    `run_approx_sim.sbatch`.
 3. `experiments/analyze_approx_sim.R` — collects the fits into the flat
-   table `approx_sim_metrics.rds`, which the four figure scripts read.
+   table `approx_sim_metrics.rds`, stored as `res_list$approx_sim_metrics`
+   in `data/experiment_results.Rdata`, which the four figure scripts read.
    (QC: `check_approx_sim.R`.)
 
 ### Shared helpers

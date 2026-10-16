@@ -9,14 +9,15 @@
 # centering is what makes the initialization spread visible: the between-c
 # differences (~60k log-lik units) are ~40x the within-c sd.
 #
-# Reads the per-task .rds outputs in ../experiments/bbc_init/ (downloaded
-# from /rafalab/eweine/log1p_experiments/bbc_init_matched).
+# Reads res_list$bbc_init_stability from ../data/experiment_results.Rdata
+# (the summary rows of the per-task outputs of run_bbc_init.R, collected by
+# utils/collect_data.R).
 
 library(ggplot2)
 library(cowplot)
 
-fs   <- list.files("../experiments/bbc_init_matched", full.names = TRUE)
-rows <- do.call(rbind, lapply(fs, function(f) readRDS(f)$row))
+load("../data/experiment_results.Rdata")
+rows <- res_list$bbc_init_stability
 stopifnot(nrow(rows) == 93, all(rows$converged))
 
 fmt_c <- function(x) ifelse(is.infinite(x), "∞",

@@ -3,10 +3,12 @@
 # BBC), RANK-1 INITIALIZATION ONLY (the paper's default; the random-init
 # comparison lives in the git history of this script).
 #
-# Reads the per-(scheme, method) trace tables written by the experiment jobs
-# (exact_vs_approx_<dataset>_..._traces.rds), each a tidy data frame with columns
-# time (seconds), exact_loglik, scheme, method, iter. The method-appropriate
-# rank-1 warm-up is already chained in at the front of each curve.
+# Reads res_list$exact_vs_approx_traces from ../data/experiment_results.Rdata
+# (the rank-1 trace tables written by the experiment jobs as
+# exact_vs_approx_<dataset>_..._traces.rds, collected by utils/collect_data.R),
+# each a tidy data frame with columns time (seconds), exact_loglik, scheme,
+# method, iter. The method-appropriate rank-1 warm-up is already chained in at
+# the front of each curve.
 #
 # y = distance from the best log-likelihood = (best exact log-likelihood ever
 # achieved for that dataset, i.e. the max over every iterate of BOTH rank-1
@@ -48,8 +50,9 @@ library(ggplot2)
 library(cowplot)
 theme_set(theme_cowplot())
 
-exp_dir <- "../experiments"
 out_png <- "../images/exact_vs_approx_all_datasets.png"
+
+load("../data/experiment_results.Rdata")
 
 ## dataset tag, display title, wall-time unit (divisor + label), and whether the
 ## time axis is log1p-transformed
@@ -98,18 +101,14 @@ SCHEME_LABS <- c(random = "Random init", rank1 = "Rank-1 init")
 ## approx vs exact -- validated colorblind-safe pair (matches the other timing figs)
 MCOL <- c("Approximate" = "red", "Exact" = "blue")   # match computational_complexity_fig.R
 
-load_dataset <- function(tag) {
-  d <- do.call(rbind, lapply(c("approx", "exact"), function(m) {
-    f <- file.path(exp_dir, sprintf("%s_rank1_%s_traces.rds", tag, m))
-    if (!file.exists(f)) { message("  missing: ", basename(f)); return(NULL) }
-    readRDS(f)
-  }))
+load_dataset <- function(key) {
+  d <- do.call(rbind, res_list$exact_vs_approx_traces[[key]])
   d[is.finite(d$exact_loglik), ]
 }
 
 ## one dataset -> one panel (rank-1 only), no legend
 panel_for <- function(ds) {
-  d <- load_dataset(ds$tag)
+  d <- load_dataset(ds$key)
   ## best ever achieved for this dataset: the max over every iterate of both
   ## rank-1 curves. The reference is attained BY one of the plotted curves, at
   ## one of its iterates, which is why one curve per panel touches zero; log1p

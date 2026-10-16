@@ -9,14 +9,15 @@
 #      own value dashed
 #
 # Thin lines: individual seeds; thick line: mean; open circle:
-# c_fit = c_true. Reads approx_sim_metrics.rds (analyze_approx_sim.R).
+# c_fit = c_true. Reads res_list$approx_sim_metrics (experiment_results.Rdata) (analyze_approx_sim.R).
 
 library(ggplot2)
 library(cowplot)
 
 N_SEEDS_SHOW <- 30
 
-res <- readRDS("../experiments/approx_sim_metrics.rds")
+load("../data/experiment_results.Rdata")
+res <- res_list$approx_sim_metrics
 ex  <- subset(res, method == "exact" & seed <= N_SEEDS_SHOW)
 
 fmt_c <- function(x) ifelse(is.infinite(x), "∞",

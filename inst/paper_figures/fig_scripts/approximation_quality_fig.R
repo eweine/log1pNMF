@@ -11,11 +11,13 @@
 # (theme_cowplot, default two-color hue scale, one panel per c_true,
 # dashed reference at 1, shared right legend, A/B/C labels).
 #
-# Reads approx_sim_metrics.rds (analyze_approx_sim.R).
+# Reads res_list$approx_sim_metrics from ../data/experiment_results.Rdata
+# (produced by analyze_approx_sim.R, collected by utils/collect_data.R).
 
 library(ggplot2)
 
-res <- readRDS("../experiments/approx_sim_metrics.rds")
+load("../data/experiment_results.Rdata")
+res <- res_list$approx_sim_metrics
 NP  <- unique(res$n * res$p)
 stopifnot(length(NP) == 1)
 
