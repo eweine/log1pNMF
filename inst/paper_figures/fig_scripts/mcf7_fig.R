@@ -37,15 +37,15 @@ samples <- data.frame(id = names(GSMList(geo)),
 samples <- samples[ids,]
 rownames(samples) <- NULL
 samples <- transform(samples,
-                     EtOH = grepl("EtOH",treatment,fixed = TRUE),
+                     EtOH = grepl("CTRL",treatment,fixed = TRUE),
                      RA   = grepl("RA",treatment,fixed = TRUE),
                      TGFb = grepl("TGFb",treatment,fixed = TRUE))
-samples$label                 <- "EtOH"
+samples$label                 <- "CTRL"
 samples[samples$RA,"label"]   <- "RA"
 samples[samples$TGFb,"label"] <- "TGFb"
 samples[with(samples,RA & TGFb),"label"] <- "RA+TGFb"
 samples <- transform(samples,
-                     label = factor(label,c("EtOH","RA","TGFb","RA+TGFb")))
+                     label = factor(label,c("CTRL","RA","TGFb","RA+TGFb")))
 
 
 x <- colSums(counts > 0)
@@ -77,10 +77,10 @@ dds <- DESeq(dds)
 # Contrast syntax: c("label", "level_of_interest", "reference")
 
 # RA vs EtOH
-res_RA_vs_EtOH <- as.data.frame(results(dds, contrast = c("label", "RA", "EtOH")))
+res_RA_vs_EtOH <- as.data.frame(results(dds, contrast = c("label", "RA", "CTRL")))
 
 # TGFb vs EtOH
-res_TGFb_vs_EtOH <- as.data.frame(results(dds, contrast = c("label", "TGFb", "EtOH")))
+res_TGFb_vs_EtOH <- as.data.frame(results(dds, contrast = c("label", "TGFb", "CTRL")))
 
 
 

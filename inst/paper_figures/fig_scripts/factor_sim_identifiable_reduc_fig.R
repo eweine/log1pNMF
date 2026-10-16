@@ -138,21 +138,34 @@ role_for <- function(prog) {
          ifelse(panel == paste0(prog,  "-rel"), "Low-Baseline, Up", "Low-Baseline, Flat"))),
          levels = c("High-Baseline, Up", "High-Baseline, Flat", "Low-Baseline, Up", "Low-Baseline, Flat"))
 }
+# Factor values carry the normalization induced by the max-1 LOADING
+# normalization used for the structure plots: l_k -> l_k / max_i(l_ik)
+# forces f_k -> f_k * max_i(l_ik) so that L F' is unchanged. The two models'
+# factors then live on genuinely different scales (log-space vs additive),
+# so each model row gets its own x-axis.
 fac_df <- function(F, L, model) {
-  Fo <- F[, ord_of(L)]                               # (Baseline, A, B)
-  rbind(data.frame(value = Fo[, 2] / max(Fo[, 2]), role = role_for("A"),
+  o  <- ord_of(L)                                    # (Baseline, A, B)
+  Fo <- sweep(F[, o], 2, apply(pmax(L[, o], 0), 2, max), FUN = "*")
+  rbind(data.frame(value = Fo[, 2], role = role_for("A"),
                    factor = "Factor A", model = model),
-        data.frame(value = Fo[, 3] / max(Fo[, 3]), role = role_for("B"),
+        data.frame(value = Fo[, 3], role = role_for("B"),
                    factor = "Factor B", model = model))
 }
 facC <- rbind(fac_df(tm$F, tm$L, "c = ∞"), fac_df(lp$FF, lp$LL, "c = 1"))
 facC$model <- factor(facC$model, levels = c("c = ∞", "c = 1"))
 
+# ggh4x::facet_grid2 with independent x scales keeps the grid layout
+# (Factor strips on top only, model labels on the right, every panel the
+# same size) while letting each model row carry its own x-axis.
 panelC <- ggplot(facC, aes(value, fill = role)) +
   geom_histogram(position = "identity", alpha = 0.85, bins = 60) +
-  facet_grid(model ~ factor) +
+  ggh4x::facet_grid2(model ~ factor, scales = "free_x", independent = "x") +
+  ggh4x::facetted_pos_scales(x = list(
+    model == "c = ∞" ~ scale_x_continuous(limits = c(NA, 125),
+                                          breaks = seq(0, 125, 25)),
+    model == "c = 1" ~ scale_x_continuous(breaks = seq(0, 2, 0.5)))) +
   scale_fill_manual(values = ROLECOL, name = "Feature Type") +
-  labs(x = "Factor Value (Normalized to Max 1)", y = "Count") +
+  labs(x = "Factor Value", y = "Count") +
   theme(strip.background = element_blank(), strip.text = element_text(face = "bold"),
         strip.text.y = element_text(angle = 0),
         panel.border = element_rect(colour = "black", fill = NA, linewidth = 0.7))

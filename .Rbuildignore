@@ -3,3 +3,5 @@
 ^LICENSE\.md$
 ^inst/paper_figures$
 ^inst/scratch$
+^notes$
+^wip$

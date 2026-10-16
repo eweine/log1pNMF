@@ -1,24 +1,30 @@
 # Main figure for Simulation 2: exact fits across the fitting-c grid
 # (including c = Inf, the topic model) on data generated at
-# c_true in {1e-3, 1, Inf}. Four rows x three columns (one per c_true):
+# c_true in {1e-3, 1, Inf}. Four rows x three columns (one per c_true),
+# restricted to seeds 1-30 in every regime (the extra c_true = 1e-3 seeds
+# exist only for the approximation-quality figure):
 #
 #   A  mean Hoyer sparsity of the loadings L
 #   B  mean Hoyer sparsity of the factors F
-#   C  per-entry likelihood ratio vs the fit at c_fit = c_true
+#   C  peak-to-mean ratio pm(B) of the fitted model, with the value
+#      predicted from the true rates alone -- pm(log(1 + Lambda/c)) at
+#      finite fitting c, pm(Lambda) at c = Inf -- dashed (mean over seeds)
+#   D  per-entry likelihood ratio vs the fit at c_fit = c_true
 #      (exp of the mean per-entry exact log-likelihood difference)
-#   D  RMSE of the fitted rates against the true rates, relative to the
-#      fit at c_fit = c_true (log scale)
 #
 # Thin lines: individual seeds; thick line: mean over seeds; dashed: the
-# truth's own value (A-B) or the reference ratio 1 (C-D); open circle:
-# c_fit = c_true. Reads approx_sim_metrics.rds (analyze_approx_sim.R);
-# rerunning after more seeds land just adds thin lines.
+# truth's own value (A-B), the Lambda-prediction (C), or the reference
+# ratio 1 (D); open circle: c_fit = c_true. Reads approx_sim_metrics.rds
+# (analyze_approx_sim.R) and regenerates the true rates from the
+# deterministic generator (approx_sim_common.R) for row C's prediction.
 
 library(ggplot2)
 library(cowplot)
 
+N_SEEDS_SHOW <- 30
+
 res <- readRDS("../experiments/approx_sim_metrics.rds")
-ex  <- subset(res, method == "exact")
+ex  <- subset(res, method == "exact" & seed <= N_SEEDS_SHOW)
 
 NP <- unique(res$n * res$p)
 stopifnot(length(NP) == 1)
@@ -34,17 +40,36 @@ ex$is_ref <- (is.finite(ex$c_true) & ex$cc == ex$c_true) |
              (is.infinite(ex$c_true) & is.infinite(ex$cc))
 
 ## references: the same seed's fit at c_fit = c_true
-ref <- ex[ex$is_ref, c("seed", "ct", "loglik_exact", "rmse")]
-names(ref)[3:4] <- c("ll_ref", "rmse_ref")
+ref <- ex[ex$is_ref, c("seed", "ct", "loglik_exact")]
+names(ref)[3] <- "ll_ref"
 ex <- merge(ex, ref, by = c("seed", "ct"))
-ex$lr_pe    <- exp((ex$loglik_exact - ex$ll_ref) / NP)
-ex$rel_rmse <- ex$rmse / ex$rmse_ref
+ex$lr_pe <- exp((ex$loglik_exact - ex$ll_ref) / NP)
+
+## row C's dashed prediction: pm of the true rates through each fitting
+## link, averaged over the seeds shown
+source("../experiments/approx_sim_common.R", chdir = TRUE)
+pm_of <- function(M, cc) {
+  g <- if (is.finite(cc)) log1p(M / cc) else M
+  max(g) / mean(g)
+}
+pred <- do.call(rbind, lapply(sort(unique(ex$c_true)), function(ct) {
+  do.call(rbind, lapply(seq_len(N_SEEDS_SHOW), function(s) {
+    d <- sim_dataset(s, ct)
+    data.frame(c_true = ct, cc = CC,
+               value = sapply(CC, pm_of, M = d$lambda))
+  }))
+}))
+pred$cf <- factor(fmt_c(pred$cc), levels = fmt_c(CC))
+pred$ct <- factor(paste0("Data Simulated with c = ", fmt_c(pred$c_true)),
+                  levels = CTL)
+pred_avg <- aggregate(value ~ cf + ct, pred, mean)
+message("pm predictions computed for ", nrow(pred), " (seed, c_true, c) triples")
 
 ## ---- one row of the figure --------------------------------------------------
 SEED_COL <- "#9BB7BD"; MEAN_COL <- "#0E5C6B"; REF_COL <- "#C2410C"
 
-row_panel <- function(d, ylab, truth_df = NULL, ref1 = FALSE, logy = FALSE,
-                      strips = FALSE, xaxis = FALSE) {
+row_panel <- function(d, ylab, truth_df = NULL, ref1 = FALSE, pred_df = NULL,
+                      logy = FALSE, strips = FALSE, xaxis = FALSE) {
   avg <- aggregate(value ~ cf + ct, d, mean)
   dg  <- merge(unique(d[d$is_ref, c("cf", "ct")]), avg)
   p <- ggplot(d, aes(cf, value))
@@ -60,7 +85,11 @@ row_panel <- function(d, ylab, truth_df = NULL, ref1 = FALSE, logy = FALSE,
               linewidth = 0.3, alpha = 0.6) +
     geom_line(data = avg, aes(group = 1), colour = MEAN_COL,
               linewidth = 0.9) +
-    geom_point(data = avg, colour = MEAN_COL, size = 1.3) +
+    geom_point(data = avg, colour = MEAN_COL, size = 1.3)
+  if (!is.null(pred_df))
+    p <- p + geom_line(data = pred_df, aes(group = 1), colour = REF_COL,
+                       linetype = "dashed", linewidth = 0.7)
+  p <- p +
     geom_point(data = dg, shape = 21, size = 3, stroke = 1,
                fill = NA, colour = REF_COL) +
     facet_grid(. ~ ct) +
@@ -71,7 +100,8 @@ row_panel <- function(d, ylab, truth_df = NULL, ref1 = FALSE, logy = FALSE,
           axis.title.y = element_text(size = 10.5),
           strip.text = if (strips) element_text(face = "bold", size = 10.5)
                        else element_blank())
-  if (logy) p <- p + scale_y_log10()
+  if (logy) p <- p + scale_y_log10(labels = function(x)
+    format(x, scientific = FALSE, big.mark = ",", trim = TRUE))
   p <- p + theme(axis.text.x = element_text(size = 8, angle = 45, hjust = 1))
   p
 }
@@ -86,9 +116,10 @@ pA <- row_panel(long("hoyer_L"), "Mean Loading Sparsity",
                 truth_df = truth_of("hoyer_L_true"), strips = TRUE)
 pB <- row_panel(long("hoyer_F"), "Mean Factor Sparsity",
                 truth_df = truth_of("hoyer_F_true"))
-pC <- row_panel(long("lr_pe"), "Likelihood Ratio", ref1 = TRUE)
-pD <- row_panel(long("rel_rmse"), "Rel. RMSE of Rates", ref1 = TRUE,
-                logy = TRUE, xaxis = TRUE)
+pC <- row_panel(long("pm_B"), "pm(B) of Fitted Model",
+                pred_df = pred_avg, logy = TRUE)
+pD <- row_panel(long("lr_pe"), "Per-Entry Likelihood Ratio", ref1 = TRUE,
+                xaxis = TRUE)
 
 g <- plot_grid(pA, pB, pC, pD, ncol = 1, align = "v", axis = "lr",
                labels = c("A", "B", "C", "D"), label_size = 13,
